@@ -1,4 +1,4 @@
-# PET-2.semester-Simpl
+# Simpl-PET-project
 # Simpl
 
 Simpl er et system til patienter, der gennemgår et fertilitetsforløb (fx IVF, ICSI, IUI eller FET), hvor de kan holde styr på deres forløb, diagnoser, aftaler, medicin, hormonværdier, dagbogsnoter, dokumenter og notifikationer.
