@@ -305,3 +305,9 @@ button.muted-link {
     background: var(--bg);
     color: var(--muted);
 }
+
+/* checkbox-row — afkrydsningsfelt med tekst ved siden af (fx "Allerede taget" på medicin.html).
+   Uden denne ville label-reglen i form-card lægge teksten på sin egen linje over boksen. */
+.checkbox-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+.checkbox-row input { width: auto; margin: 0; }
+.checkbox-row label { margin: 0; }
