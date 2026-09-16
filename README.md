@@ -47,14 +47,20 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 Projektet følger **MVC**-mønsteret (Model-View-Controller):
 
 ```
-src/
-├── Main.java              # Applikationens indgangspunkt
-├── model/                 # Dataklasser, databaseadgang, Session
-├── view/                  # JavaFX views (UI)
-├── controller/             # Forretningslogik mellem view og model
-├── enums/                  # Enums (AppointmentType, EventType, Result, Status)
-├── design/                 # CSS-stylesheet og billeder
-└── test/                   # Tests
+ src/
+├── Main.java              # Applikationens indgangspunkt (starter Javalin)
+├── model/                 # Dataklasser (én per tabel i schema.sql)
+├── dao/                   # Databaseadgang (én DAO per tabel) + DatabaseConnection
+├── controller/            # Javalin-ruter: modtager formularer, kalder DAO'er, viser sider
+└── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …)
+web/
+├── *.html                 # Siderne (login, dashboard, hormoner …)
+├── css/                   # tokens, base, layout, components, pages
+├── js/                    # common.js + én fil per side
+└── img/                   # logo (spire.svg)
+
+data/
+└── schema.sql             # Databasens tabeller
 ```
 
 ## Database
