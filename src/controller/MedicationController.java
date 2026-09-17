@@ -1,4 +1,4 @@
 package controller;
 
-public class MedicinController {
+public class MedicationController {
 }

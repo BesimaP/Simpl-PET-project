@@ -1,4 +1,4 @@
 package controller;
 
-public class DokumenterController {
+public class DocumentController {
 }

@@ -1,4 +1,4 @@
 package controller;
 
-public class TidslinjeController {
+public class TimelineController {
 }

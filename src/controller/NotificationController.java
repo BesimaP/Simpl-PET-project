@@ -1,4 +1,4 @@
 package controller;
 
-public class NotifikationerController {
+public class NotificationController {
 }

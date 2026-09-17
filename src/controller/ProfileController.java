@@ -1,4 +1,4 @@
 package controller;
 
-public class MinProfilController {
+public class ProfileController {
 }

@@ -1,4 +1,4 @@
 package controller;
 
-public class DagbogController {
+public class DiaryController {
 }
