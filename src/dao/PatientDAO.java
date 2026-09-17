@@ -1,7 +1,6 @@
     package dao;
 
-    import model.Patient;
-    import model.UserAccount;
+    import entities.Patient;
 
     import java.sql.Connection;
     import java.sql.PreparedStatement;

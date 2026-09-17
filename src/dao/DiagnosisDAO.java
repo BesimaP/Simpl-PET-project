@@ -1,6 +1,6 @@
 package dao;
 
-import model.Diagnosis;
+import entities.Diagnosis;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

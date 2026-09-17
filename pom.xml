@@ -38,7 +38,7 @@
                 </excludes>
             </resource>
             <resource>
-                <directory>data</directory>
+                <directory>resources/data</directory>
             </resource>
         </resources>
         <plugins>

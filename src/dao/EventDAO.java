@@ -1,7 +1,7 @@
 package dao;
 
 import enums.EventType;
-import model.Event;
+import entities.Event;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

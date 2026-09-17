@@ -1,4 +1,4 @@
-    package model;
+    package entities;
 
     import enums.EventType;
     import java.time.LocalDateTime;

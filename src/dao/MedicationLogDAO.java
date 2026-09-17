@@ -1,6 +1,6 @@
 package dao;
 
-import model.MedicationLog;
+import entities.MedicationLog;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

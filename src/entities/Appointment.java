@@ -1,4 +1,4 @@
-    package model;
+    package entities;
 
     import enums.AppointmentType;
     import java.time.LocalDateTime;

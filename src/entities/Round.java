@@ -1,4 +1,4 @@
-    package model;
+    package entities;
 
     import enums.Result;
     import enums.RoundStatus;

@@ -1,6 +1,6 @@
 package dao;
 
-import model.DiaryEntry;
+import entities.DiaryEntry;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

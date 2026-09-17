@@ -1,6 +1,6 @@
     package dao;
 
-    import model.Round;
+    import entities.Round;
 
     import java.sql.Connection;
     import java.sql.PreparedStatement;

@@ -1,4 +1,4 @@
-    package model;
+    package entities;
 
     // Stamdata for et lægemiddel (tabel medication). Tilhører ikke en patient — genbruges på tværs af registreringer.
     public class Medication {

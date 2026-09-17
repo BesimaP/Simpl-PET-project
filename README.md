@@ -49,7 +49,7 @@ Projektet følger **MVC**-mønsteret (Model-View-Controller):
 ```
  src/
 ├── Main.java              # Applikationens indgangspunkt (starter Javalin)
-├── model/                 # Dataklasser (én per tabel i schema.sql)
+├── entities/                 # Dataklasser (én per tabel i schema.sql)
 ├── dao/                   # Databaseadgang (én DAO per tabel) + DatabaseConnection
 ├── controller/            # Javalin-ruter: modtager formularer, kalder DAO'er, viser sider
 └── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …)
@@ -65,7 +65,7 @@ data/
 
 ## Database
 
-SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første gang applikationen køres. Databasestrukturen er defineret i `data/schema.sql` og initialiseres ved opstart af `DatabaseInitializer.java`.
+SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første gang applikationen køres. Databasestrukturen er defineret i `resources/data` og initialiseres ved opstart af `DatabaseInitializer.java`.
 
 **Nuværende tabeller (JavaFX-versionen):**
 - `patient` — brugerkonti

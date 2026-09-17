@@ -1,7 +1,7 @@
 package dao;
 
 import enums.HormoneType;
-import model.HormoneLog;
+import entities.HormoneLog;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

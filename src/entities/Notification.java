@@ -1,4 +1,4 @@
-    package model;
+    package entities;
 
     import enums.NotificationType;
     import java.time.LocalDateTime;

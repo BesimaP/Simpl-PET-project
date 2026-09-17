@@ -1,4 +1,4 @@
-    package model;
+    package entities;
 
     // Login-oplysninger, adskilt fra persondata (tabel user_account).
     // passwordHash: adgangskoden gemmes aldrig i klartekst (NFR1) — hashing sker i service-laget.

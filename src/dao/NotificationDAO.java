@@ -1,7 +1,7 @@
 package dao;
 
 import enums.NotificationType;
-import model.Notification;
+import entities.Notification;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

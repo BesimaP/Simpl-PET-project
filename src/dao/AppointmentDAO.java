@@ -1,7 +1,7 @@
 package dao;
 
 import enums.AppointmentType;
-import model.Appointment;
+import entities.Appointment;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

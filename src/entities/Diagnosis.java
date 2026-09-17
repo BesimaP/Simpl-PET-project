@@ -1,4 +1,4 @@
-package model;
+package entities;
 
 // En diagnose registreret af patienten selv (tabel diagnosis, US7). En patient kan have flere.
 public class Diagnosis {

@@ -1,7 +1,7 @@
 package dao;
 
 import enums.DocumentType;
-import model.Document;
+import entities.Document;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
