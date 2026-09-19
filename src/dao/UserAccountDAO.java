@@ -34,4 +34,20 @@ public class UserAccountDAO {
             throw new RuntimeException("Could not save user account", e);
         }
     }
+
+    public UserAccount findByUsername(String username){
+        String sql = "SELECT * FROM user_account WHERE username = ?";
+        
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, username);
+            ResultSet rs = statement.executeQuery();
+            if (rs.next()) {
+                return new UserAccount(rs.getInt("id"), rs.getString("username"), rs.getString("password_hash"));
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new RuntimeException("Could not find user " + username, e);
+        }
+    }
 }
