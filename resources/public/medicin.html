@@ -135,14 +135,22 @@
       <aside class="card helpbox" aria-labelledby="list-title">
         <h2 id="list-title" class="eyebrow">I dag</h2>
         <!-- samme liste-css som hormoner/dagbogen, så det ser ens ud -->
-        <ul class="notes">
-          <li>
-            <strong>08:00 · Taget</strong>
-            <span>Gonal F · 150 IU</span>
+        <ul class="meds">
+          <li class="med med--taken">
+            <button type="button" class="med__check" aria-label="Markér som taget">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor"/></svg>
+            </button>
+            <div class="med__text">
+              <strong class="med__name">Gonal F · 150 IU</strong>
+              <span class="muted med__status">Taget</span>
+            </div>
           </li>
-          <li>
-            <strong>20:00 · Planlagt</strong>
-            <span>Orgalutran · 0,25 mg</span>
+          <li class="med">
+            <button type="button" class="med__check" aria-label="Markér som taget"></button>
+            <div class="med__text">
+              <strong class="med__name">Orgalutran · 0,25 mg</strong>
+              <span class="muted med__status">Planlagt</span>
+            </div>
           </li>
         </ul>
 
