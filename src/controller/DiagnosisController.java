@@ -1,4 +1,4 @@
 package controller;
 
-public class DiagnoseController {
+public class DiagnosisController {
 }

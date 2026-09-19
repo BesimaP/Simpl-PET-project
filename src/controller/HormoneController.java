@@ -1,4 +1,4 @@
 package controller;
 
-public class HormonerController {
+public class HormoneController {
 }

@@ -1,4 +1,4 @@
 package controller;
 
-public class AftalerController {
+public class AppointmentController{
 }
