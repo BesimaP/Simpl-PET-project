@@ -1,7 +1,9 @@
-// aftaler.js — JavaScript kun til aftaler.html (US3) — Louises side
-// Ikke lavet endnu. Pseudokode = plan for, hvad der skal skrives:
+// aftaler.js — JavaScript kun til aftaler.html (US3)
 
 // FIND dato-feltet i "ny aftale"-formularen
-// KØR setTodayIn(dato-feltet) fra common.js
+const dateField = document.getElementById("date");
 
-// (sortering "nærmeste først" laves nemmest i backend med ORDER BY date_time - ikke i js)
+// KØR setTodayIn (fra common.js): skriver dagens dato i feltet, så man slipper for at vælge den
+setTodayIn(dateField);
+
+// (sortering "nærmeste først" laves i backend med ORDER BY date_time – ikke i js)

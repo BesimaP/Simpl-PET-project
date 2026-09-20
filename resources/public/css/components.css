@@ -311,3 +311,8 @@ button.muted-link {
 .checkbox-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
 .checkbox-row input { width: auto; margin: 0; }
 .checkbox-row label { margin: 0; }
+
+/* is-read = en notifikation, der er læst (sættes af js/notifikationer.js). Grå og lidt gennemsigtig, så de ulæste træder frem */
+.rounds li.is-read {
+    opacity: 0.55;
+}
