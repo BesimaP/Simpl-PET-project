@@ -28,5 +28,16 @@ public class LoginController {
                 ctx.redirect("/dashboard.html");  // ja -> ind på dashboard
             }
         });
+
+        // POST /opretprofil – når brugeren trykker Opret profil
+        //   0. i opretprofil.html: <form action="/opretprofil" method="post">
+        //   1. læs felterne: name, dateOfBirth, username, password
+        //   2. tjek: findes brugernavnet allerede? (UserAccountDAO.findByUsername != null) -> tilbage til opretprofil.html
+        //   3. byg et UserAccount(0, username, password) og kald UserAccountDAO.save -> giver accountId
+        //      (TODO senere: hash kodeordet med BCrypt før det gemmes)
+        //   4. byg en Patient(0, accountId, name, LocalDate.parse(dateOfBirth)) og kald PatientDAO.save
+        //   5. send til login.html
+
+
     }
 }
