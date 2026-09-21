@@ -69,6 +69,7 @@
             } catch (SQLException e) {
                 throw new RuntimeException("Could not find round " + fertilityJouneyID, e);
             }
+
         }
 
 
