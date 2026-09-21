@@ -78,14 +78,18 @@
     <!-- tom-tilstand: det man ser første gang, når der ikke er nogen runde endnu -->
     <div class="round-grid">
         <!-- card--dark = mørkt kort, empty = ekstra css til den tomme tilstand -->
-        <!-- UC3 CreateJourney (US1): én knap opretter forløbet (startdato sættes automatisk)
-             og sender videre til start-runde, så man ikke skal klikke to gange for at komme i gang -->
+
         <section class="card card--dark empty" aria-labelledby="empty-title">
             <img src="img/spire-ring.svg" alt="" width="72" height="72">
             <h2 id="empty-title">Du har ikke et forløb endnu</h2>
             <p>Når du starter dit forløb, samler Simpl dine runder, din medicin, dine aftaler og dine noter ét sted.</p>
-            <!-- et link der ligner en knap. når backend er på, opretter den forløbet først -->
-            <a href="start-runde.html" class="btn btn--light">Start dit forløb</a>
+            <!-- UC3 CreateJourney (US1): opretter forløbet med en startdato. Runden startes bagefter
+            fra dashboard (start-runde), fordi der er samtaler og forundersøgelser før første runde -->
+            <form action="/opret-forloeb" method="post">
+                <label for="startDate">Startdato</label>
+                <input type="date" id="startDate" name="startDate" required>
+                <button type="submit" class="btn btn--light">Start dit forløb</button>
+            </form>
         </section>
     </div>
 
