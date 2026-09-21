@@ -116,6 +116,13 @@ CREATE TABLE IF NOT EXISTS medication (
     name        TEXT NOT NULL UNIQUE,
     description TEXT
 );
+-- Stamdata: lægemidlerne, som dropdownen på medicin.html bruger.
+-- INSERT OR IGNORE: schema.sql kører ved hver opstart, og name er UNIQUE – rækkerne springes over, hvis de allerede findes.
+INSERT OR IGNORE INTO medication (name, description) VALUES
+    ('GONAL_F', 'Gonal-F'),
+    ('ORGALUTRAN', 'Orgalutran'),
+    ('MENOPUR', 'Menopur'),
+    ('OVITRELLE', 'Ovitrelle');
 
 -- MedicationLog — én planlagt dosis af en Medication i en runde (US8).
 -- taken: 0 = ikke taget, 1 = taget (SQLite har ingen boolean).
