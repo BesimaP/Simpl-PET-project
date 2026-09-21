@@ -1,9 +1,13 @@
 package controller;
 
 import dao.DatabaseConnection;
+import dao.PatientDAO;
 import dao.UserAccountDAO;
+import entities.Patient;
 import entities.UserAccount;
 import io.javalin.Javalin;
+
+import java.time.LocalDate;
 
 // Koordinatoren for login.html. Modtager formularen, spørger DAO'en og beslutter, hvor brugeren sendes hen.
 public class LoginController {
@@ -53,7 +57,7 @@ public class LoginController {
         });
 
         // POST /opretprofil – når brugeren trykker Opret profil
-        //   0. i opretprofil.html: <form action="/opretprofil" method="post">
+        //   0. i opretprofil.html: <form action="/opretprofil" method="pos;t">
         //   1. læs felterne: name, dateOfBirth, username, password
         //   2. tjek: findes brugernavnet allerede? (UserAccountDAO.findByUsername != null) -> tilbage til opretprofil.html
         //   3. byg et UserAccount(0, username, password) og kald UserAccountDAO.save -> giver accountId
