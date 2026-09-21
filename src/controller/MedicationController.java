@@ -8,7 +8,7 @@ import service.MedicationService;
 public class MedicationController {
 
     public static void registerRoutes(Javalin app){
-        app.post("/medicin", MedicationController :: logDose);
+        app.post("/medicin", ctx -> logDose(ctx));
     }
 
     private static void logDose(Context ctx){

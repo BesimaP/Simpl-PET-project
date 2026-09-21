@@ -17,6 +17,11 @@ public class HormoneService {
 
     // Gemmer én måling på den runde, der er i gang. En måling SKAL ligge på en runde (round_id i databasen).
     public ServiceResult saveLog(int patientId, String hormone, String value, String unit, String date) {
+        // 0. regel: alle felter skal være udfyldt (serveren stoler ikke på required i HTML)
+        if (isBlank(hormone) || isBlank(value) || isBlank(unit) || isBlank(date)) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // 1. find patientens aktive forløb – uden forløb kan der ikke være en runde
         FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
         if (journey == null) {
@@ -40,5 +45,10 @@ public class HormoneService {
         hormoneLogDao.save(log);
 
         return ServiceResult.OK; // ok
+    }
+
+    // lille hjælper: null eller kun mellemrum tæller som tomt
+    private boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 }

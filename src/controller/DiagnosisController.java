@@ -24,9 +24,10 @@ public class DiagnosisController {
         // 2. bed service gemme diagnosen – den hænger direkte på patienten, så ingen forløb/runde at finde
         ServiceResult result = new DiagnosisService().addDiagnosis(patientId, name, description);
 
-        // 3. vælg side ud fra svaret – diagnoser kan kun gå godt eller "ukendt"
+        // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
             case OK -> ctx.redirect("/diagnoser.html");
+            case INVALID_INPUT -> ctx.redirect("/diagnoser.html?fejl=felter"); // navnet var tomt
             default -> ctx.redirect("/diagnoser.html?fejl=ukendt");
         }
     }

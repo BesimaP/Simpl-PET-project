@@ -30,6 +30,7 @@ public class HormoneController {
         // 3. vælg side ud fra svaret – ét case per udfald.
         switch (result) {
             case OK -> ctx.redirect("/hormoner.html");
+            case INVALID_INPUT -> ctx.redirect("/hormoner.html?fejl=felter"); // et felt var tomt
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/hormoner.html?fejl=intet-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/hormoner.html?fejl=ingen-runde");
             default -> ctx.redirect("/hormoner.html?fejl=ukendt");

@@ -9,33 +9,12 @@ import enums.ServiceResult;
 public class DiagnosisService {
 
     public ServiceResult addDiagnosis(int patientId, String name, String description) {
-        // 1. byg kortet af felterne – diagnosen hænger direkte på patienten (patient_id), ingen forløb/runde
-        Diagnosis diagnosis = new Diagnosis(0, patientId, name, description);
-
-        // 2. læg kortet i skuffen diagnosis
-        new DiagnosisDAO(DatabaseConnection.getConnection()).save(diagnosis);
-
-        return ServiceResult.OK;
-    }
-}
-
-/*package service;
-
-import dao.DatabaseConnection;
-import dao.DiagnosisDAO;
-import entities.Diagnosis;
-import enums.ServiceResult;
-
-// Forretningslogik for diagnoser (US7). Kender IKKE Javalin. Diagnoser hænger på patienten – ingen forløb/runde.
-public class DiagnosisService {
-
-    public ServiceResult addDiagnosis(int patientId, String name, String description) {
-        // 1. regel: en diagnose skal have et navn
+        // 1. regel: en diagnose skal have et navn (serveren stoler ikke på required i HTML)
         if (isBlank(name)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. beskrivelsen er valgfri – tom tekst gemmes som null
+        // 2. beskrivelsen er valgfri – tom tekst gemmes som null, så databasen ikke fyldes med ""
         String desc = isBlank(description) ? null : description;
 
         // 3. byg kortet og gem – diagnosen hænger direkte på patienten (patient_id)
@@ -45,9 +24,8 @@ public class DiagnosisService {
         return ServiceResult.OK;
     }
 
+    // lille hjælper: null eller kun mellemrum tæller som tomt
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
     }
 }
-
- */

@@ -10,7 +10,12 @@ import java.time.LocalDate;
 
 // Forretningslogik for dagbogsnoter (US4). Kender IKKE Javalin. Svarer med ServiceResult: OK = ok.
 public class DiaryService {
-    public ServiceResult saveEntry(int patientId, String date, String title, String note){
+    public ServiceResult saveEntry(int patientId, String date, String title, String note) {
+        // 0. regel: dato, titel og note skal være udfyldt (serveren stoler ikke på required i HTML)
+        if (isBlank(date) || isBlank(title) || isBlank(note)) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // 1. find patientens aktive forløb – noter hænger på forløbet, så uden forløb er der ingen skuffe at lægge noten i
         FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
         if (journey == null) {
@@ -24,5 +29,10 @@ public class DiaryService {
         diaryDao.save(entry);
 
         return ServiceResult.OK;
+    }
+
+    // lille hjælper: null eller kun mellemrum tæller som tomt
+    private boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 }

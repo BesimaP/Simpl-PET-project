@@ -8,7 +8,7 @@ import service.AppointmentService;
 public class AppointmentController{
 
     public static void registerRoutes(Javalin app){
-        app.post("/aftaler", AppointmentController :: addAppointment);
+        app.post("/aftaler", ctx -> addAppointment(ctx));
     }
 
     private static void addAppointment(Context ctx){

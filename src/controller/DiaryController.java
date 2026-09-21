@@ -29,6 +29,7 @@ public class DiaryController {
         // 3. vælg side ud fra svaret – ét case per udfald (noter hænger på forløbet, så "ingen runde" findes ikke her)
         switch (result) {
             case OK -> ctx.redirect("/dagbog.html");
+            case INVALID_INPUT -> ctx.redirect("/dagbog.html?fejl=felter"); // et felt var tomt
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dagbog.html?fejl=intet-forloeb");
             default -> ctx.redirect("/dagbog.html?fejl=ukendt");
         }
