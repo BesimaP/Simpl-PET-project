@@ -15,6 +15,6 @@ public class DiagnosisService {
         // 2. læg kortet i skuffen diagnosis
         new DiagnosisDAO(DatabaseConnection.getConnection()).save(diagnosis);
 
-        return ServiceResult.SAVED;
+        return ServiceResult.OK;
     }
 }

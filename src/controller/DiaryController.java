@@ -23,12 +23,12 @@ public class DiaryController {
         String note = ctx.formParam("note");     // selve teksten fra textarea
         int patientId = 1; // TODO: fra session, når login husker hvem der er logget ind
 
-        // 2. bed service gemme noten – den finder selv forløbet. Svar: SAVED = ok, ellers hvad der gik galt
+        // 2. bed service gemme noten – den finder selv forløbet. Svar: OK = ok, ellers hvad der gik galt
         ServiceResult result = new DiaryService().saveEntry(patientId, date, title, note);
 
         // 3. vælg side ud fra svaret – ét case per udfald (noter hænger på forløbet, så "ingen runde" findes ikke her)
         switch (result) {
-            case SAVED -> ctx.redirect("/dagbog.html");
+            case OK -> ctx.redirect("/dagbog.html");
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dagbog.html?fejl=intet-forloeb");
             default -> ctx.redirect("/dagbog.html?fejl=ukendt");
         }

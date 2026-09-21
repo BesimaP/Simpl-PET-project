@@ -12,7 +12,7 @@ import enums.ServiceResult;
 import java.time.LocalDate;
 
 // Forretningslogik for hormonmålinger (US9). Kender IKKE Javalin – controlleren kalder saveLog med felterne.
-// Svarer med ServiceResult: SAVED = ok, ellers hvad der gik galt (controlleren vælger side ud fra det).
+// Svarer med ServiceResult: OK = ok, ellers hvad der gik galt (controlleren vælger side ud fra det).
 public class HormoneService {
 
     // Gemmer én måling på den runde, der er i gang. En måling SKAL ligge på en runde (round_id i databasen).
@@ -39,6 +39,6 @@ public class HormoneService {
         // 4. læg kortet i skuffen hormone_log
         hormoneLogDao.save(log);
 
-        return ServiceResult.SAVED; // ok
+        return ServiceResult.OK; // ok
     }
 }

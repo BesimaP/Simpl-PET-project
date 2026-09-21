@@ -26,7 +26,7 @@ public class DiagnosisController {
 
         // 3. vælg side ud fra svaret – diagnoser kan kun gå godt eller "ukendt"
         switch (result) {
-            case SAVED -> ctx.redirect("/diagnoser.html");
+            case OK -> ctx.redirect("/diagnoser.html");
             default -> ctx.redirect("/diagnoser.html?fejl=ukendt");
         }
     }

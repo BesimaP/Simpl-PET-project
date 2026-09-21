@@ -8,7 +8,7 @@ import enums.ServiceResult;
 
 import java.time.LocalDate;
 
-// Forretningslogik for dagbogsnoter (US4). Kender IKKE Javalin. Svarer med ServiceResult: SAVED = ok.
+// Forretningslogik for dagbogsnoter (US4). Kender IKKE Javalin. Svarer med ServiceResult: OK = ok.
 public class DiaryService {
     public ServiceResult saveEntry(int patientId, String date, String title, String note){
         // 1. find patientens aktive forløb – noter hænger på forløbet, så uden forløb er der ingen skuffe at lægge noten i
@@ -23,6 +23,6 @@ public class DiaryService {
         // 3. læg kortet i skuffen diary_entry
         diaryDao.save(entry);
 
-        return ServiceResult.SAVED;
+        return ServiceResult.OK;
     }
 }
