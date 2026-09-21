@@ -6,6 +6,7 @@
     import java.sql.PreparedStatement;
     import java.sql.ResultSet;
     import java.sql.SQLException;
+    import java.time.LocalDate;
 
     public class PatientDAO {
         private Connection connection;
@@ -14,7 +15,7 @@
             this.connection = connection;
         }
 
-        // Gemmer en ny konto og returnerer det id, databasen gav den
+        // Gemmer en ny patient og returnerer det id, databasen gav den
         public int save(Patient patient) {
             String sql = "INSERT INTO patient (user_account_id, name, date_of_birth) VALUES (?, ?, ?)";
             try {
@@ -35,5 +36,29 @@
             }
         }
 
+        // Finder patienten bag en konto – returnerer null, hvis kontoen ingen patient har (bruges efter login)
+        public Patient findByUserAccount(int userAccountId) {
+            // ? = pladsholder for konto-id'et, som sættes nedenfor (aldrig lim tal ind i SQL-strengen selv)
+            String sql = "SELECT * FROM patient WHERE user_account_id = ?";
 
+            try {
+                // gør SQL'en klar til at køre
+                PreparedStatement statement = connection.prepareStatement(sql);
+                // fyld ? ud – setInt, fordi user_account_id er et tal
+                statement.setInt(1, userAccountId);
+
+                // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
+                ResultSet rs = statement.executeQuery();
+
+                // if, ikke while: der kan højst være én række, fordi user_account_id er UNIQUE (én konto = én patient)
+                if (rs.next()) {
+                    // rækken -> et Patient-objekt (kortet). date_of_birth er gemt som tekst, derfor LocalDate.parse
+                    return new Patient(rs.getInt("id"), rs.getInt("user_account_id"), rs.getString("name"), LocalDate.parse(rs.getString("date_of_birth")));
+                }
+                return null; // ingen række = kontoen har ingen patient
+
+            } catch (SQLException e) {
+                throw new RuntimeException("Could not find patient for account " + userAccountId, e);
+            }
+        }
     }
