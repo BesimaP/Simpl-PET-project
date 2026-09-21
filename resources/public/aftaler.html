@@ -87,7 +87,7 @@
         <p class="subtitle">Skriv aftalen ind, så den dukker op i din oversigt.</p>
 
         <!-- action = siden sender bare til sig selv indtil vi får backend på -->
-        <form action="aftaler.html" method="get">
+        <form action="/aftaler" method="post">
           <!-- value = det navn databasen bruger (appointment_type i schema.sql), teksten er den danske visning -->
           <label for="type">Type</label>
           <select id="type" name="type" required>
