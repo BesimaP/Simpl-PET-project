@@ -52,9 +52,9 @@
                 // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
                 ResultSet rs = statement.executeQuery();
 
-                // if, ikke while: der kan højst være én række, fordi username er UNIQUE
+                // if, ikke while: der kan højst være én række, fordi round er UNIQUE
                 if (rs.next()) {
-                    // rækken -> et UserAccount-objekt (kortet), som controlleren kan kigge på
+                    // rækken -> et round-objekt (kortet), som controlleren kan kigge på
                     return new Round(
                             rs.getInt("id"),
                             rs.getInt("fertility_journey_id"),
@@ -69,7 +69,6 @@
             } catch (SQLException e) {
                 throw new RuntimeException("Could not find round " + fertilityJouneyID, e);
             }
-
         }
 
 
