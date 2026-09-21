@@ -32,8 +32,8 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 
 - Frontend: alle 15 sider er bygget i HTML/CSS med lidt JavaScript (dato, enheder, tællere, fejlbeskeder)
 - Database: `schema.sql` med 13 tabeller, alle entity- og DAO-klasser er skrevet
-- Backend: Javalin kører og serverer siderne; login virker hele vejen fra formular til database
-- Næste: resten af ruterne i controllerne, session (hvem er logget ind), templates til at vise data, skift fra SQLite til PostgreSQL
+- Backend: Javalin kører og serverer siderne; login, opret profil, forløb/runde, hormoner, dagbog, diagnoser, medicin og aftaler gemmer i databasen via controller → service → DAO
+- Næste: min profil og dokumenter, session (hvem er logget ind), templates til at vise data, skift fra SQLite til PostgreSQL
 
 ## Tech stack
 
@@ -50,7 +50,8 @@ Projektet følger **MVC** (Model-View-Controller) med *separation of concerns*: 
 ```
 src/
 ├── Main.java              # Starter Javalin (port 7070) og melder controllerne til
-├── controller/            # Koordinatoren: modtager formularer, kalder DAO'er, sender svar (én per side)
+├── controller/            # Javalin-ruter: læser formularen, kalder service, vælger side (én per side)
+├── service/               # Forretningslogik: regler og DAO-kald, uden Javalin (én per emne) – svarer med ServiceResult
 ├── entities/              # Model: dataklasser, én per tabel i schema.sql
 ├── dao/                   # Model: databaseadgang (én DAO per tabel) + DatabaseConnection/-Initializer
 └── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …) – matcher CHECK i schema.sql
@@ -61,7 +62,9 @@ resources/
 └── data/schema.sql        # Databasens tabeller
 ```
 
-Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST) → Javalin finder ruten → `HormoneController` læser felterne og bygger en `HormoneLog` → `HormoneLogDAO.save()` skriver i databasen → controlleren sender brugeren videre.
+Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST) → Javalin finder ruten → `HormoneController` læser felterne og kalder `HormoneService.saveLog()` → service tjekker regler (tomme felter, findes forløb/runde), bygger en `HormoneLog` og kalder `HormoneLogDAO.save()` → service svarer med `ServiceResult` (OK eller en fejl) → controlleren vælger side ud fra svaret.
+
+`ServiceResult` (i `src/enums`) er én fælles enum for svaret fra alle services: `OK, INVALID_INPUT, ALREADY_EXISTS, NO_ACTIVE_JOURNEY, NO_ACTIVE_ROUND, ROUND_IN_PROGRESS`.
 
 ## Database
 

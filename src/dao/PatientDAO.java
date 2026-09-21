@@ -61,4 +61,20 @@
                 throw new RuntimeException("Could not find patient for account " + userAccountId, e);
             }
         }
+
+        // Retter patientens navn (min-profil). UPDATE ændrer en række, der findes
+        public void updateName(int id, String name) {
+            // SET = hvad der ændres, WHERE = hvilken række. Uden WHERE ville ALLE patienter få det nye navn!
+            String sql = "UPDATE patient SET name = ? WHERE id = ?";
+
+            try {
+                PreparedStatement statement = connection.prepareStatement(sql);
+                statement.setInt(2, id);
+                statement.setString(1, name); // første ? = det nye navn
+                statement.executeUpdate();            // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
+
+            } catch (SQLException e) {
+                throw new RuntimeException("Could not update name for patient " + id,e);
+            }
+        }
     }

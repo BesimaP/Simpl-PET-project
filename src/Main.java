@@ -19,6 +19,7 @@ public class Main {
         DiagnosisController.registerRoutes(app);
         MedicationController.registerRoutes(app);
         AppointmentController.registerRoutes(app);
+        ProfileController.registerRoutes(app);
 
         // forsiden: / sender videre til login-siden
         app.get("/", ctx -> ctx.redirect("/login.html"));

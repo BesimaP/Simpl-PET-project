@@ -82,7 +82,7 @@
       <!-- kort 1: ret sine oplysninger -->
       <section class="card">
         <h2 class="eyebrow">Profil</h2>
-        <form>
+        <form action="/min-profil" method="post">
           <!-- for og id skal være ens, så label og felt hører sammen -->
           <label for="name">Navn</label>
           <input type="text" id="name" name="name" placeholder="Dit fulde navn" autocomplete="name" required>
@@ -104,7 +104,7 @@
       <!-- kort 2: skift adgangskode -->
       <section class="card">
         <h2 class="eyebrow">Adgangskode</h2>
-        <form>
+        <form action="/skift-kodeord" method="post">
           <!-- type password = der kommer prikker når man skriver -->
           <label for="current-password">Nuværende adgangskode</label>
           <input type="password" id="current-password" name="current-password" autocomplete="current-password" required>
@@ -145,7 +145,7 @@
       <p class="muted">Alle dine data – forløb, runder, noter og dokumenter – slettes og kan ikke gendannes.</p>
       <div class="confirm__actions">
         <button type="submit" value="cancel" class="btn btn--outline">Annullér</button>
-        <button type="submit" value="confirm" class="btn btn--primary">Slet konto</button>
+        <button type="submit" value="confirm" formmethod="post" formaction="/slet-konto" class="btn btn--primary">Slet konto</button>
       </div>
     </form>
   </dialog>
