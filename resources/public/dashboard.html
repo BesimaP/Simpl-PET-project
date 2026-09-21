@@ -197,7 +197,8 @@
         <p class="muted">Du kan fortryde i Rundehistorik.</p>
         <div class="confirm__actions">
             <button type="submit" value="cancel" class="btn btn--outline">Annullér</button>
-            <button type="submit" value="confirm" class="btn btn--primary">Afslut runde</button>
+            <!-- formmethod/formaction: DENNE knap sender til serveren (/afslut-runde) – Annullér lukker bare dialogen -->
+            <button type="submit" value="confirm" formmethod="post" formaction="/afslut-runde" class="btn btn--primary">Afslut runde</button>
         </div>
     </form>
 </dialog>

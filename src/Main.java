@@ -1,3 +1,4 @@
+import controller.DashboardController;
 import controller.LoginController;
 import dao.DatabaseInitializer;
 import io.javalin.Javalin;
@@ -13,6 +14,7 @@ public class Main {
         }).start(7070);
 
         LoginController.registerRoutes(app);
+        DashboardController.registerRoutes(app);
 
         // forsiden: / sender videre til login-siden
         app.get("/", ctx -> ctx.redirect("/login.html"));
