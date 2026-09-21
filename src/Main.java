@@ -1,4 +1,5 @@
 import controller.DashboardController;
+import controller.HormoneController;
 import controller.LoginController;
 import dao.DatabaseInitializer;
 import io.javalin.Javalin;
@@ -15,6 +16,7 @@ public class Main {
 
         LoginController.registerRoutes(app);
         DashboardController.registerRoutes(app);
+        HormoneController.registerRoutes(app);
 
         // forsiden: / sender videre til login-siden
         app.get("/", ctx -> ctx.redirect("/login.html"));

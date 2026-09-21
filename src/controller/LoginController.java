@@ -11,9 +11,9 @@ public class LoginController {
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: LoginController.registerRoutes(app)
     public static void registerRoutes(Javalin app) {
-        // LoginController::login = "kald metoden login med den ctx, Javalin rækker os"
-        app.post("/login", LoginController::login);              // formularen på login.html
-        app.post("/opretprofil", LoginController::createProfile); // formularen på opretprofil.html
+        // ctx -> login(ctx) = "kald metoden login med den ctx, Javalin rækker os"
+        app.post("/login", ctx -> login(ctx));              // formularen på login.html
+        app.post("/opretprofil", ctx -> createProfile(ctx)); // formularen på opretprofil.html
     }
 
     // POST /login – læs kuverten, spørg service, send brugeren videre
