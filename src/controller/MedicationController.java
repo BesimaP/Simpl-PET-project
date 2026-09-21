@@ -25,6 +25,7 @@ public class MedicationController {
         switch (result){
             case OK -> ctx.redirect("/medicin.html");
             case INVALID_INPUT -> ctx.redirect("/medicin.html?fejl=felter");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/medicin.html?fejl=ingen-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/medicin.html?fejl=ingen-runde");
             default -> ctx.redirect("/medicin.html?fejl=ukendt");
         }
