@@ -1,5 +1,6 @@
 package controller;
 
+import enums.ServiceResult;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.HormoneService;
@@ -23,14 +24,15 @@ public class HormoneController {
         String date = ctx.formParam("date");         // fx "2026-09-21"
         int patientId = 1; // TODO: fra session, når login husker hvem der er logget ind
 
-        // 2. bed service gemme målingen – den finder selv forløb og runde. Svar: null = ok, ellers en fejlkode
-        String fejl = new HormoneService().saveLog(patientId, hormone, value, unit, date);
+        // 2. bed service gemme målingen – den finder selv forløb og runde. Svar: SAVED = ok, ellers hvad der gik galt
+        ServiceResult result = new HormoneService().saveLog(patientId,hormone,value,unit,date);
 
-        // 3. vælg side ud fra svaret
-        if (fejl != null) {
-            ctx.redirect("/hormoner.html?fejl=" + fejl);   // fx ?fejl=ingen-runde (js kan vise en besked)
-        } else {
-            ctx.redirect("/hormoner.html");                // ok -> tilbage til siden (senere: med listen fyldt ud)
+        // 3. vælg side ud fra svaret – ét case per udfald.
+        switch (result) {
+            case SAVED -> ctx.redirect("/hormoner.html");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/hormoner.html?fejl=intet-forloeb");
+            case NO_ACTIVE_ROUND -> ctx.redirect("/hormoner.html?fejl=ingen-runde");
+            default -> ctx.redirect("/hormoner.html?fejl=ukendt");
         }
     }
 }
