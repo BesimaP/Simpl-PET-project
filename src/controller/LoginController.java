@@ -29,6 +29,29 @@ public class LoginController {
             }
         });
 
+
+
+        app.post("/opretprofil", ctx -> {
+            String name = ctx.formParam("name");
+            String dateOfBirth = ctx.formParam("dateOfBirth");
+            String username = ctx.formParam("username");
+            String password = ctx.formParam("password");
+
+            UserAccountDAO accountDao = new UserAccountDAO(DatabaseConnection.getConnection());
+
+            if(accountDao.findByUsername(username) != null ){
+                ctx.redirect("/opretprofil.html?fejl=brugernavn");
+                return;
+            }
+
+            int accountId = accountDao.save(new UserAccount(0, username, password));
+
+            PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
+            patientDao.save(new Patient(0, accountId, name, LocalDate.parse(dateOfBirth)));
+
+            ctx.redirect("/dashboard.html");
+        });
+
         // POST /opretprofil – når brugeren trykker Opret profil
         //   0. i opretprofil.html: <form action="/opretprofil" method="post">
         //   1. læs felterne: name, dateOfBirth, username, password
