@@ -1,6 +1,7 @@
 # Use case-beskrivelser
 
 *Forudsætning for UC3–UC14: patienten er logget ind (UC1). Forudsætning for UC8–UC14: patienten har et forløb med status ACTIVE. Hver use case dækker én eller flere user stories (angivet i parentes).*
+- Note på en aftale (fx "husk fastende") – valgt fra af scope-hensyn: kræver kolonne, entity, DAO og service
 
 ## UC1: LogIn (US5)
 Systemet starter og viser en login-skærm.
@@ -159,3 +160,4 @@ Følgende features er identificeret, men ligger uden for denne version og har de
 - Medicinplan, der automatisk opretter alle planlagte doser i en periode (UC10)
 - Automatisk generering af APPOINTMENT_REMINDER-notifikationer (UC7), ud over MEDICATION_REMINDER
 - Hormonværdier vist som graf (UC9)
+- Note på en aftale, fx "husk fastende" (UC5) — valgt fra af scope-hensyn: kræver kolonne, entity, DAO og service
