@@ -35,7 +35,9 @@ public class LoginController {
 
 
 
+        // formularen på opretprofil.html sender hertil (action="/opretprofil" method="post")
         app.post("/opretprofil", ctx -> {
+            // 1. åbn kuverten: læs felterne fra formularen
             String name = ctx.formParam("name");
             String dateOfBirth = ctx.formParam("dateOfBirth");
             String username = ctx.formParam("username");
@@ -43,28 +45,22 @@ public class LoginController {
 
             UserAccountDAO accountDao = new UserAccountDAO(DatabaseConnection.getConnection());
 
-            if(accountDao.findByUsername(username) != null ){
+            // 2. findes brugernavnet allerede? så tilbage til siden med en fejl i adressen (js kan vise den)
+            if (accountDao.findByUsername(username) != null) {
                 ctx.redirect("/opretprofil.html?fejl=brugernavn");
-                return;
+                return; // stop her – resten skal ikke køre
             }
 
+            // 3. gem kontoen – id'et fra databasen skal bruges til patienten lige efter
+            //    (TODO senere: hash kodeordet med BCrypt før det gemmes)
             int accountId = accountDao.save(new UserAccount(0, username, password));
 
+            // 4. gem patienten, knyttet til kontoen via accountId
             PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
             patientDao.save(new Patient(0, accountId, name, LocalDate.parse(dateOfBirth)));
 
+            // 5. ind på dashboard med det samme
             ctx.redirect("/dashboard.html");
         });
-
-        // POST /opretprofil – når brugeren trykker Opret profil
-        //   0. i opretprofil.html: <form action="/opretprofil" method="pos;t">
-        //   1. læs felterne: name, dateOfBirth, username, password
-        //   2. tjek: findes brugernavnet allerede? (UserAccountDAO.findByUsername != null) -> tilbage til opretprofil.html
-        //   3. byg et UserAccount(0, username, password) og kald UserAccountDAO.save -> giver accountId
-        //      (TODO senere: hash kodeordet med BCrypt før det gemmes)
-        //   4. byg en Patient(0, accountId, name, LocalDate.parse(dateOfBirth)) og kald PatientDAO.save
-        //   5. send til login.html
-
-
     }
 }
