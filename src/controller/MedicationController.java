@@ -1,5 +1,6 @@
 package controller;
 
+import enums.ServiceResult;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.MedicationService;
@@ -10,7 +11,7 @@ public class MedicationController {
         app.post("/medicin", MedicationController :: logDose);
     }
 
-    public static void logDose(Context ctx){
+    private static void logDose(Context ctx){
     String medication = ctx.formParam("medication");
     String dose = ctx.formParam("dose");
     String unit = ctx.formParam("unit");
@@ -19,12 +20,14 @@ public class MedicationController {
     boolean taken = ctx.formParam("taken") != null; // afkrydset checkbox sender 1, ellers null
     int patientId = 1;
 
-        MedicationService.LogResult result = new MedicationService().logDose(patientId, medication, dose, unit, date, time, taken);
+        ServiceResult result = new MedicationService().logDose(patientId, medication, dose, unit, date, time, taken);
 
         switch (result){
-            case SAVED -> ctx.redirect("/medicin.html");
+            case OK -> ctx.redirect("/medicin.html");
             case INVALID_INPUT -> ctx.redirect("/medicin.html?fejl=felter");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/medicin.html?fejl=ingen-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/medicin.html?fejl=ingen-runde");
+            default -> ctx.redirect("/medicin.html?fejl=ukendt");
         }
     }
 

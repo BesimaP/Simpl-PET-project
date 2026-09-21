@@ -2,7 +2,6 @@ package enums;
 
 // Udfaldet af en handling i en service. Controlleren bruger det til at vælge, hvor brugeren sendes hen.
 public enum ServiceResult {
-    SAVED,              // gemmes
     OK,                 // det lykkedes
     INVALID_INPUT,      // manglende eller ugyldige felter
     ALREADY_EXISTS,     // noget findes allerede (fx brugernavnet er optaget)
