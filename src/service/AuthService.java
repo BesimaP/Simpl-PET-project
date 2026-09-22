@@ -24,8 +24,9 @@ public class AuthService {
         return user;       // login ok
     }
 
-    // Opret profil: konto + patient. OK = oprettet · INVALID_INPUT = tomt felt/ugyldig dato · ALREADY_EXISTS = brugernavnet er optaget
-    public ServiceResult createProfile(String name, String dateOfBirth, String username, String password) {
+    // Opret profil: konto + patient (+ forløb, hvis brugeren allerede er i gang med et).
+    // OK = oprettet · INVALID_INPUT = tomt felt/ugyldig dato · ALREADY_EXISTS = brugernavnet er optaget
+    public ServiceResult createProfile(String name, String dateOfBirth, String username, String password, String hasJourney, String journeyStart) {
 
         // 0. regel: ingen tomme felter
         if (isBlank(name) || isBlank(dateOfBirth) || isBlank(username) || isBlank(password)) {
@@ -40,8 +41,21 @@ public class AuthService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        UserAccountDAO accountDao = new UserAccountDAO(DatabaseConnection.getConnection());
+        // 0c. regel: har brugeren svaret "ja" til forløb, skal startdatoen være en rigtig dato
+        //     (tjekkes HER, før vi gemmer noget – ellers ville kontoen være oprettet, men forløbet fejle)
+        boolean wantsJourney = "yes".equals(hasJourney);
+        if (wantsJourney) {
+            if (isBlank(journeyStart)) {
+                return ServiceResult.INVALID_INPUT;
+            }
+            try {
+                LocalDate.parse(journeyStart);
+            } catch (DateTimeParseException e) {
+                return ServiceResult.INVALID_INPUT;
+            }
+        }
 
+        UserAccountDAO accountDao = new UserAccountDAO(DatabaseConnection.getConnection());
 
         // 1. regel: brugernavn skal være unikt
         if (accountDao.findByUsername(username) != null) {
@@ -54,7 +68,12 @@ public class AuthService {
 
         // 3. gem patienten, knyttet til kontoen via accountId
         PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
-        patientDao.save(new Patient(0, accountId, name, dob));
+        int patientId = patientDao.save(new Patient(0, accountId, name, dob)); // id'et skal bruges til forløbet
+
+        // 4. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
+        if (wantsJourney) {
+            new DashboardService().createJourney(patientId, journeyStart);
+        }
 
         return ServiceResult.OK;
     }

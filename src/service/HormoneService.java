@@ -10,6 +10,8 @@ import enums.HormoneType;
 import enums.ServiceResult;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 
 // Forretningslogik for hormonmålinger (US9). Kender IKKE Javalin – controlleren kalder saveLog med felterne.
 // Svarer med ServiceResult: OK = ok, ellers hvad der gik galt (controlleren vælger side ud fra det).
@@ -35,16 +37,27 @@ public class HormoneService {
             return ServiceResult.NO_ACTIVE_ROUND;
         }
 
-        // 3. byg kortet af felterne. Tekst fra formularen oversættes til de typer, HormoneLog vil have:
+        // 3. tekst fra formularen -> de typer, HormoneLog vil have:
         //    "2026-09-21" -> LocalDateTime (kl. 00:00), "FSH" -> enum, "450" -> 450.0
-        HormoneLogDAO hormoneLogDao = new HormoneLogDAO(DatabaseConnection.getConnection());
-        HormoneLog log = new HormoneLog(0, round.getId(), LocalDate.parse(date).atStartOfDay(),
-                HormoneType.valueOf(hormone), Double.parseDouble(value), unit);
+        //    try/catch: en ugyldig dato, et ukendt hormon eller "abc" som tal giver INVALID_INPUT i stedet for et crash
+        LocalDateTime dateTime;
+        HormoneType hormoneType;
+        double numericValue;
+        try {
+            dateTime = LocalDate.parse(date).atStartOfDay();
+            hormoneType = HormoneType.valueOf(hormone);
+            numericValue = Double.parseDouble(value);
+        } catch (DateTimeParseException | IllegalArgumentException e) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
-        // 4. læg kortet i skuffen hormone_log
+        // 4. byg kortet og læg det i skuffen hormone_log
+        HormoneLogDAO hormoneLogDao = new HormoneLogDAO(DatabaseConnection.getConnection());
+        HormoneLog log = new HormoneLog(0, round.getId(), dateTime, hormoneType, numericValue, unit);
+
         hormoneLogDao.save(log);
 
-        return ServiceResult.OK; // ok
+        return ServiceResult.OK;
     }
 
     // lille hjælper: null eller kun mellemrum tæller som tomt

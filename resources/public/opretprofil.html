@@ -54,6 +54,17 @@
                 <input type="password" id="password" name="password"
                        placeholder="Mindst 8 tegn" autocomplete="new-password" minlength="8" required>
 
+                <!-- radio = kun ét valg ad gangen; begge har samme name, value er det der sendes -->
+                <fieldset>
+                    <legend>Er du allerede i gang med et forløb?</legend>
+                    <label><input type="radio" name="hasJourney" value="no" checked> Nej, ikke endnu</label>
+                    <label><input type="radio" name="hasJourney" value="yes"> Ja</label>
+                </fieldset>
+
+                <label for="journeyStart">Forløbet startede</label>
+                <!-- ikke required: kun nødvendig ved "Ja" – det tjekker AuthService -->
+                <input type="date" id="journeyStart" name="journeyStart">
+
                 <!-- knappen sender formularen -->
                 <button type="submit">Opret profil</button>
             </form>

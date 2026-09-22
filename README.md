@@ -32,13 +32,14 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 
 - Frontend: alle 15 sider er bygget i HTML/CSS med lidt JavaScript (dato, enheder, tællere, fejlbeskeder)
 - Database: `schema.sql` med 13 tabeller, alle entity- og DAO-klasser er skrevet
-- Backend: Javalin kører og serverer siderne; login, opret profil, forløb/runde, hormoner, dagbog, diagnoser, medicin og aftaler gemmer i databasen via controller → service → DAO
-- Næste: min profil og dokumenter, session (hvem er logget ind), templates til at vise data, skift fra SQLite til PostgreSQL
+- Backend: Javalin kører og serverer siderne; login, opret profil (evt. med forløb), forløb/runde, hormoner, dagbog, diagnoser, medicin, aftaler og min profil gemmer i databasen via controller → service → DAO
+- Næste: dokumenter (upload), session (hvem er logget ind), Thymeleaf-templates til at vise data, skift fra SQLite til PostgreSQL
 
 ## Tech stack
 
 - **Java 21**
-- **Javalin 6** — webserver/backend (ruter, formularer, statiske filer)
+- **Javalin 7** — webserver/backend (ruter, formularer, statiske filer)
+- **Thymeleaf** — templates, der viser data fra databasen (`resources/templates`)
 - **HTML / CSS / JavaScript** — frontend i `resources/public`
 - **SQLite** (via `sqlite-jdbc`) — lokal database *(skiftes til PostgreSQL senere på semestret)*
 - **Maven** — byggeværktøj og afhængighedsstyring

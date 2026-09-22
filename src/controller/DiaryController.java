@@ -1,7 +1,7 @@
 package controller;
 
 import enums.ServiceResult;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import service.DiaryService;
 
@@ -9,10 +9,10 @@ import service.DiaryService;
 // Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
 public class DiaryController {
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: DiaryController.registerRoutes(app)
-    public static void registerRoutes(Javalin app) {
+    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: DiaryController.setRoutes(config)
+    public static void setRoutes(JavalinConfig config) {
         // "når der kommer POST til /dagbog (formularen på dagbog.html), så kald saveEntry med den ctx, Javalin rækker os"
-        app.post("/dagbog", ctx -> saveEntry(ctx));
+        config.routes.post("/dagbog", ctx -> saveEntry(ctx));
     }
 
     // POST /dagbog – når brugeren trykker "Gem note". ctx = kuverten fra Javalin

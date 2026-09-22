@@ -13,13 +13,6 @@ endRoundButton.addEventListener("click", function () {
     endRoundDialog.showModal();
 });
 
-// NÅR dialogen lukkes (uanset hvilken knap man trykkede):
-endRoundDialog.addEventListener("close", function () {
-
-    // HVIS det var "Afslut runde"-knappen (value="confirm"), der lukkede den:
-    if (endRoundDialog.returnValue === "confirm") {
-
-        // TODO: her skal backend afslutte runden (US10a). Indtil da: gå til rundehistorik
-        window.location.href = "rundehistorik.html";
-    }
-});
+// Der er IKKE en "close"-handler mere: "Afslut runde"-knappen i dialogen har formmethod="post" formaction="/afslut-runde",
+// så browseren sender selv formularen til serveren, og serveren sender videre til rundehistorik.
+// Et window.location.href her ville afbryde den afsendelse.

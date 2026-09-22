@@ -8,6 +8,7 @@ public class Diagnosis {
     private String name;
     private String description;  // må være null
 
+    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
     public Diagnosis(int id, int patientId, String name, String description) {
         this.id = id;
         this.patientId = patientId;
@@ -15,6 +16,7 @@ public class Diagnosis {
         this.description = description;
     }
 
+    // gettere: læs felterne. setId bruges af DAO'en efter save; resten kan ikke ændres udefra
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getPatientId() { return patientId; }

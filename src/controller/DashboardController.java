@@ -2,7 +2,7 @@ package controller;
 
 import enums.Result;
 import enums.ServiceResult;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import service.DashboardService;
 import service.RoundService;
@@ -11,10 +11,10 @@ import service.RoundService;
 // Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen DAO'er her.
 public class DashboardController {
 
-    public static void registerRoutes(Javalin app) {
-        app.post("/opret-forloeb", ctx -> createJourney(ctx)); // "Start dit forløb" på dashboardtom.html (US1)
-        app.post("/start-runde", ctx -> startRound(ctx));      // "Start runde" på start-runde.html (US10a)
-        app.post("/afslut-runde", ctx -> endRound(ctx));       // bekræft i dialogen på dashboard.html (US10b)
+    public static void setRoutes(JavalinConfig config) {
+        config.routes.post("/opret-forloeb", ctx -> createJourney(ctx)); // "Start dit forløb" på dashboardtom.html (US1)
+        config.routes.post("/start-runde", ctx -> startRound(ctx));      // "Start runde" på start-runde.html (US10a)
+        config.routes.post("/afslut-runde", ctx -> endRound(ctx));       // bekræft i dialogen på dashboard.html (US10b)
         // GET /dashboard og GET /rundehistorik (vis data fra databasen) kommer med templates
     }
 

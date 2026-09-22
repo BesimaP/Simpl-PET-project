@@ -1,17 +1,17 @@
 package controller;
 
 import enums.ServiceResult;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import service.DiagnosisService;
 
 // Koordinatoren for diagnoser.html (US7). Læser formularen, kalder DiagnosisService og sender brugeren videre.
 public class DiagnosisController {
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: DiagnosisController.registerRoutes(app)
-    public static void registerRoutes(Javalin app) {
+    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: DiagnosisController.setRoutes(config)
+    public static void setRoutes(JavalinConfig config) {
         // "når der kommer POST til /diagnoser (formularen på diagnoser.html), så kald addDiagnosis med den ctx, Javalin rækker os"
-        app.post("/diagnoser", ctx -> addDiagnosis(ctx));
+        config.routes.post("/diagnoser", ctx -> addDiagnosis(ctx));
     }
 
     // POST /diagnoser – når brugeren trykker "Tilføj diagnose". ctx = kuverten fra Javalin

@@ -41,13 +41,6 @@ deleteLink.addEventListener("click", function (event) {
     deleteDialog.showModal();
 });
 
-// NÅR dialogen lukkes (uanset hvilken knap man trykkede):
-deleteDialog.addEventListener("close", function () {
-
-    // HVIS det var "Slet konto"-knappen (value="confirm"), der lukkede den:
-    if (deleteDialog.returnValue === "confirm") {
-
-        // TODO: her skal backend slette kontoen. Indtil da: gå til login
-        window.location.href = "login.html";
-    }
-});
+// Der er IKKE en "close"-handler mere: "Slet konto"-knappen i dialogen har formaction="/slet-konto",
+// så browseren sender selv formularen til serveren, og serveren sender videre til login.
+// Et window.location.href her ville afbryde den afsendelse.

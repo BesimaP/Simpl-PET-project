@@ -1,7 +1,7 @@
 package controller;
 
 import enums.ServiceResult;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import service.HormoneService;
 
@@ -9,10 +9,10 @@ import service.HormoneService;
 // Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
 public class HormoneController {
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: HormoneController.registerRoutes(app)
-    public static void registerRoutes(Javalin app) {
+    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: HormoneController.setRoutes(config)
+    public static void setRoutes(JavalinConfig config) {
         // "når der kommer POST til /hormoner (formularen på hormoner.html), så kald saveLog med den ctx, Javalin rækker os"
-        app.post("/hormoner", ctx -> saveLog(ctx));
+        config.routes.post("/hormoner", ctx -> saveLog(ctx));
     }
 
     // POST /hormoner – når brugeren trykker "Gem måling". ctx = kuverten fra Javalin: felterne ligger i den, og svaret sendes gennem den
@@ -25,12 +25,12 @@ public class HormoneController {
         int patientId = 1; // TODO: fra session, når login husker hvem der er logget ind
 
         // 2. bed service gemme målingen – den finder selv forløb og runde. Svar: OK = ok, ellers hvad der gik galt
-        ServiceResult result = new HormoneService().saveLog(patientId,hormone,value,unit,date);
+        ServiceResult result = new HormoneService().saveLog(patientId, hormone, value, unit, date);
 
         // 3. vælg side ud fra svaret – ét case per udfald.
         switch (result) {
             case OK -> ctx.redirect("/hormoner.html");
-            case INVALID_INPUT -> ctx.redirect("/hormoner.html?fejl=felter"); // et felt var tomt
+            case INVALID_INPUT -> ctx.redirect("/hormoner.html?fejl=felter"); // et felt var tomt eller ugyldigt
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/hormoner.html?fejl=intet-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/hormoner.html?fejl=ingen-runde");
             default -> ctx.redirect("/hormoner.html?fejl=ukendt");

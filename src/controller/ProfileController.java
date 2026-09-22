@@ -1,7 +1,7 @@
 package controller;
 
 import enums.ServiceResult;
-import io.javalin.Javalin;
+import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import service.ProfileService;
 
@@ -9,10 +9,10 @@ import service.ProfileService;
 // Ruterne er én linje hver. Metoderne læser formularen, kalder ProfileService og sender brugeren videre – ingen DAO'er her.
 public class ProfileController {
 
-    public static void registerRoutes(Javalin app) {
-        app.post("/min-profil", ctx -> updateName(ctx));        // formular "Ret navn" på min-profil.html
-        app.post("/skift-kodeord", ctx -> changePassword(ctx)); // formular "Skift kodeord" på min-profil.html
-        app.post("/slet-konto", ctx -> deleteAccount(ctx));     // bekræft-knappen i slet-dialogen
+    public static void setRoutes(JavalinConfig config) {
+        config.routes.post("/min-profil", ctx -> updateName(ctx));        // formular "Ret navn" på min-profil.html
+        config.routes.post("/skift-kodeord", ctx -> changePassword(ctx)); // formular "Skift kodeord" på min-profil.html
+        config.routes.post("/slet-konto", ctx -> deleteAccount(ctx));     // bekræft-knappen i slet-dialogen
     }
 
     // POST /min-profil

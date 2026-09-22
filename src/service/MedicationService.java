@@ -13,10 +13,11 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 
 // Forretningslogik for medicin (US8). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
+// Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldigt tal, dato eller ukendt medicin · NO_ACTIVE_JOURNEY · NO_ACTIVE_ROUND
 public class MedicationService {
 
-    // Log en dosis i patientens aktive runde
-    public ServiceResult logDose(int patientId, String medicationName, String dose, String unit, String date, String time, boolean taken){
+    // Logger én dosis i patientens aktive runde (en dosis SKAL ligge på en runde – round_id i databasen)
+    public ServiceResult logDose(int patientId, String medicationName, String dose, String unit, String date, String time, boolean taken) {
 
         // 1. regel: alle felter skal være udfyldt
         if (isBlank(medicationName) || isBlank(dose) || isBlank(unit) || isBlank(date) || isBlank(time)) {
@@ -26,31 +27,31 @@ public class MedicationService {
         // 2. tekst fra formularen -> rigtige typer. Ugyldigt input giver INVALID_INPUT i stedet for et crash
         double doseValue;
         LocalDateTime scheduled;
-        try{
-            doseValue = Double.parseDouble(dose);
-            scheduled = LocalDateTime.of(LocalDate.parse(date), LocalTime.parse(time));
-        }catch(NumberFormatException | DateTimeParseException e){
+        try {
+            doseValue = Double.parseDouble(dose);                                       // "150" -> 150.0
+            scheduled = LocalDateTime.of(LocalDate.parse(date), LocalTime.parse(time)); // dato + klokkeslæt -> ét tidspunkt
+        } catch (NumberFormatException | DateTimeParseException e) {
             return ServiceResult.INVALID_INPUT;
         }
 
         // 3. regel: dosis skal være større end 0
-        if(doseValue<=0){
+        if (doseValue <= 0) {
             return ServiceResult.INVALID_INPUT;
         }
 
         // 4. find lægemidlet ud fra navnet (dropdownens value)
         Medication medication = new MedicationDAO(DatabaseConnection.getConnection()).findByName(medicationName);
-        if(medication == null){
+        if (medication == null) {
             return ServiceResult.INVALID_INPUT;
         }
 
         // 5. find den aktive runde – en dosis hører til en runde
         FertilityJourney journey = new FertilityJourneyDAO(DatabaseConnection.getConnection()).findActiveByPatient(patientId);
-        if(journey == null){
+        if (journey == null) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         }
         Round round = new RoundDAO(DatabaseConnection.getConnection()).findActiveByJourney(journey.getId());
-        if(round == null){
+        if (round == null) {
             return ServiceResult.NO_ACTIVE_ROUND;
         }
 
@@ -60,7 +61,9 @@ public class MedicationService {
 
         return ServiceResult.OK;
     }
-    private boolean isBlank(String s){
+
+    // lille hjælper: null eller kun mellemrum tæller som tomt
+    private boolean isBlank(String s) {
         return s == null || s.isBlank();
     }
 }
