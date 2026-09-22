@@ -29,7 +29,7 @@ public class AuthService {
 
         // 1. regel: brugernavn skal være unikt
         if (accountDao.findByUsername(username) != null) {
-            return ServiceResult.INVALID_INPUT; // brugernavnet er optaget
+            return ServiceResult.ALREADY_EXISTS; // brugernavnet er optaget
         }
 
         // 2. gem kontoen – id'et fra databasen skal bruges til patienten lige efter
