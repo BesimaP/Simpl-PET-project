@@ -5,6 +5,7 @@ import dao.PatientDAO;
 import dao.UserAccountDAO;
 import entities.Patient;
 import entities.UserAccount;
+import enums.ServiceResult;
 
 import java.time.LocalDate;
 
@@ -23,12 +24,12 @@ public class AuthService {
     }
 
     // Opret profil: konto + patient. true = oprettet, false = brugernavnet er optaget
-    public boolean createProfile(String name, String dateOfBirth, String username, String password) {
+    public ServiceResult createProfile(String name, String dateOfBirth, String username, String password) {
         UserAccountDAO accountDao = new UserAccountDAO(DatabaseConnection.getConnection());
 
         // 1. regel: brugernavn skal være unikt
         if (accountDao.findByUsername(username) != null) {
-            return false; // brugernavnet er optaget
+            return ServiceResult.INVALID_INPUT; // brugernavnet er optaget
         }
 
         // 2. gem kontoen – id'et fra databasen skal bruges til patienten lige efter
@@ -39,6 +40,6 @@ public class AuthService {
         PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
         patientDao.save(new Patient(0, accountId, name, LocalDate.parse(dateOfBirth)));
 
-        return true;
+        return ServiceResult.OK;
     }
 }
