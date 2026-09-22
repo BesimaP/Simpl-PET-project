@@ -24,17 +24,14 @@ public class DashboardController {
         String startDate = ctx.formParam("startDate");
         int patientId = 1; // TODO: fra session, når login husker hvem der er logget ind
 
-        // tom dato? (feltet har required, men serveren stoler aldrig blindt på browseren) -> tilbage til siden
-        if (startDate == null || startDate.isBlank()) {
-            ctx.redirect("/dashboardtom.html?fejl=dato");
-            return;
-        }
-
         // bed service oprette forløbet – den kender reglen "kun ét aktivt"
-        new DashboardService().createJourney(patientId, startDate);
+       ServiceResult result = new DashboardService().createJourney(patientId, startDate);
 
-        // ind på dashboard – uanset om der blev oprettet et nyt, findes der nu et aktivt forløb
-        ctx.redirect("/dashboard.html");
+        switch (result) {
+            case OK, ALREADY_EXISTS -> ctx.redirect("/dashboard.html");     // der findes nu et aktivt forløb
+            case INVALID_INPUT -> ctx.redirect("/dashboardtom.html?fejl=dato");
+            default -> ctx.redirect("/dashboardtom.html?fejl=ukendt");
+        }
     }
 
     // POST /start-runde

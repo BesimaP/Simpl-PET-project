@@ -12,12 +12,17 @@ import enums.TreatmentType;
 import java.time.LocalDate;
 
 // Forretningslogik for runder (Round, US10a/10b). Kender IKKE Javalin.
-// Metoderne svarer med en fejlkode (String) eller null = det gik godt. Controlleren vælger side ud fra svaret.
+// Metoderne svarer med ServiceResult. Controlleren vælger side ud fra svaret.
 public class RoundService {
 
     // Starter en ny runde i patientens aktive forløb.
-    // Svar: null = ok · "intet-forloeb" = patienten har intet aktivt forløb · "runde-i-gang" = der er allerede en runde
+    // Svar: OK · INVALID_INPUT = tomme felter · NO_ACTIVE_JOURNEY = intet aktivt forløb · ROUND_IN_PROGRESS = der er allerede en runde
     public ServiceResult startRound(int patientId, String type, String startDate) {
+        // 0. regel: begge felter skal være udfyldt
+        if (type == null || type.isBlank() || startDate == null || startDate.isBlank()) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // arkivaren til round-skuffen
         RoundDAO roundDao = new RoundDAO(DatabaseConnection.getConnection());
 
@@ -45,7 +50,7 @@ public class RoundService {
 
 
     // Afslutter den runde, der er i gang. result må være null (kan udfyldes senere).
-    // Svar: null = ok · "ingen-runde" = der var ikke nogen runde at afslutte
+    // Svar: OK · NO_ACTIVE_ROUND = der var ikke nogen runde at afslutte
     public ServiceResult endRound(int patientId, Result result) {
         RoundDAO roundDao = new RoundDAO(DatabaseConnection.getConnection());
 
