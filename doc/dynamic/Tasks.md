@@ -9,13 +9,14 @@
 - [ ]  Test at oprettelsen virker og bliver synlig
 
 ## User story 2 – Tidslinje (Round)
-- [ ]  Lav layout til tidslinjevisningen for en runde
+- [x]  Lav layout til tidslinjevisningen for en runde *(HTML/CSS lavet – tidslinje.html)*
+- [ ]  Opret et Event, når der gemmes noget på runden (hormonlog, dagbogsnote, medicin, aftale) – ellers er tidslinjen tom *(EventDAO.save findes, men ingen service kalder den endnu)*
 - [ ]  Hent og sortér hændelser (Event) efter dato fra databasen
 - [ ]  Sørg for at tidslinjen opdateres automatisk, når en ny hændelse tilføjes
 - [ ]  Test sorteringen og live-opdateringen
 
 ## User story 3 – Aftaler (Journey)
-- [ ]  Lav layout til aftaleoversigten
+- [x]  Lav layout til aftaleoversigten *(HTML/CSS lavet – aftaler.html, kommende/tidligere)*
 - [ ]  Hent og sortér aftaler efter dato (nærmeste først)
 - [ ]  Vis dato, type og lokation for hver aftale
 - [x]  Lav layout til at oprette en aftale (dato, type som dropdown, lokation) og gem den på det aktive forløb *(POST /aftaler → AppointmentService)*
@@ -59,9 +60,9 @@
 
 ## User story 8 – Medicin
 - [x]  Opret Medication-stamdata (navn, beskrivelse) som kan genbruges på tværs af registreringer *(INSERT i schema.sql)*
-- [ ]  Lav layout til at registrere medicinindtag (vælg medicin, dosis, tidspunkt) på en aktiv runde
+- [x]  Lav layout til at registrere medicinindtag (vælg medicin, dosis, tidspunkt) på en aktiv runde *(HTML/CSS lavet – medicin.html)*
 - [x]  Gem registreringen i databasen, med reference til den valgte Medication *(POST /medicin → MedicationService.logDose)*
-- [ ]  Lav layout til medicinlisten, der viser tidligere registreringer
+- [x]  Lav layout til medicinlisten, der viser tidligere registreringer *(HTML/CSS lavet – medicin.html, i dag/tidligere)*
 - [ ]  Implementér "markér som taget" på en planlagt dosis (taken)
 - [ ]  Test at data gemmes og vises korrekt, inkl. korrekt reference til Medication og taget-status
 
@@ -95,7 +96,7 @@
 
 ## User story 12 – Notifikationer
 - [ ]  Implementér logik der genererer en notifikation for dagens planlagte medicindoser, når appen åbnes (MEDICATION_REMINDER)
-- [ ]  Lav layout til notifikationslisten (titel, besked, isRead-status)
+- [x]  Lav layout til notifikationslisten (titel, besked, isRead-status) *(HTML/CSS lavet – notifikationer.html)*
 - [ ]  Implementér markering af en notifikation som læst
 - [ ]  Test at notifikationer genereres korrekt og kan markeres som læst
 
