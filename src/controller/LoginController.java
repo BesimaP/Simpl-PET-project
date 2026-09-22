@@ -1,6 +1,7 @@
 package controller;
 
 import entities.UserAccount;
+import enums.ServiceResult;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.AuthService;
@@ -37,12 +38,13 @@ public class LoginController {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 
-        boolean ok = new AuthService().createProfile(name, dateOfBirth, username, password);
+        ServiceResult result = new AuthService().createProfile(name, dateOfBirth, username, password);
 
-        if (!ok) {
-            ctx.redirect("/opretprofil.html?fejl=brugernavn"); // brugernavnet er optaget
-        } else {
-            ctx.redirect("/dashboard.html");
+        switch (result) {
+            case OK -> ctx.redirect("/dashboard.html");
+            case ALREADY_EXISTS -> ctx.redirect("/opretprofil.html?fejl=brugernavn");
+            case INVALID_INPUT -> ctx.redirect("/opretprofil.html?fejl=felter");
+            default -> ctx.redirect("/opretprofil.html?fejl=ukendt");
         }
     }
 }
