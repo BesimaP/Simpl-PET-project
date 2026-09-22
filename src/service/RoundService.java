@@ -43,6 +43,7 @@ public class RoundService {
         return ServiceResult.OK; // ok
     }
 
+
     // Afslutter den runde, der er i gang. result må være null (kan udfyldes senere).
     // Svar: null = ok · "ingen-runde" = der var ikke nogen runde at afslutte
     public ServiceResult endRound(int patientId, Result result) {
