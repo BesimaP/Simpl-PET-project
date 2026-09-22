@@ -98,3 +98,10 @@
 - [ ]  Lav layout til notifikationslisten (titel, besked, isRead-status)
 - [ ]  Implementér markering af en notifikation som læst
 - [ ]  Test at notifikationer genereres korrekt og kan markeres som læst
+
+## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
+- [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)
+- [ ]  `AuthService.createProfile`: tilføj blank-tjek på name/username/password → INVALID_INPUT (som i DiagnosisService)
+- [ ]  `LocalDate.parse(dateOfBirth)` kaster exception ved tom/ugyldig dato → skal give INVALID_INPUT i stedet for 500-fejl (samme gælder forløbs-startdato i opret profil)
+- [ ]  Kodeord gemmes i klartekst → BCrypt-hash inden aflevering (AuthService.login/createProfile, ProfileService.changePassword)
+- [ ]  `enums/Result.java` ser ud til at være en rest ved siden af `ServiceResult` → slet eller forklar
