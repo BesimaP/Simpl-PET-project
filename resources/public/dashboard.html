@@ -195,6 +195,13 @@
         <p class="muted">Runden markeres som afsluttet, og du kan starte en ny.
             Dine logs og noter gemmes.</p>
         <p class="muted">Du kan fortryde i Rundehistorik.</p>
+        <!-- resultat er valgfrit: value = det, der sendes til /afslut-runde (matcher enum Result) – tom = ikke afgjort endnu -->
+        <label for="result">Resultat</label>
+        <select id="result" name="result">
+            <option value="">Ikke afgjort endnu</option>
+            <option value="POSITIVE">Positiv</option>
+            <option value="NEGATIVE">Negativ</option>
+        </select>
         <div class="confirm__actions">
             <button type="submit" value="cancel" class="btn btn--outline">Annullér</button>
             <!-- formmethod/formaction: DENNE knap sender til serveren (/afslut-runde) – Annullér lukker bare dialogen -->

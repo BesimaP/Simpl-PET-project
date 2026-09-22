@@ -8,6 +8,7 @@ import entities.UserAccount;
 import enums.ServiceResult;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 // Forretningslogik for login og opret profil. Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 public class AuthService {
@@ -23,9 +24,24 @@ public class AuthService {
         return user;       // login ok
     }
 
-    // Opret profil: konto + patient. true = oprettet, false = brugernavnet er optaget
+    // Opret profil: konto + patient. OK = oprettet · INVALID_INPUT = tomt felt/ugyldig dato · ALREADY_EXISTS = brugernavnet er optaget
     public ServiceResult createProfile(String name, String dateOfBirth, String username, String password) {
+
+        // 0. regel: ingen tomme felter
+        if (isBlank(name) || isBlank(dateOfBirth) || isBlank(username) || isBlank(password)) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
+        // 0b. regel: fødselsdatoen skal være en rigtig dato (ellers crasher LocalDate.parse længere nede)
+        LocalDate dob;
+        try {
+            dob = LocalDate.parse(dateOfBirth);
+        } catch (DateTimeParseException e) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         UserAccountDAO accountDao = new UserAccountDAO(DatabaseConnection.getConnection());
+
 
         // 1. regel: brugernavn skal være unikt
         if (accountDao.findByUsername(username) != null) {
@@ -38,8 +54,13 @@ public class AuthService {
 
         // 3. gem patienten, knyttet til kontoen via accountId
         PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
-        patientDao.save(new Patient(0, accountId, name, LocalDate.parse(dateOfBirth)));
+        patientDao.save(new Patient(0, accountId, name, dob));
 
         return ServiceResult.OK;
+    }
+
+    // hjælper: null eller kun mellemrum tæller som tomt (samme som i de andre services)
+    private boolean isBlank(String s) {
+        return s == null || s.isBlank();
     }
 }
