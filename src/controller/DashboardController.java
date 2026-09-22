@@ -1,6 +1,7 @@
 package controller;
 
 import enums.Result;
+import enums.ServiceResult;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import service.DashboardService;
@@ -43,17 +44,17 @@ public class DashboardController {
         String startDate = ctx.formParam("startDate");
         int patientId = 1; // TODO: fra session
 
-        // bed service starte runden – svaret er null (ok) eller en fejlkode
-        String fejl = new RoundService().startRound(patientId, type, startDate);
+        ServiceResult result = new RoundService().startRound(patientId, type, startDate);
 
         // vælg side ud fra svaret
-        if ("intet-forloeb".equals(fejl)) {
-            ctx.redirect("/dashboardtom.html");              // intet forløb -> opret et først
-        } else if (fejl != null) {
-            ctx.redirect("/dashboard.html?fejl=" + fejl);    // fx runde-i-gang
-        } else {
-            ctx.redirect("/dashboard.html");                 // ok
+        switch (result) {
+            case OK -> ctx.redirect("/dashboard.html");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/dashboardtom.html");
+            case ROUND_IN_PROGRESS -> ctx.redirect("/dashboard.html?fejl=runde-i-gang");
+            case INVALID_INPUT -> ctx.redirect("/start-runde.html?fejl=felter");
+            default -> ctx.redirect("/dashboard.html?fejl=ukendt");
         }
+
     }
 
     // POST /afslut-runde
@@ -63,13 +64,12 @@ public class DashboardController {
         Result result = (resultParam == null || resultParam.isBlank()) ? null : Result.valueOf(resultParam);
         int patientId = 1; // TODO: fra session
 
-        // bed service afslutte runden – svaret er null (ok) eller en fejlkode
-        String fejl = new RoundService().endRound(patientId, result);
+        ServiceResult outcome = new RoundService().endRound(patientId, result);
 
-        if (fejl != null) {
-            ctx.redirect("/dashboard.html?fejl=" + fejl);    // fx ingen-runde
-        } else {
-            ctx.redirect("/rundehistorik.html");             // ok -> historikken, hvor runden nu står som afsluttet
+        switch (outcome) {
+            case OK -> ctx.redirect("/rundehistorik.html");
+            case NO_ACTIVE_ROUND -> ctx.redirect("/dashboard.html?fejl=ingen-runde");
+            default -> ctx.redirect("/dashboard.html?fejl=ukendt");
         }
     }
 }

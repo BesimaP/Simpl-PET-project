@@ -6,6 +6,7 @@ import entities.FertilityJourney;
 import entities.Round;
 import enums.Result;
 import enums.RoundStatus;
+import enums.ServiceResult;
 import enums.TreatmentType;
 
 import java.time.LocalDate;
@@ -16,19 +17,19 @@ public class RoundService {
 
     // Starter en ny runde i patientens aktive forløb.
     // Svar: null = ok · "intet-forloeb" = patienten har intet aktivt forløb · "runde-i-gang" = der er allerede en runde
-    public String startRound(int patientId, String type, String startDate) {
+    public ServiceResult startRound(int patientId, String type, String startDate) {
         // arkivaren til round-skuffen
         RoundDAO roundDao = new RoundDAO(DatabaseConnection.getConnection());
 
         // 1. find det aktive forløb – uden forløb er der ingen skuffe at lægge runden i
         FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
         if (journey == null) {
-            return "intet-forloeb";
+            return ServiceResult.NO_ACTIVE_JOURNEY;
         }
 
         // 2. regel: kun én runde i gang ad gangen
         if (roundDao.findActiveByJourney(journey.getId()) != null) {
-            return "runde-i-gang";
+            return ServiceResult.ROUND_IN_PROGRESS;
         }
 
         // 3. rundenummer = antal runder i forløbet + 1 (første runde bliver nr. 1)
@@ -39,24 +40,24 @@ public class RoundService {
                 LocalDate.parse(startDate), null, RoundStatus.IN_PROGRESS, null);
         roundDao.save(round);
 
-        return null; // ok
+        return ServiceResult.OK; // ok
     }
 
     // Afslutter den runde, der er i gang. result må være null (kan udfyldes senere).
     // Svar: null = ok · "ingen-runde" = der var ikke nogen runde at afslutte
-    public String endRound(int patientId, Result result) {
+    public ServiceResult endRound(int patientId, Result result) {
         RoundDAO roundDao = new RoundDAO(DatabaseConnection.getConnection());
 
         // 1. find forløbet og den runde, der er i gang
         FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
         Round round = (journey == null) ? null : roundDao.findActiveByJourney(journey.getId());
         if (round == null) {
-            return "ingen-runde";
+            return ServiceResult.NO_ACTIVE_ROUND;
         }
 
         // 2. afslut den: slutdato = i dag, status COMPLETED (UPDATE i databasen)
         roundDao.endRound(round.getId(), LocalDate.now(), result);
 
-        return null; // ok
+        return ServiceResult.OK; // ok
     }
 }
