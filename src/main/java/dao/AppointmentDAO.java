@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import enums.AppointmentType;
 import entities.Appointment;
 
@@ -37,7 +39,7 @@ public class AppointmentDAO {
             return appointment.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save appointment", e);
+            throw new DatabaseException("Could not save appointment", e);
         }
     }
 
@@ -56,7 +58,7 @@ public class AppointmentDAO {
             return appointments;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find appointments for journey " + fertilityJourneyId, e);
+            throw new DatabaseException("Could not find appointments for journey " + fertilityJourneyId, e);
         }
     }
 
@@ -68,7 +70,7 @@ public class AppointmentDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete appointment " + id, e);
+            throw new DatabaseException("Could not delete appointment " + id, e);
         }
     }
 

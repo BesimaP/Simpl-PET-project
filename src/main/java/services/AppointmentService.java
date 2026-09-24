@@ -2,11 +2,11 @@ package services;
 
 import dao.AppointmentDAO;
 import dao.DatabaseConnection;
-import dao.FertilityJourneyDAO;
 import entities.Appointment;
 import entities.FertilityJourney;
 import enums.AppointmentType;
 import enums.ServiceResult;
+import exceptions.NoActiveJourneyException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,9 +34,12 @@ public class AppointmentService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 3. find det aktive forløb – en aftale hører til forløbet (ikke runden)
-        FertilityJourney journey = new FertilityJourneyDAO(DatabaseConnection.getConnection()).findActiveByPatient(patientId);
-        if (journey == null) {
+        // 3. find det aktive forløb – en aftale hører til forløbet (ikke runden).
+        //    findActiveJourney kaster, hvis der ikke er et – vi fanger og oversætter til et ServiceResult
+        FertilityJourney journey;
+        try {
+            journey = new DashboardService().findActiveJourney(patientId);
+        } catch (NoActiveJourneyException e) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         }
 

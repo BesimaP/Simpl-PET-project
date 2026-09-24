@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import enums.EventType;
 import entities.Event;
 
@@ -37,7 +39,7 @@ public class EventDAO {
             return event.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save event", e);
+            throw new DatabaseException("Could not save event", e);
         }
     }
 
@@ -56,7 +58,7 @@ public class EventDAO {
             return events;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find events for round " + roundId, e);
+            throw new DatabaseException("Could not find events for round " + roundId, e);
         }
     }
 
@@ -68,7 +70,7 @@ public class EventDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete event " + id, e);
+            throw new DatabaseException("Could not delete event " + id, e);
         }
     }
 

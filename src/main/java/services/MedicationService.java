@@ -1,11 +1,12 @@
 package services;
 
 import dao.*;
-import entities.FertilityJourney;
 import entities.Medication;
 import entities.MedicationLog;
 import entities.Round;
 import enums.ServiceResult;
+import exceptions.NoActiveJourneyException;
+import exceptions.NoActiveRoundException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,13 +46,14 @@ public class MedicationService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 5. find den aktive runde – en dosis hører til en runde
-        FertilityJourney journey = new FertilityJourneyDAO(DatabaseConnection.getConnection()).findActiveByPatient(patientId);
-        if (journey == null) {
+        // 5. find den aktive runde – en dosis hører til en runde.
+        //    findActiveRound kaster, hvis der ikke er forløb eller runde – vi fanger og oversætter til et ServiceResult
+        Round round;
+        try {
+            round = new RoundService().findActiveRound(patientId);
+        } catch (NoActiveJourneyException e) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
-        }
-        Round round = new RoundDAO(DatabaseConnection.getConnection()).findActiveByJourney(journey.getId());
-        if (round == null) {
+        } catch (NoActiveRoundException e) {
             return ServiceResult.NO_ACTIVE_ROUND;
         }
 

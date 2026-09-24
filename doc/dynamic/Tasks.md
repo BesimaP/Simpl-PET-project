@@ -104,7 +104,7 @@
 - [ ]  Thymeleaf: templates + GET-ruter med `ctx.render` på siderne, der viser data (start: diagnoser, dernæst dashboard)
 - [ ]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` sættes ved login; alle `int patientId = 1; // TODO` erstattes
 - [ ]  Requestscope: data til siden via `Map.of(...)` i `ctx.render` (opfyldes sammen med første template)
-- [ ]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` → login-siden med fejlbesked
+- [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i Main; fejlbesked på login-siden kommer med Thymeleaf)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
 - [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)

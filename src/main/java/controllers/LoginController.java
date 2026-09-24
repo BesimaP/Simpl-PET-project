@@ -2,6 +2,7 @@ package controllers;
 
 import entities.UserAccount;
 import enums.ServiceResult;
+import exceptions.UserNotFoundException;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import services.AuthService;
@@ -23,14 +24,12 @@ public class LoginController {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 
-        // 2. spørg service. Svaret er selve kortet (UserAccount) eller null – ikke ServiceResult, fordi vi senere skal bruge user.getId() til sessionen
-        UserAccount user = new AuthService().login(username, password);
-
-        // 3. vælg side
-        if (user == null) {
-            ctx.redirect("/login.html");      // nej -> tilbage til login
-        } else {
+        try{
+            // 2. spørg service. Svaret er selve kortet (UserAccount) eller null – ikke ServiceResult, fordi vi senere skal bruge user.getId() til sessionen
+            UserAccount user = new AuthService().login(username, password);
             ctx.redirect("/dashboard.html");  // ja -> ind på dashboard
+        } catch (UserNotFoundException e) {
+            ctx.redirect("/login.html?fejl=1");
         }
     }
 

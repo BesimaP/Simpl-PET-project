@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import enums.DocumentType;
 import entities.Document;
 
@@ -36,7 +38,7 @@ public class DocumentDAO {
             return document.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save document", e);
+            throw new DatabaseException("Could not save document", e);
         }
     }
 
@@ -55,7 +57,7 @@ public class DocumentDAO {
             return documents;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find documents for round " + roundId, e);
+            throw new DatabaseException("Could not find documents for round " + roundId, e);
         }
     }
 
@@ -67,7 +69,7 @@ public class DocumentDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete document " + id, e);
+            throw new DatabaseException("Could not delete document " + id, e);
         }
     }
 

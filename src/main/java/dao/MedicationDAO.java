@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.Medication;
 
 import java.sql.Connection;
@@ -33,7 +35,7 @@ public class MedicationDAO {
             return medication.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save medication", e);
+            throw new DatabaseException("Could not save medication", e);
         }
     }
 
@@ -51,7 +53,7 @@ public class MedicationDAO {
             return medications;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find medications", e);
+            throw new DatabaseException("Could not find medications", e);
         }
     }
 
@@ -70,7 +72,7 @@ public class MedicationDAO {
             return null;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find medication " + name, e);
+            throw new DatabaseException("Could not find medication " + name, e);
         }
     }
 

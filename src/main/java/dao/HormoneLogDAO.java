@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import enums.HormoneType;
 import entities.HormoneLog;
 
@@ -48,7 +50,7 @@ public class HormoneLogDAO {
 
         } catch (SQLException e) {
             // går SQL'en galt, stopper vi med en fejl, der fortæller hvad der skete
-            throw new RuntimeException("Could not save hormone log", e);
+            throw new DatabaseException("Could not save hormone log", e);
         }
     }
 
@@ -70,7 +72,7 @@ public class HormoneLogDAO {
             return logs;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find hormone logs for round " + roundId, e);
+            throw new DatabaseException("Could not find hormone logs for round " + roundId, e);
         }
     }
 
@@ -82,7 +84,7 @@ public class HormoneLogDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete hormone log " + id, e);
+            throw new DatabaseException("Could not delete hormone log " + id, e);
         }
     }
 

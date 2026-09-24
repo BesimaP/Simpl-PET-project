@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.DiaryEntry;
 
 import java.sql.Connection;
@@ -36,7 +38,7 @@ public class DiaryEntryDAO {
             return entry.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save diary entry", e);
+            throw new DatabaseException("Could not save diary entry", e);
         }
     }
 
@@ -56,7 +58,7 @@ public class DiaryEntryDAO {
             return entries;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find diary entries for journey " + fertilityJourneyId, e);
+            throw new DatabaseException("Could not find diary entries for journey " + fertilityJourneyId, e);
         }
     }
 
@@ -68,7 +70,7 @@ public class DiaryEntryDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete diary entry " + id, e);
+            throw new DatabaseException("Could not delete diary entry " + id, e);
         }
     }
 

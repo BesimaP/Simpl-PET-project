@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.MedicationLog;
 
 import java.sql.Connection;
@@ -38,7 +40,7 @@ public class MedicationLogDAO {
             return log.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save medication log", e);
+            throw new DatabaseException("Could not save medication log", e);
         }
     }
 
@@ -57,7 +59,7 @@ public class MedicationLogDAO {
             return logs;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find medication logs for round " + roundId, e);
+            throw new DatabaseException("Could not find medication logs for round " + roundId, e);
         }
     }
 
@@ -69,7 +71,7 @@ public class MedicationLogDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not mark medication log " + id + " as taken", e);
+            throw new DatabaseException("Could not mark medication log " + id + " as taken", e);
         }
     }
 
@@ -81,7 +83,7 @@ public class MedicationLogDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete medication log " + id, e);
+            throw new DatabaseException("Could not delete medication log " + id, e);
         }
     }
 

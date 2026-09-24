@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import enums.NotificationType;
 import entities.Notification;
 
@@ -39,7 +41,7 @@ public class NotificationDAO {
             return notification.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save notification", e);
+            throw new DatabaseException("Could not save notification", e);
         }
     }
 
@@ -58,7 +60,7 @@ public class NotificationDAO {
             return notifications;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find notifications for patient " + patientId, e);
+            throw new DatabaseException("Could not find notifications for patient " + patientId, e);
         }
     }
 
@@ -72,7 +74,7 @@ public class NotificationDAO {
             rs.next();               // COUNT giver altid præcis én række
             return rs.getInt(1);     // første (og eneste) kolonne = tallet
         } catch (SQLException e) {
-            throw new RuntimeException("Could not count unread notifications for patient " + patientId, e);
+            throw new DatabaseException("Could not count unread notifications for patient " + patientId, e);
         }
     }
 
@@ -84,7 +86,7 @@ public class NotificationDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not mark notification " + id + " as read", e);
+            throw new DatabaseException("Could not mark notification " + id + " as read", e);
         }
     }
 
@@ -96,7 +98,7 @@ public class NotificationDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete notification " + id, e);
+            throw new DatabaseException("Could not delete notification " + id, e);
         }
     }
 

@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.Patient;
 
 import java.sql.Connection;
@@ -33,7 +35,7 @@ public class PatientDAO {
             return patient.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save patient", e);
+            throw new DatabaseException("Could not save patient", e);
         }
     }
 
@@ -59,7 +61,7 @@ public class PatientDAO {
             return null; // ingen række = kontoen har ingen patient
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find patient for account " + userAccountId, e);
+            throw new DatabaseException("Could not find patient for account " + userAccountId, e);
         }
     }
 
@@ -75,7 +77,7 @@ public class PatientDAO {
             statement.executeUpdate();            // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not update name for patient " + id,e);
+            throw new DatabaseException("Could not update name for patient " + id,e);
         }
     }
 }

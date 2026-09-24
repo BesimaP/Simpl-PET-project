@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.FertilityJourney;
 import enums.JourneyStatus;
 
@@ -35,7 +37,7 @@ public class FertilityJourneyDAO {
             return journey.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save fertility journey", e);
+            throw new DatabaseException("Could not save fertility journey", e);
         }
     }
 
@@ -69,7 +71,7 @@ public class FertilityJourneyDAO {
 
         } catch (SQLException e) {
             // e sendes med, så den rigtige databasefejl kan ses bagved vores egen besked
-            throw new RuntimeException("Could not find active journey for patient " + patientId, e);
+            throw new DatabaseException("Could not find active journey for patient " + patientId, e);
         }
     }
 

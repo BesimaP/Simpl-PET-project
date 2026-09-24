@@ -2,6 +2,7 @@ import configuration.ThymeleafConfig;
 import controllers.*;
 import dao.DatabaseInitializer;
 import io.javalin.Javalin;
+import exceptions.DatabaseException;
 import io.javalin.rendering.template.JavalinThymeleaf;
 
 // Programmets startpunkt. Gør tre ting: klargør databasen, tænder Javalin (døren på port 7070) og melder alle controllere til.
@@ -32,6 +33,13 @@ public class Main {
 
             // forsiden: / sender videre til login-siden
             config.routes.get("/", ctx -> ctx.redirect("/login.html"));
+
+            // ÉN samlet håndtering af databasefejl: kaster en DAO en DatabaseException, ender den her i stedet for som en 500-side.
+            // (senere: ctx.render("error", Map.of("message", e.getMessage())) når fejlsiden er en template)
+            config.routes.exception(DatabaseException.class, (e, ctx) -> {
+                ctx.status(500);
+                ctx.result("Databasefejl: " + e.getMessage());
+            });
         }).start(7070);
     }
 }

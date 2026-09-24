@@ -2,12 +2,12 @@ package services;
 
 import dao.DatabaseConnection;
 import dao.HormoneLogDAO;
-import dao.RoundDAO;
-import entities.FertilityJourney;
 import entities.HormoneLog;
 import entities.Round;
 import enums.HormoneType;
 import enums.ServiceResult;
+import exceptions.NoActiveJourneyException;
+import exceptions.NoActiveRoundException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -24,16 +24,14 @@ public class HormoneService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 1. find patientens aktive forløb – uden forløb kan der ikke være en runde
-        FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
-        if (journey == null) {
+        // 1-2. find den runde, der er i gang – det er den, målingen skal hænge på.
+        //      findActiveRound kaster, hvis der ikke er forløb eller runde – vi fanger og oversætter til et ServiceResult
+        Round round;
+        try {
+            round = new RoundService().findActiveRound(patientId);
+        } catch (NoActiveJourneyException e) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
-        }
-
-        // 2. find den runde, der er i gang i forløbet – det er den, målingen skal hænge på
-        RoundDAO roundDao = new RoundDAO(DatabaseConnection.getConnection());
-        Round round = roundDao.findActiveByJourney(journey.getId());
-        if (round == null) {
+        } catch (NoActiveRoundException e) {
             return ServiceResult.NO_ACTIVE_ROUND;
         }
 

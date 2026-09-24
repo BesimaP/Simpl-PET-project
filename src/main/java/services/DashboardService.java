@@ -5,6 +5,7 @@ import dao.FertilityJourneyDAO;
 import entities.FertilityJourney;
 import enums.JourneyStatus;
 import enums.ServiceResult;
+import exceptions.NoActiveJourneyException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -39,10 +40,14 @@ public class DashboardService {
         return ServiceResult.OK;
     }
 
-    // Finder patientens aktive forløb – null, hvis der ikke er noget.
-    // Bruges af de andre services (runde, hormoner, dagbog, tidslinje) og senere af dashboard-visningen
-    public FertilityJourney findActiveJourney(int patientId) {
+    // Finder patientens aktive forløb. Findes der ikke et, KASTES NoActiveJourneyException (i stedet for at returnere null,
+    // som ikke siger hvorfor). Bruges af de andre services (runde, hormoner, dagbog, aftaler, tidslinje) og senere af dashboard-visningen
+    public FertilityJourney findActiveJourney(int patientId) throws NoActiveJourneyException {
         FertilityJourneyDAO journeyDao = new FertilityJourneyDAO(DatabaseConnection.getConnection());
-        return journeyDao.findActiveByPatient(patientId);
+        FertilityJourney journey = journeyDao.findActiveByPatient(patientId);
+        if (journey == null) {
+            throw new NoActiveJourneyException("Du har ikke et aktivt forløb");
+        }
+        return journey;
     }
 }

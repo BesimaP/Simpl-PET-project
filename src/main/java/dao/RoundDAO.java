@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.Round;
 import enums.Result;
 import enums.RoundStatus;
@@ -40,7 +42,7 @@ public class RoundDAO {
             return round.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save round", e);
+            throw new DatabaseException("Could not save round", e);
         }
     }
 
@@ -63,7 +65,7 @@ public class RoundDAO {
             return null; // ingen række = ingen runde i gang
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find active round for journey " + fertilityJourneyId, e);
+            throw new DatabaseException("Could not find active round for journey " + fertilityJourneyId, e);
         }
     }
 
@@ -83,7 +85,7 @@ public class RoundDAO {
             return rounds;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find rounds for journey " + fertilityJourneyId, e);
+            throw new DatabaseException("Could not find rounds for journey " + fertilityJourneyId, e);
         }
     }
 
@@ -98,7 +100,7 @@ public class RoundDAO {
             statement.setInt(4, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not end round " + id, e);
+            throw new DatabaseException("Could not end round " + id, e);
         }
     }
 

@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -23,7 +25,7 @@ public class DatabaseInitializer {
             }
             System.out.println("Database initialized from schema.sql");
         } catch (SQLException e) {
-            throw new RuntimeException("Could not initialize database", e);
+            throw new DatabaseException("Could not initialize database", e);
         }
     }
 
@@ -31,11 +33,11 @@ public class DatabaseInitializer {
     private static String readSchema() {
         try (InputStream in = DatabaseInitializer.class.getClassLoader().getResourceAsStream("data/schema.sql")) {
             if (in == null) {
-                throw new RuntimeException("schema.sql not found on classpath");
+                throw new DatabaseException("schema.sql not found on classpath", null);
             }
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (java.io.IOException e) {
-            throw new RuntimeException("Could not read schema.sql", e);
+            throw new DatabaseException("Could not read schema.sql", e);
         }
     }
 }

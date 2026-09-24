@@ -6,6 +6,7 @@ import dao.UserAccountDAO;
 import entities.Patient;
 import entities.UserAccount;
 import enums.ServiceResult;
+import exceptions.UserNotFoundException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -14,12 +15,12 @@ import java.time.format.DateTimeParseException;
 public class AuthService {
 
     // Login: giver kortet (UserAccount) tilbage, hvis brugernavn og kodeord passer – ellers null
-    public UserAccount login(String username, String password) {
+    public UserAccount login(String username, String password) throws UserNotFoundException {
         UserAccountDAO dao = new UserAccountDAO(DatabaseConnection.getConnection());
         UserAccount user = dao.findByUsername(username);
 
         if (user == null || !password.equals(user.getPasswordHash())) {
-            return null;   // ukendt bruger eller forkert kodeord (senere: BCrypt.checkpw i stedet for equals)
+            throw new UserNotFoundException("Forkert brugernavn eller kodeord");
         }
         return user;       // login ok
     }

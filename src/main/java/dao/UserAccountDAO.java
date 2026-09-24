@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.UserAccount;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,7 +33,7 @@ public class UserAccountDAO {
             return userAccount.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save user account", e);
+            throw new DatabaseException("Could not save user account", e);
         }
     }
 
@@ -53,7 +55,7 @@ public class UserAccountDAO {
             }
             return null; // ingen række = brugeren findes ikke
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find user " + username, e);
+            throw new DatabaseException("Could not find user " + username, e);
         }
     }
 
@@ -69,7 +71,7 @@ public class UserAccountDAO {
             statement.executeUpdate();            // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not update password for account " + id, e);
+            throw new DatabaseException("Could not update password for account " + id, e);
         }
     }
 
@@ -83,7 +85,7 @@ public class UserAccountDAO {
             statement.setInt(1, id);   // ? = kontoens id
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete account " + id, e);
+            throw new DatabaseException("Could not delete account " + id, e);
         }
     }
 
@@ -106,7 +108,7 @@ public class UserAccountDAO {
             return null; // ingen række = kontoen findes ikke
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find account " + id, e);
+            throw new DatabaseException("Could not find account " + id, e);
         }
     }
 }

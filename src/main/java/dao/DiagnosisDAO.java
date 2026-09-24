@@ -1,5 +1,7 @@
 package dao;
 
+import exceptions.DatabaseException;
+
 import entities.Diagnosis;
 
 import java.sql.Connection;
@@ -34,7 +36,7 @@ public class DiagnosisDAO {
             return diagnosis.getId();
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not save diagnosis", e);
+            throw new DatabaseException("Could not save diagnosis", e);
         }
     }
 
@@ -53,7 +55,7 @@ public class DiagnosisDAO {
             return diagnoses;
 
         } catch (SQLException e) {
-            throw new RuntimeException("Could not find diagnoses for patient " + patientId, e);
+            throw new DatabaseException("Could not find diagnoses for patient " + patientId, e);
         }
     }
 
@@ -65,7 +67,7 @@ public class DiagnosisDAO {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Could not delete diagnosis " + id, e);
+            throw new DatabaseException("Could not delete diagnosis " + id, e);
         }
     }
 

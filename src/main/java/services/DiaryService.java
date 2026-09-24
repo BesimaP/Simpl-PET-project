@@ -5,6 +5,7 @@ import dao.DiaryEntryDAO;
 import entities.DiaryEntry;
 import entities.FertilityJourney;
 import enums.ServiceResult;
+import exceptions.NoActiveJourneyException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,8 +23,11 @@ public class DiaryService {
         }
 
         // 1. find patientens aktive forløb – noter hænger på forløbet, så uden forløb er der ingen skuffe at lægge noten i
-        FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
-        if (journey == null) {
+        //    findActiveJourney kaster, hvis der ikke er et – vi fanger og oversætter til et ServiceResult
+        FertilityJourney journey;
+        try {
+            journey = new DashboardService().findActiveJourney(patientId);
+        } catch (NoActiveJourneyException e) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         }
 
