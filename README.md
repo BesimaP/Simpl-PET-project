@@ -39,37 +39,41 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 
 - **Java 21**
 - **Javalin 7** — webserver/backend (ruter, formularer, statiske filer)
-- **Thymeleaf** — templates, der viser data fra databasen (`resources/templates`)
-- **HTML / CSS / JavaScript** — frontend i `resources/public`
+- **Thymeleaf** — templates, der viser data fra databasen (`src/main/resources/templates`)
+- **HTML / CSS / JavaScript** — frontend i `src/main/resources/public`
 - **SQLite** (via `sqlite-jdbc`) — lokal database *(skiftes til PostgreSQL senere på semestret)*
-- **Maven** — byggeværktøj og afhængighedsstyring
+- **Maven** — byggeværktøj og afhængighedsstyring (standardlayout som i undervisningen)
+- **JUnit 5** — unit tests
 
 ## Arkitektur
 
 Projektet følger **MVC** (Model-View-Controller) med *separation of concerns*: hvert lag har sit eget ansvar og taler kun med naboen.
 
 ```
-src/
-├── Main.java              # Starter Javalin (port 7070) og melder controllerne til
-├── controller/            # Javalin-ruter: læser formularen, kalder service, vælger side (én per side)
-├── service/               # Forretningslogik: regler og DAO-kald, uden Javalin (én per emne) – svarer med ServiceResult
+src/main/java/
+├── Main.java              # Starter Javalin (port 7070), Thymeleaf og melder controllerne til
+├── configuration/         # ThymeleafConfig: hvor skabelonerne ligger
+├── controllers/           # Javalin-ruter: læser formularen, kalder service, vælger side (én per side)
+├── services/              # Forretningslogik: regler og DAO-kald, uden Javalin (én per emne) – svarer med ServiceResult
 ├── entities/              # Model: dataklasser, én per tabel i schema.sql
 ├── dao/                   # Model: databaseadgang (én DAO per tabel) + DatabaseConnection/-Initializer
 └── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …) – matcher CHECK i schema.sql
 
-resources/
-├── public/                # View: siderne (login.html, dashboard.html …), css/, js/, img/
-├── templates/             # Thymeleaf-skabeloner til sider med data fra databasen (kommer)
+src/main/resources/
+├── public/                # View: statiske sider (login.html, opretprofil.html …), css/, js/, img/
+├── templates/             # Thymeleaf-skabeloner til sider med data fra databasen
 └── data/schema.sql        # Databasens tabeller
+
+src/test/java/             # JUnit-tests af services
 ```
 
 Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST) → Javalin finder ruten → `HormoneController` læser felterne og kalder `HormoneService.saveLog()` → service tjekker regler (tomme felter, findes forløb/runde), bygger en `HormoneLog` og kalder `HormoneLogDAO.save()` → service svarer med `ServiceResult` (OK eller en fejl) → controlleren vælger side ud fra svaret.
 
-`ServiceResult` (i `src/enums`) er én fælles enum for svaret fra alle services: `OK, INVALID_INPUT, ALREADY_EXISTS, NO_ACTIVE_JOURNEY, NO_ACTIVE_ROUND, ROUND_IN_PROGRESS`.
+`ServiceResult` (i `enums`) er én fælles enum for svaret fra alle services: `OK, INVALID_INPUT, ALREADY_EXISTS, NO_ACTIVE_JOURNEY, NO_ACTIVE_ROUND, ROUND_IN_PROGRESS`.
 
 ## Database
 
-SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første gang applikationen køres. Strukturen er defineret i `resources/data/schema.sql` og køres af `DatabaseInitializer` ved opstart. `simpl.db` er ikke i git.
+SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første gang applikationen køres. Strukturen er defineret i `src/main/resources/data/schema.sql` og køres af `DatabaseInitializer` ved opstart. `simpl.db` er ikke i git.
 
 **Tabeller (13):**
 - `user_account` — login (brugernavn, kodeord-hash)
@@ -86,7 +90,7 @@ SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første
 - `document` — dokumenter på en runde (kun stien gemmes)
 - `notification` — påmindelser til patienten
 
-Gyldige værdier (fx hormontyper, aftaletyper) er låst med `CHECK` i `schema.sql` og matcher enum-klasserne i `src/enums` og `value` i HTML-dropdowns.
+Gyldige værdier (fx hormontyper, aftaletyper) er låst med `CHECK` i `schema.sql` og matcher enum-klasserne i `enums` og `value` i HTML-dropdowns.
 
 ## Kom i gang
 

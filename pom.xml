@@ -35,6 +35,13 @@
             <artifactId>javalin-rendering-thymeleaf</artifactId>
             <version>7.2.3</version>
         </dependency>
+        <!-- JUnit 5 = unit tests af services (src/test/java). scope test = kun med når tests kører, ikke i selve programmet -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.14.0</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Databasedriver. Skiftes til org.postgresql:postgresql når vi går over til PostgreSQL -->
         <dependency>
             <groupId>org.xerial</groupId>
@@ -43,18 +50,5 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <sourceDirectory>src</sourceDirectory>
-        <resources>
-            <!-- resources/data: schema.sql lander som "schema.sql" på classpath (DatabaseInitializer læser den) -->
-            <resource>
-                <directory>resources/data</directory>
-            </resource>
-            <!-- resources: public/ (html, css, js, img) og templates/ lander på classpath, så Javalin kan servere dem -->
-            <resource>
-                <directory>resources</directory>
-            </resource>
-        </resources>
-    </build>
 </project>
 
