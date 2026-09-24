@@ -1,0 +1,354 @@
+/* pages.css — det der kun findes på én bestemt side:
+   dashboard (runde-kort, ring, dagens medicin, statistik-kort),
+   formular-sider (form-layout) og den tomme tilstand (dashboardtom). */
+
+/* runde-kortet: flex = ring og tekst side om side, gap = luft imellem */
+.round {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.dashboard .round {
+    padding: 18px 16px;
+}
+
+.round__actions .btn {
+    padding: 8px 14px;
+    font-size: 12.5px;
+}
+
+/* ring = dag-tælleren. flex: 0 0 80px = altid præcis 80px bred */
+.ring {
+    position: relative;
+    flex: 0 0 80px;
+    width: 80px;
+    height: 80px;
+}
+
+.ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);   /* start i toppen */
+}
+
+/* track = den grå cirkel bagved, value = den farvede der viser hvor langt man er */
+.ring__track,
+.ring__value {
+    fill: none;   /* kun stregen, ikke fyld i cirklen */
+    stroke-width: 7;   /* tyk streg = ringen */
+}
+
+.ring__track {
+    stroke: #5d4a3a;
+}
+
+.ring__value {
+    stroke: var(--on-brand-muted);
+    stroke-linecap: round;
+}
+
+.ring__label {
+    position: absolute;
+    inset: 0;   /* inset: 0 = top/right/bottom/left = 0, dvs. fyld hele forælderen (.ring). kræver position: absolute */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.1;
+}
+
+.ring__label strong {
+    font-family: var(--font-display);
+    font-size: 18px;
+}
+
+.ring__label small {
+    font-size: 10px;
+    color: var(--on-brand-muted);
+}
+
+.round__body h2 {
+    font-family: var(--font-body);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 2px 0 10px;
+}
+
+.round__meta {
+    display: none;                     /* kun på desktop */
+    font-size: 13px;
+    color: #d8c9b4;
+    margin: -6px 0 10px;
+}
+
+.round__actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* grid = nederste kort. 1fr 1fr = to lige brede kolonner */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;   /* mobil: statistik-kort side om side */
+    gap: 12px;
+}
+
+/* 1 / -1 = fra første til sidste kolonne, dvs. fuld bredde */
+.grid .next {
+    grid-column: 1 / -1;              /* aftale i fuld bredde */
+}
+
+/* Medicin */
+/* list-style: none + margin/padding 0 = fjerner prikker og indrykning fra ul */
+.meds {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.med {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* med__check = cirklen til venstre. border-radius 50% = rund */
+.med__check {
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2.5px solid var(--wait);   /* planlagt = sennep-ring */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.med--taken .med__check {
+    border: none;
+    background: var(--ok);             /* taget = grøn + flueben */
+    color: #fff;
+}
+
+.med__check svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.4;
+}
+
+.med__text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+
+.med__name {
+    font-weight: 600;
+}
+
+.med--taken .med__name {
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: line-through;     /* ikke farve alene */
+}
+
+.med__text .muted {
+    font-size: 12px;
+}
+
+/* Aftale */
+.appt {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.datebox {
+    flex: 0 0 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.datebox strong {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--brand);
+}
+
+.datebox small {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 2px;
+}
+
+.appt__title {
+    font-weight: 600;
+}
+
+/* Statistik-kort: én værdi pr. kort (Nielsen #8) */
+.dashboard .stat {
+    padding: 16px 14px;
+}
+
+.stat .section-head {
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.stat .eyebrow {
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+}
+
+.stat .muted,
+.stat .muted-link {
+    font-size: 12px;
+}
+
+.stat__value {
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1;
+    margin: 4px 0 6px;
+}
+
+.stat__value small {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+}
+
+/* round-grid = øverste række (runde-kort + dagens medicin). på mobil under hinanden, på desktop side om side */
+.round-grid {
+    display: grid;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+@media (min-width: 900px) {
+    .round__meta {
+        display: block;
+    }
+
+    .dashboard .round {
+        padding: 22px 24px;
+    }
+
+    .round__actions .btn {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+
+    .dashboard .stat {
+        padding: 18px 20px;
+    }
+
+    .stat .eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.18em;
+    }
+
+    .stat .muted,
+    .stat .muted-link {
+        font-size: 13px;
+    }
+
+    /* Runde-kort + I dag side om side; tre kort nedenunder */
+    .ring {
+        flex-basis: 104px;
+        width: 104px;
+        height: 104px;
+    }
+
+    .round__body h2 {
+        font-size: 22px;
+    }
+
+    .grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .round-grid {
+        grid-template-columns: 1.3fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .grid .next {
+        grid-column: span 1;
+    }
+
+    /* I dag-sektionen bliver ét kort med linje mellem doserne */
+    .today {
+        background: var(--card);
+        border-radius: var(--radius-card);
+        padding: 18px 20px;
+    }
+
+    .today .med {
+        padding: 10px 0;
+        background: transparent;
+        border-radius: 0;
+    }
+
+    .today .med + .med {
+        border-top: 1px solid #eee7d9;
+    }
+
+    .meds { gap: 0; }
+}
+
+/* form-layout = bruges på alle formular-sider (dagbog, hormoner, start-runde, dokumenter, min-profil). mobil: kortene under hinanden */
+.form-layout {
+    display: grid;
+    gap: 16px;
+}
+
+@media (min-width: 900px) {
+    .form-layout {
+        /* desktop: to kolonner, formular max 480px og hjælpeboks max 360px */
+        grid-template-columns: minmax(0, 480px) minmax(0, 360px);
+        gap: 20px;
+        align-items: start;
+    }
+}
+
+/* empty = tom-tilstanden på dashboardtom.html: alt centreret */
+.dashboard .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 24px;
+}
+
+.empty img {
+    margin-bottom: 16px;
+}
+
+.empty h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.empty p {
+    max-width: 420px;
+    margin-bottom: 24px;
+    color: var(--on-brand-muted);
+}

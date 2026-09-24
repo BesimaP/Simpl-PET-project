@@ -1,0 +1,54 @@
+package entities;
+
+import enums.HormoneType;
+import java.time.LocalDateTime;
+
+// En hormonmåling i en runde (tabel hormone_log, US9).
+public class HormoneLog {
+
+    private int id;
+    private int roundId;
+    private LocalDateTime dateTime;
+    private HormoneType hormoneType;
+    private double value;
+    private String unit;
+
+    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    public HormoneLog(int id, int roundId, LocalDateTime dateTime, HormoneType hormoneType, double value, String unit) {
+        this.id = id;
+        this.roundId = roundId;
+        this.dateTime = dateTime;
+        this.hormoneType = hormoneType;
+        this.value = value;
+        this.unit = unit;
+    }
+
+    // gettere: læs felterne. setId bruges af DAO'en efter save; resten kan ikke ændres udefra
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getRoundId() {
+        return roundId;
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime;
+    }
+
+    public HormoneType getHormoneType() {
+        return hormoneType;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+}
