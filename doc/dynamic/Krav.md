@@ -29,3 +29,12 @@
 3. **Ydeevne** – Oversigtssiden skal indlæses på under 2 sekunder ved normal brug
 4. **Brugervenlighed** – En patient skal kunne registrere en dagbogsnote på maks. 3 klik fra dashboardet
 5. **Udvidelighed** – Nye typer (fx en ny aftaletype eller hormontype) skal kunne tilføjes ved at udvide den relevante enum, uden at ændre eksisterende logik
+
+## Tekniske krav fra undervisningen (24. sep 2026)
+
+*Krav til Pet Project, stillet af underviseren. Sådan opfyldes de i Simpl:*
+
+1. **Thymeleaf på html-siderne** – siderne, der viser data fra databasen (dashboard, diagnoser, dagbog, hormoner, medicin, aftaler, rundehistorik, tidslinje, notifikationer, min profil), flyttes til `resources/templates` og vises via GET-ruter med `ctx.render("side", Map.of(...))` og `th:each`/`th:text`. Opsætning: `configuration/ThymeleafConfig` + `config.fileRenderer(...)` i Main.
+2. **Data i både sessionsscope og requestscope** – *session*: hvem der er logget ind (`ctx.sessionAttribute("patientId", ...)` sættes ved login, læses i alle controllere i stedet for `int patientId = 1`). *Request*: data til én side (listen/objektet, der gives med i `Map.of(...)` til `ctx.render`).
+3. **Kast og håndtér mindst én Exception** – egen `UserNotFoundException` (pakke `exceptions`), kastes af `AuthService.login`, når brugeren ikke findes, og fanges i `LoginController`, som viser login-siden med en fejlbesked via Thymeleaf. Derudover fanges `DateTimeParseException`/`NumberFormatException` allerede i services (ugyldig dato/tal → INVALID_INPUT).
+
