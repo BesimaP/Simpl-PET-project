@@ -59,7 +59,17 @@ public class LoginController {
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
-            case OK -> ctx.redirect("/dashboard");
+            case OK -> {
+                // profilen findes nu – log brugeren ind med det samme, så hun ikke skal skrive det hele igen
+                try {
+                    Patient patient = new AuthService().login(username, password);
+                    ctx.sessionAttribute("patientId", patient.getId());
+                    ctx.sessionAttribute("accountId", patient.getUserAccountId());
+                    ctx.redirect("/dashboard");
+                } catch (UserNotFoundException e) {
+                    ctx.redirect("/login"); // burde ikke ske – men så må hun logge ind manuelt
+                }
+            }
             case ALREADY_EXISTS -> ctx.redirect("/opretprofil.html?fejl=brugernavn"); // brugernavnet er optaget
             case INVALID_INPUT -> ctx.redirect("/opretprofil.html?fejl=felter");      // tomt felt eller ugyldig dato
             default -> ctx.redirect("/opretprofil.html?fejl=ukendt");

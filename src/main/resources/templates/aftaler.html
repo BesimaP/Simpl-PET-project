@@ -127,11 +127,11 @@
         <ul class="rounds">
           <li th:each="a : ${upcoming}">
             <div class="datebox">
-              <strong th:text="${#temporals.format(a.dateTime, 'd')}">5</strong>
+              <strong th:text="${#temporals.day(a.dateTime)}">5</strong>
               <small th:text="${#temporals.format(a.dateTime, 'MMM')}">SEP</small>
             </div>
             <div class="round__info">
-              <strong class="appt__title" th:text="${a.appointmentType}">Scanning</strong>
+              <strong class="appt__title" th:text="${a.appointmentType.label}">Scanning</strong>
               <span th:text="${a.location} + ' · kl. ' + ${#temporals.format(a.dateTime, 'HH:mm')}">Vitanova · kl. 9.30</span>
             </div>
           </li>
@@ -143,11 +143,11 @@
         <ul class="rounds">
           <li th:each="a : ${past}">
             <div class="datebox">
-              <strong th:text="${#temporals.format(a.dateTime, 'd')}">21</strong>
+              <strong th:text="${#temporals.day(a.dateTime)}">21</strong>
               <small th:text="${#temporals.format(a.dateTime, 'MMM')}">AUG</small>
             </div>
             <div class="round__info">
-              <strong class="appt__title" th:text="${a.appointmentType}">Opstartssamtale</strong>
+              <strong class="appt__title" th:text="${a.appointmentType.label}">Opstartssamtale</strong>
               <span th:text="${a.location} + ' · kl. ' + ${#temporals.format(a.dateTime, 'HH:mm')}">Vitanova · kl. 10.00</span>
             </div>
           </li>

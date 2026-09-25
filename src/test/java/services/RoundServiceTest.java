@@ -89,4 +89,26 @@ class RoundServiceTest {
         int patientId = TestData.newPatient();
         assertThrows(NoActiveJourneyException.class, () -> new RoundService().findActiveRound(patientId));
     }
+
+    @Test
+    void getRoundsWithoutJourneyReturnsEmptyList() {
+        int patientId = TestData.newPatient();
+        assertTrue(new RoundService().getRounds(patientId).isEmpty());
+    }
+
+    @Test
+    void getRoundsContainsBothFinishedAndActiveRound() {
+        int patientId = TestData.newPatientWithRound();
+        new RoundService().endRound(patientId, null);
+        new RoundService().startRound(patientId, "FET", "2026-10-01");
+        assertEquals(2, new RoundService().getRounds(patientId).size());
+        assertEquals(RoundStatus.COMPLETED, new RoundService().getRounds(patientId).get(0).getStatus());
+        assertEquals(RoundStatus.IN_PROGRESS, new RoundService().getRounds(patientId).get(1).getStatus());
+    }
+
+    @Test
+    void startRoundWithInvalidDateReturnsInvalidInput() {
+        int patientId = TestData.newPatientWithJourney();
+        assertEquals(ServiceResult.INVALID_INPUT, new RoundService().startRound(patientId, "IVF", "10-09-2026"));
+    }
 }

@@ -38,4 +38,28 @@ class DiaryServiceTest {
         // noter hænger på forløbet – ingen runde nødvendig
         assertEquals(ServiceResult.OK, new DiaryService().saveEntry(patientId, "2026-09-12", "Scanning i dag", "Alt så fint ud"));
     }
+
+    @Test
+    void getEntriesWithoutJourneyReturnsEmptyList() {
+        int patientId = TestData.newPatient();
+        assertTrue(new DiaryService().getEntries(patientId).isEmpty());
+    }
+
+    @Test
+    void savedEntryKeepsTitleAndContent() {
+        int patientId = TestData.newPatientWithJourney();
+        new DiaryService().saveEntry(patientId, "2026-09-12", "Scanning", "Gik fint");
+        assertEquals(1, new DiaryService().getEntries(patientId).size());
+        assertEquals("Scanning", new DiaryService().getEntries(patientId).get(0).getTitle());
+        assertEquals("Gik fint", new DiaryService().getEntries(patientId).get(0).getContent());
+    }
+
+    @Test
+    void entriesFromOnePatientAreNotVisibleToAnother() {
+        int anna = TestData.newPatientWithJourney();
+        int maria = TestData.newPatientWithJourney();
+        new DiaryService().saveEntry(anna, "2026-09-12", "Annas note", "Privat");
+        assertEquals(1, new DiaryService().getEntries(anna).size());
+        assertEquals(0, new DiaryService().getEntries(maria).size());
+    }
 }

@@ -38,4 +38,17 @@ class DiagnosisServiceTest {
         // en patient kan have flere diagnoser
         assertEquals(2, new DiagnosisDAO(DatabaseConnection.getConnection()).findByPatient(patientId).size());
     }
+
+    @Test
+    void newPatientHasNoDiagnoses() {
+        int patientId = TestData.newPatient();
+        assertTrue(new DiagnosisService().getDiagnoses(patientId).isEmpty());
+    }
+
+    @Test
+    void savedDiagnosisKeepsName() {
+        int patientId = TestData.newPatient();
+        new DiagnosisService().addDiagnosis(patientId, "PCOS", "Konstateret ved første konsultation");
+        assertEquals("PCOS", new DiagnosisService().getDiagnoses(patientId).get(0).getName());
+    }
 }

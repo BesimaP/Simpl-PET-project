@@ -167,11 +167,11 @@
                 <div class="appt" th:if="${nextAppointment != null}">
                     <!-- datebox = den lille kalender-firkant med dato -->
                     <time class="datebox">
-                        <strong th:text="${#temporals.format(nextAppointment.dateTime, 'd')}">5</strong>
+                        <strong th:text="${#temporals.day(nextAppointment.dateTime)}">5</strong>
                         <small th:text="${#temporals.format(nextAppointment.dateTime, 'MMM')}">sep</small>
                     </time>
                     <div>
-                        <p class="appt__title" th:text="${nextAppointment.appointmentType}">Scanning</p>
+                        <p class="appt__title" th:text="${nextAppointment.appointmentType.label}">Scanning</p>
                         <p class="muted" th:text="${nextAppointment.location} + ' · kl. ' + ${#temporals.format(nextAppointment.dateTime, 'HH:mm')}">Vitanova · kl. 9.30</p>
                     </div>
                 </div>
@@ -186,7 +186,7 @@
                 </div>
                 <div th:if="${latestHormone != null}">
                     <p class="stat__value"><span th:text="${latestHormone.value}">450</span> <small th:text="${latestHormone.unit}">pmol/L</small></p>
-                    <p class="muted" th:text="${latestHormone.hormoneType} + ' · ' + ${#temporals.format(latestHormone.dateTime, 'd. MMM')}">Østradiol · målt i går</p>
+                    <p class="muted" th:text="${latestHormone.hormoneType.label} + ' · ' + ${#temporals.format(latestHormone.dateTime, 'd. MMM')}">Østradiol · målt i går</p>
                 </div>
                 <p class="muted" th:if="${latestHormone == null}">Ingen målinger endnu.</p>
             </section>

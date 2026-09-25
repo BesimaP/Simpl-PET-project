@@ -5,6 +5,9 @@ import dao.DatabaseConnection;
 import entities.Appointment;
 import entities.FertilityJourney;
 import enums.AppointmentType;
+import enums.EventType;
+import entities.Round;
+import exceptions.NoActiveRoundException;
 import enums.ServiceResult;
 import exceptions.NoActiveJourneyException;
 import java.time.LocalDate;
@@ -47,7 +50,28 @@ public class AppointmentService {
 
         // 4. byg kortet (id 0 = databasen giver et) og læg det i skuffen appointment
         new AppointmentDAO(DatabaseConnection.getConnection()).save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
+
+        // 5. de store trin (ægudtagning, oplægning, graviditetstest) skal også på tidslinjen (US2) – men kun hvis en runde er i gang
+        EventType eventType = toEventType(appointmentType);
+        if (eventType != null) {
+            try {
+                Round round = new RoundService().findActiveRound(patientId);
+                new TimelineService().addEvent(round.getId(), dateTime, eventType, location);
+            } catch (NoActiveJourneyException | NoActiveRoundException e) {
+                // ingen runde i gang = aftalen gemmes, men kommer ikke på tidslinjen. Ikke en fejl
+            }
+        }
         return ServiceResult.OK;
+    }
+
+    // hjælper: hvilke aftaletyper er også et trin på tidslinjen? Resten (konsultation, scanning, blodprøve) giver null
+    private EventType toEventType(AppointmentType type) {
+        switch (type) {
+            case EGG_RETRIEVAL:   return EventType.EGG_RETRIEVAL;
+            case EMBRYO_TRANSFER: return EventType.EMBRYO_TRANSFER;
+            case PREGNANCY_TEST:  return EventType.PREGNANCY_TEST;
+            default:              return null;
+        }
     }
 
 

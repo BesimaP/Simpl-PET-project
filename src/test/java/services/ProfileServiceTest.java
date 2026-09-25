@@ -4,6 +4,7 @@ import dao.DatabaseConnection;
 import dao.PatientDAO;
 import dao.UserAccountDAO;
 import enums.ServiceResult;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -75,5 +76,12 @@ class ProfileServiceTest {
         } catch (java.sql.SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    void getPatientReturnsNameAndDateOfBirth() {
+        int patientId = TestData.newPatient(); // oprettes med "Test Bruger" og 1996-01-01
+        assertEquals("Test Bruger", new ProfileService().getPatient(patientId).getName());
+        assertEquals(LocalDate.of(1996, 1, 1), new ProfileService().getPatient(patientId).getDateOfBirth());
     }
 }

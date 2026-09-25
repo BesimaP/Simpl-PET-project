@@ -127,7 +127,7 @@
         <!-- th:each: ét li per måling. h = én måling ad gangen. hormoneType = enum (E2_OESTRADIOL …) -->
         <li th:each="h : ${logs}">
           <strong th:text="${#temporals.format(h.dateTime, 'd. MMM yyyy')}">I går</strong>
-          <span th:text="${h.hormoneType} + ' · ' + ${h.value} + ' ' + ${h.unit}">Østradiol · 450 pmol/L</span>
+          <span th:text="${h.hormoneType.label} + ' · ' + ${h.value} + ' ' + ${h.unit}">Østradiol · 450 pmol/L</span>
         </li>
       </ul>
       <p class="muted" th:if="${logs.isEmpty()}">Ingen målinger i denne runde endnu.</p>

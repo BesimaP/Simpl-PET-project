@@ -8,6 +8,7 @@ import enums.Result;
 import enums.RoundStatus;
 import enums.ServiceResult;
 import enums.TreatmentType;
+import enums.EventType;
 import exceptions.NoActiveJourneyException;
 import exceptions.NoActiveRoundException;
 
@@ -60,7 +61,10 @@ public class RoundService {
 
         // 5. byg kortet og gem. end_date og result er null, til runden afsluttes
         Round round = new Round(0, journey.getId(), roundNumber, treatmentType, start, null, RoundStatus.IN_PROGRESS, null);
-        roundDao.save(round);
+        roundDao.save(round); // save sætter round.id til det id, databasen gav
+
+        // 6. første trin på tidslinjen: runden er startet (US2). Startdato kl. 00:00, fordi Event bruger LocalDateTime
+        new TimelineService().addEvent(round.getId(), start.atStartOfDay(), EventType.STIMULATION_START, treatmentType.name());
 
         return ServiceResult.OK; // ok
     }

@@ -1,6 +1,7 @@
 package services;
 
 import enums.ServiceResult;
+import enums.HormoneType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -49,5 +50,27 @@ class HormoneServiceTest {
     void saveLogReturnsOk() {
         int patientId = TestData.newPatientWithRound();
         assertEquals(ServiceResult.OK, new HormoneService().saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12"));
+    }
+
+    @Test
+    void getLogsWithoutRoundReturnsEmptyList() {
+        int patientId = TestData.newPatientWithJourney();
+        assertTrue(new HormoneService().getLogs(patientId).isEmpty());
+    }
+
+    @Test
+    void savedLogKeepsValueAndType() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService().saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12");
+        assertEquals(1, new HormoneService().getLogs(patientId).size());
+        assertEquals(450.0, new HormoneService().getLogs(patientId).get(0).getValue());
+        assertEquals(HormoneType.E2_OESTRADIOL, new HormoneService().getLogs(patientId).get(0).getHormoneType());
+    }
+
+    @Test
+    void hormoneTypeLabelIsDanish() {
+        // labels bruges i Thymeleaf: ${h.hormoneType.label}
+        assertEquals("Østradiol", HormoneType.E2_OESTRADIOL.getLabel());
+        assertEquals("Progesteron", HormoneType.PROGESTERONE.getLabel());
     }
 }

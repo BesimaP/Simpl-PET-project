@@ -83,7 +83,7 @@
     <ul class="rounds">
       <li th:each="e : ${events}">
         <div class="round__info">
-          <strong th:text="${e.eventType}">Blodprøve</strong>
+          <strong th:text="${e.eventType.label}">Blodprøve</strong>
           <span th:text="${#temporals.format(e.dateTime, 'd. MMMM')} + (${e.description != null} ? ' · ' + ${e.description} : '')">1. september</span>
         </div>
       </li>
