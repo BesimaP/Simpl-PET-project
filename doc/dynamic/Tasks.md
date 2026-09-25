@@ -1,6 +1,6 @@
 # Tasks per user story
 
-*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (88 tests i src/test/java/services).*
+*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (96 tests i src/test/java/services).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
 
@@ -93,8 +93,8 @@
 - [x]  Lav layout til at tilføje et dokument (titel, dokumenttype som dropdown: Blodprøvesvar, Behandlingsplan, Andet, filvalg) *(HTML/CSS lavet)*
 - [x]  JavaScript: filtype (PDF/JPG/PNG) og størrelse (maks 10 MB) tjekkes, når filen vælges; forkert fil afvises med fejlbesked; "Fjern fil"-knap *(js/dokumenter.js)*
 - [x]  Implementér gemning af dokumenter med filePath *(POST /dokumenter → DocumentService.uploadDocument, filen gemmes i uploads/, stien i databasen – Louise, 25. sep)*
-- [ ]  Lav layout til at åbne og vise et valgt dokument
-- [ ]  Test at dokumenter kan gemmes, listes og åbnes korrekt
+- [x]  Lav layout til at åbne og vise et valgt dokument *(GET /dokumenter/{id} sender filen til browseren – kun patientens egne, 25. sep)*
+- [x]  Test at dokumenter kan gemmes, listes og åbnes korrekt *(DocumentServiceTest, 8 tests)*
 
 ## User story 12 – Notifikationer
 - [ ]  Implementér logik der genererer en notifikation for dagens planlagte medicindoser, når appen åbnes (MEDICATION_REMINDER)
@@ -107,7 +107,7 @@
 - [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `accountId` sættes ved login; alle controllere læser fra sessionen og sender til /login, hvis den er tom
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
-- [x]  Automatiserede tests: 88 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
+- [x]  Automatiserede tests: 96 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
 - [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)

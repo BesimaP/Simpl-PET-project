@@ -88,7 +88,7 @@
           <li th:each="d : ${documents}">
             <div class="round__info">
               <strong th:text="${d.title}">Behandlingsplan.pdf</strong>
-              <span th:text="${d.documentType}">PDF</span>
+              <span th:text="${d.documentType.label}">PDF</span>
             </div>
             <a th:href="'/dokumenter/' + ${d.id}">Åbn</a>
           </li>

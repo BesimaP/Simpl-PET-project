@@ -89,6 +89,17 @@ public class DocumentService {
         }
     }
 
+    // Finder ét dokument ud fra id – men kun blandt patientens egne, så man ikke kan åbne andres filer ved at gætte et id.
+    // Returnerer null, hvis det ikke findes (controlleren svarer 404)
+    public Document findDocument(int patientId, int documentId) {
+        for (Document d : getDocuments(patientId)) {
+            if (d.getId() == documentId) {
+                return d;
+            }
+        }
+        return null;
+    }
+
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
     }
