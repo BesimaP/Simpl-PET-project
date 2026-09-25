@@ -13,27 +13,42 @@ public class HormoneController {
     public static void setRoutes(JavalinConfig config) {
         // "når der kommer POST til /hormoner (formularen på hormoner.html), så kald saveLog med den ctx, Javalin rækker os"
         config.routes.post("/hormoner", ctx -> saveLog(ctx));
+        config.routes.get("/hormoner", ctx -> showLogs(ctx));
+    }
+
+    // GET /hormoner – hent rundens målinger og fyld skabelonen
+    public static void showLogs(Context ctx) {
+        // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        ctx.attribute("logs", new HormoneService().getLogs(patientId));   // requestscope -> ${logs}
+        ctx.render("hormoner");                                            // templates/hormoner.html
     }
 
     // POST /hormoner – når brugeren trykker "Gem måling". ctx = kuverten fra Javalin: felterne ligger i den, og svaret sendes gennem den
     public static void saveLog(Context ctx) {
-        // 1. åbn kuverten: læs de fire felter (name="hormone", "value", "unit", "date" i hormoner.html)
-        String hormone = ctx.formParam("hormone");   // fx "E2_OESTRADIOL" – value i dropdownen, matcher enum HormoneType
-        String value = ctx.formParam("value");       // fx "450" – tekst endnu, service laver den om til tal
-        String unit = ctx.formParam("unit");         // fx "pmol/L"
-        String date = ctx.formParam("date");         // fx "2026-09-21"
-        int patientId = 1; // TODO: fra session, når login husker hvem der er logget ind
+        String hormone = ctx.formParam("hormone");
+        String value = ctx.formParam("value");
+        String unit = ctx.formParam("unit");
+        String date = ctx.formParam("date");
 
-        // 2. bed service gemme målingen – den finder selv forløb og runde. Svar: OK = ok, ellers hvad der gik galt
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+
         ServiceResult result = new HormoneService().saveLog(patientId, hormone, value, unit, date);
 
-        // 3. vælg side ud fra svaret – ét case per udfald.
         switch (result) {
-            case OK -> ctx.redirect("/hormoner.html");
-            case INVALID_INPUT -> ctx.redirect("/hormoner.html?fejl=felter"); // et felt var tomt eller ugyldigt
-            case NO_ACTIVE_JOURNEY -> ctx.redirect("/hormoner.html?fejl=intet-forloeb");
-            case NO_ACTIVE_ROUND -> ctx.redirect("/hormoner.html?fejl=ingen-runde");
-            default -> ctx.redirect("/hormoner.html?fejl=ukendt");
+            case OK -> ctx.redirect("/hormoner");
+            case INVALID_INPUT -> ctx.redirect("/hormoner?fejl=felter");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/hormoner?fejl=intet-forloeb");
+            case NO_ACTIVE_ROUND -> ctx.redirect("/hormoner?fejl=ingen-runde");
+            default -> ctx.redirect("/hormoner?fejl=ukendt");
         }
     }
 }

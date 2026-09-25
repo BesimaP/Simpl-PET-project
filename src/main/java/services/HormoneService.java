@@ -58,6 +58,17 @@ public class HormoneService {
         return ServiceResult.OK;
     }
 
+    // Henter alle målinger i den runde, der er i gang, nyeste først – til listen på hormoner-siden (GET).
+// Intet forløb eller ingen runde er ikke en fejl her: så er der bare ingen målinger at vise -> tom liste
+    public List<HormoneLog> getLogs(int patientId) {
+        try {
+            Round round = new RoundService().findActiveRound(patientId);
+            return new HormoneLogDAO(DatabaseConnection.getConnection()).findByRound(round.getId());
+        } catch (NoActiveJourneyException | NoActiveRoundException e) {
+            return new ArrayList<>();
+        }
+    }
+
     // lille hjælper: null eller kun mellemrum tæller som tomt
     private boolean isBlank(String s) {
         return s == null || s.isBlank();

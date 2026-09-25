@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 // Forretningslogik for aftaler (US3). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 // Aftaler hænger på forløbet, ikke runden (første konsultation sker før nogen runde).
@@ -46,6 +48,39 @@ public class AppointmentService {
         // 4. byg kortet (id 0 = databasen giver et) og læg det i skuffen appointment
         new AppointmentDAO(DatabaseConnection.getConnection()).save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
         return ServiceResult.OK;
+    }
+
+
+    // Henter aftaler på patientens aktive forløb, delt i kommende (fra nu og frem) og tidligere.
+    // Intet forløb -> tom liste
+    public List<Appointment> getUpcoming(int patientId) {
+        List<Appointment> upcoming = new ArrayList<>();
+        for (Appointment a : getAll(patientId)) {
+            if (a.getDateTime().isAfter(LocalDateTime.now())) {   // ligger efter nu = kommende
+                upcoming.add(a);
+            }
+        }
+        return upcoming;
+    }
+
+    public List<Appointment> getPast(int patientId) {
+        List<Appointment> past = new ArrayList<>();
+        for (Appointment a : getAll(patientId)) {
+            if (!a.getDateTime().isAfter(LocalDateTime.now())) {  // ikke efter nu = tidligere
+                past.add(a);
+            }
+        }
+        return past;
+    }
+
+    // hjælper: alle aftaler på forløbet, tidligste først (DAO'en sorterer). Bruges af de to ovenfor
+    private List<Appointment> getAll(int patientId) {
+        try {
+            FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
+            return new AppointmentDAO(DatabaseConnection.getConnection()).findByJourney(journey.getId());
+        } catch (NoActiveJourneyException e) {
+            return new ArrayList<>();
+        }
     }
 
     // lille hjælper: null eller kun mellemrum tæller som tomt
