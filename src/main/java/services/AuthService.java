@@ -14,15 +14,18 @@ import java.time.format.DateTimeParseException;
 // Forretningslogik for login og opret profil. Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 public class AuthService {
 
-    // Login: giver kortet (UserAccount) tilbage, hvis brugernavn og kodeord passer – ellers null
-    public UserAccount login(String username, String password) throws UserNotFoundException {
+    // Login: giver patientens id tilbage (det er det, sessionen skal huske) – ellers kastes UserNotFoundException
+    public int login(String username, String password) throws UserNotFoundException {
         UserAccountDAO dao = new UserAccountDAO(DatabaseConnection.getConnection());
         UserAccount user = dao.findByUsername(username);
 
         if (user == null || !password.equals(user.getPasswordHash())) {
             throw new UserNotFoundException("Forkert brugernavn eller kodeord");
         }
-        return user;       // login ok
+
+        // kontoen passer – find patienten bag den, og giv id'et tilbage
+        Patient patient = new PatientDAO(DatabaseConnection.getConnection()).findByUserAccount(user.getId());
+        return patient.getId();
     }
 
     // Opret profil: konto + patient (+ forløb, hvis brugeren allerede er i gang med et).

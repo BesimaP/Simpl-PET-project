@@ -1,6 +1,5 @@
 package controllers;
 
-import entities.UserAccount;
 import enums.ServiceResult;
 import exceptions.UserNotFoundException;
 import io.javalin.config.JavalinConfig;
@@ -13,9 +12,10 @@ public class LoginController {
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: LoginController.setRoutes(config)
     public static void setRoutes(JavalinConfig config) {
-        // ctx -> login(ctx) = "kald metoden login med den ctx, Javalin rækker os"
-        config.routes.post("/login", ctx -> login(ctx));              // formularen på login.html
-        config.routes.post("/opretprofil", ctx -> createProfile(ctx)); // formularen på opretprofil.html
+        // ctx -> login(ctx) = "kald metoden login med den ctx, Javalin rækker os";
+        config.routes.get("/login", ctx -> ctx.render("login"));
+        config.routes.post("/login", ctx -> login(ctx));
+        config.routes.post("/opretprofil", ctx -> createProfile(ctx));
     }
 
     // POST /login – læs kuverten, spørg service, send brugeren videre

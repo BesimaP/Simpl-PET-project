@@ -1,3 +1,5 @@
+import configuration.ExceptionConfig;
+import configuration.RouteConfig;
 import configuration.ThymeleafConfig;
 import dao.DatabaseInitializer;
 import io.javalin.Javalin;

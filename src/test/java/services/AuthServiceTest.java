@@ -31,10 +31,10 @@ class AuthServiceTest {
     }
 
     @Test
-    void loginWithCorrectPasswordReturnsUser() throws UserNotFoundException {
+    void loginWithCorrectPasswordReturnsPatientId() throws UserNotFoundException {
         AuthService authService = new AuthService();
         authService.createProfile("Test", "1996-01-01", "auth2", "hemmelig1", "no", null);
-        assertEquals("auth2", authService.login("auth2", "hemmelig1").getUsername());
+        assertTrue(authService.login("auth2", "hemmelig1") > 0);   // et rigtigt id er altid > 0
     }
 
     @Test
@@ -69,9 +69,8 @@ class AuthServiceTest {
     void createProfileWithJourneyCreatesActiveJourney() throws Exception {
         AuthService authService = new AuthService();
         assertEquals(ServiceResult.OK, authService.createProfile("Test", "1996-01-01", "auth7", "hemmelig1", "yes", "2026-09-01"));
-        // forløbet findes: findActiveJourney kaster IKKE
-        int accountId = authService.login("auth7", "hemmelig1").getId();
-        int patientId = new dao.PatientDAO(dao.DatabaseConnection.getConnection()).findByUserAccount(accountId).getId();
+        // forløbet findes: login giver patientens id, og findActiveJourney kaster IKKE
+        int patientId = authService.login("auth7", "hemmelig1");
         assertNotNull(new DashboardService().findActiveJourney(patientId));
     }
 }
