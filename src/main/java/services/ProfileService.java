@@ -3,12 +3,18 @@ package services;
 import dao.DatabaseConnection;
 import dao.PatientDAO;
 import dao.UserAccountDAO;
+import entities.Patient;
 import entities.UserAccount;
 import enums.ServiceResult;
 
 // Forretningslogik for min-profil (US6b). Kender IKKE Javalin – ProfileController læser formularen og kalder én metode her.
 // Alle tre metoder gemmer/ændrer noget, så de svarer med ServiceResult. Controlleren vælger side ud fra svaret.
 public class ProfileService {
+
+    // Henter patientens kort – til at forudfylde felterne på min-profil (GET)
+    public Patient getPatient(int patientId) {
+        return new PatientDAO(DatabaseConnection.getConnection()).findById(patientId);
+    }
 
     // Retter patientens navn
     public ServiceResult updateName(int patientId, String name) {

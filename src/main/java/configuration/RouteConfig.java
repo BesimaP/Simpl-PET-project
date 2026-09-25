@@ -16,7 +16,9 @@ public class RouteConfig {
         MedicationController.setRoutes(config);
         AppointmentController.setRoutes(config);
         ProfileController.setRoutes(config);
-        // TODO: DocumentController, NotificationController, TimelineController – når de får ruter
+        NotificationController.setRoutes(config);
+        TimelineController.setRoutes(config);
+        // TODO: DocumentController – når den får ruter
 
         config.routes.get("/", ctx -> ctx.redirect("/login"));
     }

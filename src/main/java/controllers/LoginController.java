@@ -5,6 +5,7 @@ import exceptions.UserNotFoundException;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import services.AuthService;
+import entities.Patient;
 
 // Koordinatoren for login.html og opretprofil.html.
 // Ruterne er én linje hver og peger på en metode nedenunder. Al logik ligger i AuthService.
@@ -25,14 +26,15 @@ public class LoginController {
         String password = ctx.formParam("password");
 
         try {
-            // 2. spørg service. Svaret er patientens id – eller en UserNotFoundException, som fanges nedenfor
-            int patientId = new AuthService().login(username, password);
+            // 2. spørg service. Svaret er patientens kort – eller en UserNotFoundException, som fanges nedenfor
+            Patient patient = new AuthService().login(username, password);
 
-            // 3. sessionscope: husk hvem der er logget ind, til browseren lukkes. Alle andre controllere læser patientId herfra
-            ctx.sessionAttribute("patientId", patientId);
+            // 3. sessionscope: husk hvem der er logget ind, til browseren lukkes. Alle andre controllere læser herfra
+            ctx.sessionAttribute("patientId", patient.getId());              // hvem er patienten
+            ctx.sessionAttribute("accountId", patient.getUserAccountId());   // hvilken konto (til kodeord/slet på min profil)
 
             // 4. ind på dashboard
-            ctx.redirect("/dashboard.html");
+            ctx.redirect("/dashboard");
 
         } catch (UserNotFoundException e) {
             // requestscope: gælder kun for dette ene svar. Thymeleaf viser det som ${error} på login-siden
@@ -40,6 +42,7 @@ public class LoginController {
             ctx.render("login");
         }
     }
+
 
     // POST /opretprofil – læs kuverten, spørg service, send brugeren videre
     private static void createProfile(Context ctx) {
@@ -56,7 +59,7 @@ public class LoginController {
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
-            case OK -> ctx.redirect("/dashboard.html");
+            case OK -> ctx.redirect("/dashboard");
             case ALREADY_EXISTS -> ctx.redirect("/opretprofil.html?fejl=brugernavn"); // brugernavnet er optaget
             case INVALID_INPUT -> ctx.redirect("/opretprofil.html?fejl=felter");      // tomt felt eller ugyldig dato
             default -> ctx.redirect("/opretprofil.html?fejl=ukendt");

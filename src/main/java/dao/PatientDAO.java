@@ -80,4 +80,22 @@ public class PatientDAO {
             throw new DatabaseException("Could not update name for patient " + id,e);
         }
     }
+
+    // Finder én patient ud fra id – returnerer null, hvis den ikke findes (bruges af min-profil)
+    public Patient findById(int id) {
+        String sql = "SELECT * FROM patient WHERE id = ?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            ResultSet rs = statement.executeQuery();
+
+            // if, ikke while: id er PRIMARY KEY, så der er højst én række
+            if (rs.next()) {
+                return new Patient(rs.getInt("id"), rs.getInt("user_account_id"), rs.getString("name"), LocalDate.parse(rs.getString("date_of_birth")));
+            }
+            return null;
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not find patient " + id, e);
+        }
+    }
 }

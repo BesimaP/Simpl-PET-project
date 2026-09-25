@@ -1,4 +1,4 @@
-// dashboard.js — JavaScript kun til dashboard.html
+// dashboard.js — JavaScript kun til dashboard (templates/dashboard.html)
 
 // --- "Afslut runde": spørg først i vores egen dialog (samme mønster som slet konto på min profil) ---
 
@@ -6,12 +6,16 @@
 const endRoundButton = document.getElementById("end-round");
 const endRoundDialog = document.getElementById("confirm-end");
 
-// NÅR man klikker på knappen:
-endRoundButton.addEventListener("click", function () {
+// knappen og dialogen findes KUN, når der er en runde i gang (th:if i skabelonen) – ellers er de null, og vi gør ingenting
+if (endRoundButton && endRoundDialog) {
 
-    // åbn dialogen (modal = resten af siden låses imens)
-    endRoundDialog.showModal();
-});
+    // NÅR man klikker på knappen:
+    endRoundButton.addEventListener("click", function () {
+
+        // åbn dialogen (modal = resten af siden låses imens)
+        endRoundDialog.showModal();
+    });
+}
 
 // Der er IKKE en "close"-handler mere: "Afslut runde"-knappen i dialogen har formmethod="post" formaction="/afslut-runde",
 // så browseren sender selv formularen til serveren, og serveren sender videre til rundehistorik.

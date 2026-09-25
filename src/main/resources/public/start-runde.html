@@ -22,42 +22,42 @@
 <!-- Navigation: bundnav på mobil, sidebar på desktop (samme HTML) -->
 <!-- menuen - den er ens på alle sider -->
 <nav class="sidenav" aria-label="Hovedmenu">
-    <a class="sidenav__logo" href="dashboard.html">
+    <a class="sidenav__logo" href="/dashboard">
         <img src="img/spire.svg" alt="" width="22" height="22">
         <span>SIMPL</span>
     </a>
 
     <ul class="sidenav__list">
-      <li><a href="dashboard.html" class="is-active" aria-current="page">
+      <li><a href="/dashboard" class="is-active" aria-current="page">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6 10.5V19h12v-8.5"/></svg>
         <span>Hjem</span></a></li>
-      <li><a href="../templates/medicin.html">
+      <li><a href="/medicin">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="m8.5 12.2 2.3 2.3 4.7-4.8"/></svg>
         <span>Medicin</span></a></li>
-      <li><a href="../templates/hormoner.html">
+      <li><a href="/hormoner">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5.5 3.5 3L19 7"/><path d="M15 7h4v4"/></svg>
         <span>Hormoner</span></a></li>
-      <li><a href="../templates/dagbog.html">
+      <li><a href="/dagbog">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19l1-4L16.5 4.5l2.9 2.9L8.9 18 5 19z"/></svg>
         <span>Dagbog</span></a></li>
       <!-- desktop-only = vises ikke på mobil -->
-      <li class="desktop-only"><a href="../templates/aftaler.html">
+      <li class="desktop-only"><a href="/aftaler">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10h16M8 4v4M16 4v4"/></svg>
         <span>Aftaler</span></a></li>
-      <li class="desktop-only"><a href="tidslinje.html">
+      <li class="desktop-only"><a href="/tidslinje">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M12 8h6a2 2 0 0 0 0-4M12 14h-5a2 2 0 0 1 0-4"/><circle cx="12" cy="19" r="1.4"/></svg>
         <span>Tidslinje</span></a></li>
       <li class="desktop-only"><a href="dokumenter.html">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h5"/></svg>
         <span>Dokumenter</span></a></li>
-      <li><a href="../templates/rundehistorik.html">
+      <li><a href="/rundehistorik">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/></svg>
         <span>Historik</span></a></li>
     </ul>
 
     <!-- nederst i menuen -->
     <p class="sidenav__footer desktop-only">
-        <a href="min-profil.html">Min profil</a> · <a href="../templates/login.html">Log ud</a>
+        <a href="/min-profil">Min profil</a> · <a href="/login">Log ud</a>
     </p>
 </nav>
 
@@ -70,7 +70,7 @@
             <h1>Start runde</h1>
         </div>
         <div class="topbar__actions">
-            <a href="min-profil.html" class="avatar desktop-only" aria-label="Min profil">A</a>
+            <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil">A</a>
         </div>
     </header>
 
@@ -102,7 +102,7 @@
                 <button type="submit">Start runde</button>
             </form>
 
-            <p class="link-line"><a href="dashboardtom.html">Annullér</a></p>
+            <p class="link-line"><a href="/dashboard">Annullér</a></p>
         </section>
 
         <!-- HØJRE: hjælpetekst der forklarer hvad der sker -->
