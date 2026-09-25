@@ -1,6 +1,6 @@
 # Tasks per user story
 
-*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (106 tests i src/test/java/services).*
+*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
 
@@ -31,12 +31,13 @@
 - [x]  Vis listen af tidligere noter til patienten *(Thymeleaf: GET /dagbog, th:each)*
 - [x]  JavaScript: dagens dato sættes automatisk i dato-feltet *(js/dagbog.js)*
 - [x]  JavaScript: antal noter tælles og vises under listen *(js/dagbog.js)*
-- [x]  Test hele flowet fra start til slut *(DiaryServiceTest – inkl. at patienter ikke kan se hinandens noter)*
+- [x]  Slet en note (POST /dagbog/slet → DiaryService.deleteEntry – kun egne noter) *(25. sep)*
+- [x]  Test hele flowet fra start til slut *(DiaryServiceTest – inkl. at patienter ikke kan se eller slette hinandens noter)*
 
 ## User story 5 – Login
 - [x]  Lav layout til login-skærmen *(HTML/CSS lavet)*
 - [x]  Tjek brugernavn/adgangskode mod databasen *(POST /login → AuthService.login → UserAccountDAO.findByUsername)*
-- [ ]  Håndter fejlscenariet: bruger uden profil henvises til oprettelse (User story 6a)
+- [x]  Håndter fejlscenariet: bruger uden profil henvises til oprettelse (User story 6a) *(fejlbeskeden siger bevidst ikke, OM brugernavnet findes – det er god sikkerhedsskik; "Opret profil"-linket står lige under. 25. sep)*
 - [x]  Håndter fejlscenariet: forkert brugernavn/adgangskode giver fejlbesked *(UserNotFoundException → ${error} på login-siden)*
 - [x]  Test både succesfuldt login og fejlscenarierne *(AuthServiceTest)*
 
@@ -74,6 +75,7 @@
 - [x]  JavaScript: enheden vælges automatisk ud fra hormonet *(js/hormoner.js)*
 - [x]  Gem målingen i databasen, tilknyttet den aktive Round *(POST /hormoner → HormoneService.saveLog)*
 - [x]  Implementér logik til at finde og vise den seneste måling *(HormoneService.getLogs nyeste først; vises på /hormoner og dashboard med dansk label via HormoneType.getLabel)*
+- [x]  Slet en måling (POST /hormoner/slet → HormoneService.deleteLog – kun egne) og kurve som SVG med eget gennemsnit *(25. sep)*
 - [x]  Test registrering og "seneste værdi"-visning *(HormoneServiceTest)*
 
 ## User story 10a – Start og afslut runde
@@ -107,7 +109,7 @@
 - [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `accountId` sættes ved login; alle controllere læser fra sessionen og sender til /login, hvis den er tom
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
-- [x]  Automatiserede tests: 106 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
+- [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
 - [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)

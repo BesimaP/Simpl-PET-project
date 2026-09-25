@@ -131,6 +131,11 @@
         <li th:each="h : ${logs}">
           <strong th:text="${#temporals.format(h.dateTime, 'd. MMM yyyy')}">I går</strong>
           <span th:text="${h.hormoneType.label} + ' · ' + ${h.value} + ' ' + ${h.unit}">Østradiol · 450 pmol/L</span>
+          <!-- slet: en lille formular med målingens id i et skjult felt -> POST /hormoner/slet -->
+          <form action="/hormoner/slet" method="post" class="delete-form">
+            <input type="hidden" name="id" th:value="${h.id}">
+            <button type="submit" class="muted-link">Slet</button>
+          </form>
         </li>
       </ul>
       <p class="muted" th:if="${logs.isEmpty()}">Ingen målinger i denne runde endnu.</p>

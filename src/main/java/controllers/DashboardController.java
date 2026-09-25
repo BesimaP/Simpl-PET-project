@@ -43,6 +43,7 @@ public class DashboardController {
         NotificationService notificationService = new NotificationService();
         notificationService.createMedicationReminders(patientId);
         ctx.attribute("unread", notificationService.countUnread(patientId));
+        ctx.attribute("notifications", notificationService.getNotifications(patientId));   // til pop-op'en ved klokken
 
         // forløb og runde: null, hvis de ikke findes -> skabelonen viser den rigtige tilstand med th:if
         FertilityJourney journey = null;

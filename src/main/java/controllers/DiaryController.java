@@ -14,6 +14,7 @@ public class DiaryController {
         // "når der kommer POST til /dagbog (formularen på dagbog.html), så kald saveEntry med den ctx, Javalin rækker os"
         config.routes.post("/dagbog", ctx -> saveEntry(ctx));
         config.routes.get("/dagbog", ctx -> showEntries(ctx));
+        config.routes.post("/dagbog/slet", ctx -> deleteEntry(ctx));   // "Slet" på én note
     }
 
     public static void showEntries(Context ctx) {
@@ -53,5 +54,23 @@ public class DiaryController {
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dagbog?fejl=intet-forloeb");
             default -> ctx.redirect("/dagbog?fejl=ukendt");
         }
+    }
+
+    // POST /dagbog/slet – slet én note (id i et skjult felt). Service tjekker, at noten er patientens egen
+    private static void deleteEntry(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        int entryId;
+        try {
+            entryId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/dagbog?fejl=ukendt");
+            return;
+        }
+        ServiceResult result = new DiaryService().deleteEntry(patientId, entryId);
+        ctx.redirect(result == ServiceResult.OK ? "/dagbog?gemt=slettet" : "/dagbog?fejl=ukendt");
     }
 }

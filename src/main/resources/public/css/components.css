@@ -348,3 +348,10 @@ button.muted-link:hover {
 @keyframes toast-hide {
     to { opacity: 0; height: 0; padding: 0; margin: 0; overflow: hidden; }
 }
+
+
+/* delete-form = den lille "Slet" under en note/måling. Højrestillet og diskret, så den ikke trykkes ved et uheld */
+.delete-form {
+    margin: 4px 0 0;
+    text-align: right;
+}

@@ -71,11 +71,12 @@
             <p class="muted" th:text="${#temporals.format(today, 'EEEE d. MMMM')}">Onsdag 2. september</p>
         </div>
         <div class="topbar__actions">
-            <a href="/notifikationer" class="iconbtn" aria-label="Notifikationer">
+            <!-- klokken er en knap (ikke et link): js/dashboard.js åbner pop-op'en #notif-dialog. type=button = sender ingen formular -->
+            <button type="button" id="open-notifications" class="iconbtn" aria-label="Notifikationer">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
                 <!-- th:if: den røde prik vises kun, når der er ulæste påmindelser (${unread} fra DashboardController) -->
                 <span class="dot" th:if="${unread > 0}"></span>
-            </a>
+            </button>
             <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil" th:text="${#strings.substring(patient.name, 0, 1)}">A</a>
         </div>
     </header>
@@ -211,6 +212,32 @@
 </main>
 
 <!-- Bekræftelse (Nielsen #3 + #5): rolig, neutral, med udvej -->
+<!-- Pop-op med notifikationer (US12). Skjult indtil js/dashboard.js åbner den, når man klikker på klokken.
+     Samme liste som /notifikationer – de 5 nyeste. th:each over ${notifications} fra DashboardController -->
+<dialog id="notif-dialog" class="confirm">
+    <form method="dialog">   <!-- method dialog = knapperne lukker bare vinduet -->
+        <h2>Notifikationer</h2>
+        <ul class="rounds">
+            <!-- ${#lists…}: kun de 5 nyeste. iterStat.index = nummeret i løkken (0, 1, 2 …) -->
+            <li th:each="n, iterStat : ${notifications}" th:if="${iterStat.index < 5}" th:classappend="${n.read} ? 'is-read'">
+                <div class="round__info">
+                    <strong th:text="${n.title}">Husk din medicin</strong>
+                    <span th:text="${n.message}">Gonal-F · 150 IU · kl. 20:00</span>
+                </div>
+                <span class="pill" th:unless="${n.read}">Ny</span>
+            </li>
+        </ul>
+        <p class="muted" th:if="${notifications.isEmpty()}">Ingen notifikationer.</p>
+        <div class="confirm__actions">
+            <button type="submit" value="close" class="btn btn--outline">Luk</button>
+            <!-- formmethod/formaction: DENNE knap sender til serveren – markér alle som læst. Kun når der er ulæste -->
+            <button type="submit" formmethod="post" formaction="/notifikationer/laest-alle" class="btn btn--primary" th:if="${unread > 0}">Markér alle som læst</button>
+            <!-- almindeligt link til hele siden -->
+            <a href="/notifikationer" class="btn btn--outline" th:unless="${unread > 0}">Se alle</a>
+        </div>
+    </form>
+</dialog>
+
 <!-- dialog = et pop-op vindue. er skjult indtil js/dashboard.js åbner det. Kun med, når der er en runde -->
 <dialog id="confirm-end" class="confirm" th:if="${round != null}">
     <!-- method dialog = knapperne lukker bare vinduet, sender ikke noget -->

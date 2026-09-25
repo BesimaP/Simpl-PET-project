@@ -73,6 +73,17 @@ public class HormoneService {
         }
     }
 
+    // Sletter én måling – kun patientens egen (id'et skal findes i rundens liste). Svar: OK · NOT_FOUND
+    public ServiceResult deleteLog(int patientId, int logId) {
+        for (HormoneLog log : getLogs(patientId)) {
+            if (log.getId() == logId) {
+                new HormoneLogDAO(DatabaseConnection.getConnection()).delete(logId);
+                return ServiceResult.OK;
+            }
+        }
+        return ServiceResult.NOT_FOUND;
+    }
+
     // SVG'ens størrelse – skabelonen bruger samme tal i viewBox
     public static final int CHART_WIDTH = 320;
     public static final int CHART_HEIGHT = 140;

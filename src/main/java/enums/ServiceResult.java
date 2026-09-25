@@ -7,5 +7,6 @@ public enum ServiceResult {
     ALREADY_EXISTS,     // noget findes allerede (fx brugernavnet er optaget)
     NO_ACTIVE_JOURNEY,  // patienten har intet aktivt forløb
     NO_ACTIVE_ROUND,    // patienten har ingen aktiv runde
-    ROUND_IN_PROGRESS   // der er allerede en runde i gang
+    ROUND_IN_PROGRESS,  // der er allerede en runde i gang
+    NOT_FOUND           // det, der skulle slettes/ændres, findes ikke – eller tilhører en anden patient
 }

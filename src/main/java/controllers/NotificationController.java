@@ -34,7 +34,9 @@ public class NotificationController {
             return;
         }
         new NotificationService().markAllRead(patientId);
-        ctx.redirect("/notifikationer");
+        // tilbage til den side, knappen blev trykket på (pop-op på dashboard eller /notifikationer). Referer = "hvor kom du fra"
+        String from = ctx.header("Referer");
+        ctx.redirect(from != null && from.contains("/dashboard") ? "/dashboard" : "/notifikationer");
     }
 
     // POST /notifikationer/laest – markér én som læst (id i et skjult felt). Bruges ikke i UI'et lige nu, men ruten findes

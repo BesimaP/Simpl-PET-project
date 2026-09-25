@@ -62,4 +62,23 @@ class DiaryServiceTest {
         assertEquals(1, new DiaryService().getEntries(anna).size());
         assertEquals(0, new DiaryService().getEntries(maria).size());
     }
+
+    @Test
+    void deleteEntryRemovesOwnEntry() {
+        int patientId = TestData.newPatientWithJourney();
+        new DiaryService().saveEntry(patientId, "2026-09-12", "Slet mig", "…");
+        int id = new DiaryService().getEntries(patientId).get(0).getId();
+        assertEquals(ServiceResult.OK, new DiaryService().deleteEntry(patientId, id));
+        assertTrue(new DiaryService().getEntries(patientId).isEmpty());
+    }
+
+    @Test
+    void deleteEntryOfAnotherPatientReturnsNotFound() {
+        int anna = TestData.newPatientWithJourney();
+        int maria = TestData.newPatientWithJourney();
+        new DiaryService().saveEntry(anna, "2026-09-12", "Annas note", "Privat");
+        int id = new DiaryService().getEntries(anna).get(0).getId();
+        assertEquals(ServiceResult.NOT_FOUND, new DiaryService().deleteEntry(maria, id));
+        assertEquals(1, new DiaryService().getEntries(anna).size()); // stadig der
+    }
 }

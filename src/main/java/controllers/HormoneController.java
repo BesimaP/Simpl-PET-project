@@ -15,6 +15,7 @@ public class HormoneController {
         // "når der kommer POST til /hormoner (formularen på hormoner.html), så kald saveLog med den ctx, Javalin rækker os"
         config.routes.post("/hormoner", ctx -> saveLog(ctx));
         config.routes.get("/hormoner", ctx -> showLogs(ctx));
+        config.routes.post("/hormoner/slet", ctx -> deleteLog(ctx));   // "Slet" på én måling
     }
 
     // GET /hormoner – hent rundens målinger og fyld skabelonen
@@ -67,5 +68,23 @@ public class HormoneController {
             case NO_ACTIVE_ROUND -> ctx.redirect("/hormoner?fejl=ingen-runde");
             default -> ctx.redirect("/hormoner?fejl=ukendt");
         }
+    }
+
+    // POST /hormoner/slet – slet én måling (id i et skjult felt). Service tjekker, at målingen er patientens egen
+    private static void deleteLog(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        int logId;
+        try {
+            logId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/hormoner?fejl=ukendt");
+            return;
+        }
+        ServiceResult result = new HormoneService().deleteLog(patientId, logId);
+        ctx.redirect(result == ServiceResult.OK ? "/hormoner?gemt=slettet" : "/hormoner?fejl=ukendt");
     }
 }

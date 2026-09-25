@@ -35,6 +35,9 @@
             <p class="subtitle">Det tager under et minut</p>
 
             <!-- action = hvor formularen sendes hen, method=get = data ses i adressen -->
+            <!-- fejlbesked fra serveren (?fejl=brugernavn / felter i adressen). Tom fra start; js/opretprofil.js skriver teksten -->
+            <p id="form-error" class="field-error" role="alert"></p>
+
             <form action="/opretprofil" method="post">
                 <!-- for og id skal være ens, så label og felt hører sammen -->
                 <label for="name">Navn</label>
@@ -61,9 +64,12 @@
                     <label><input type="radio" name="hasJourney" value="yes"> Ja</label>
                 </fieldset>
 
-                <label for="journeyStart">Forløbet startede</label>
-                <!-- ikke required: kun nødvendig ved "Ja" – det tjekker AuthService -->
-                <input type="date" id="journeyStart" name="journeyStart">
+                <!-- div'en skjules/vises af js/opretprofil.js alt efter Ja/Nej. hidden = skjult fra start (Nej er valgt) -->
+                <div id="journey-fields" hidden>
+                    <label for="journeyStart">Forløbet startede</label>
+                    <!-- ikke required her: js/opretprofil.js sætter required, når "Ja" er valgt – og AuthService tjekker igen -->
+                    <input type="date" id="journeyStart" name="journeyStart">
+                </div>
 
                 <!-- knappen sender formularen -->
                 <button type="submit">Opret profil</button>

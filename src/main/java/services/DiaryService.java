@@ -60,6 +60,18 @@ public class DiaryService {
         }
     }
 
+    // Sletter én note – men kun hvis den er patientens egen (id'et skal findes i hendes liste).
+    // Svar: OK · NOT_FOUND = findes ikke / ikke hendes
+    public ServiceResult deleteEntry(int patientId, int entryId) {
+        for (DiaryEntry e : getEntries(patientId)) {
+            if (e.getId() == entryId) {
+                new DiaryEntryDAO(DatabaseConnection.getConnection()).delete(entryId);
+                return ServiceResult.OK;
+            }
+        }
+        return ServiceResult.NOT_FOUND;
+    }
+
     // lille hjælper: null eller kun mellemrum tæller som tomt
     private boolean isBlank(String s) {
         return s == null || s.isBlank();

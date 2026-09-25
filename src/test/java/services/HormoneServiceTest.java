@@ -110,4 +110,23 @@ class HormoneServiceTest {
         assertEquals(500.0, curve.getAverage());
         assertEquals(58.0, curve.getAverageY());   // 200 af 800 = 25 % op ad de 100 px: y = 120 - 25 = 95
     }
+
+    @Test
+    void deleteLogRemovesOwnLog() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService().saveLog(patientId, "LH", "5", "IU/L", "2026-09-12");
+        int id = new HormoneService().getLogs(patientId).get(0).getId();
+        assertEquals(ServiceResult.OK, new HormoneService().deleteLog(patientId, id));
+        assertTrue(new HormoneService().getLogs(patientId).isEmpty());
+    }
+
+    @Test
+    void deleteLogOfAnotherPatientReturnsNotFound() {
+        int anna = TestData.newPatientWithRound();
+        int maria = TestData.newPatientWithRound();
+        new HormoneService().saveLog(anna, "LH", "5", "IU/L", "2026-09-12");
+        int id = new HormoneService().getLogs(anna).get(0).getId();
+        assertEquals(ServiceResult.NOT_FOUND, new HormoneService().deleteLog(maria, id));
+        assertEquals(1, new HormoneService().getLogs(anna).size());
+    }
 }
