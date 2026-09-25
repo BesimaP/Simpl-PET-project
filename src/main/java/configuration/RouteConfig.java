@@ -18,6 +18,7 @@ public class RouteConfig {
         ProfileController.setRoutes(config);
         NotificationController.setRoutes(config);
         TimelineController.setRoutes(config);
+        DocumentController.setRoutes(config);
         // TODO: DocumentController – når den får ruter
 
         config.routes.get("/", ctx -> ctx.redirect("/login"));
