@@ -24,12 +24,20 @@ public class LoginController {
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 
-        try{
-            // 2. spørg service. Svaret er selve kortet (UserAccount) eller null – ikke ServiceResult, fordi vi senere skal bruge user.getId() til sessionen
-            UserAccount user = new AuthService().login(username, password);
-            ctx.redirect("/dashboard.html");  // ja -> ind på dashboard
+        try {
+            // 2. spørg service. Svaret er patientens id – eller en UserNotFoundException, som fanges nedenfor
+            int patientId = new AuthService().login(username, password);
+
+            // 3. sessionscope: husk hvem der er logget ind, til browseren lukkes. Alle andre controllere læser patientId herfra
+            ctx.sessionAttribute("patientId", patientId);
+
+            // 4. ind på dashboard
+            ctx.redirect("/dashboard.html");
+
         } catch (UserNotFoundException e) {
-            ctx.redirect("/login.html?fejl=1");
+            // requestscope: gælder kun for dette ene svar. Thymeleaf viser det som ${error} på login-siden
+            ctx.attribute("error", e.getMessage());
+            ctx.render("login");
         }
     }
 
