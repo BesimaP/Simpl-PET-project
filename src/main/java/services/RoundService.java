@@ -13,6 +13,8 @@ import exceptions.NoActiveRoundException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 // Forretningslogik for runder (Round, US10a/10b). Kender IKKE Javalin.
 // Metoderne svarer med ServiceResult. Controlleren vælger side ud fra svaret.
@@ -92,5 +94,15 @@ public class RoundService {
             throw new NoActiveRoundException("Der er ingen runde i gang");
         }
         return round;
+    }
+
+    // Henter alle runder i patientens aktive forløb, ældste først – til rundehistorik (GET). Intet forløb -> tom liste
+    public List<Round> getRounds(int patientId) {
+        try {
+            FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
+            return new RoundDAO(DatabaseConnection.getConnection()).findByJourney(journey.getId());
+        } catch (NoActiveJourneyException e) {
+            return new ArrayList<>();
+        }
     }
 }

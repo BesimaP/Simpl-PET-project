@@ -15,14 +15,31 @@ public class DashboardController {
         config.routes.post("/opret-forloeb", ctx -> createJourney(ctx)); // "Start dit forløb" på dashboardtom.html (US1)
         config.routes.post("/start-runde", ctx -> startRound(ctx));      // "Start runde" på start-runde.html (US10a)
         config.routes.post("/afslut-runde", ctx -> endRound(ctx));       // bekræft i dialogen på dashboard.html (US10b)
-        // GET /dashboard og GET /rundehistorik (vis data fra databasen) kommer med templates
+        config.routes.get("/rundehistorik", ctx -> showRounds(ctx));
+        // GET /dashboard kommer med templates
+    }
+
+    // GET /rundehistorik – hent alle runder og fyld skabelonen
+    private static void showRounds(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        ctx.attribute("rounds", new RoundService().getRounds(patientId));   // requestscope -> ${rounds}
+        ctx.render("rundehistorik");
     }
 
     // POST /opret-forloeb
     private static void createJourney(Context ctx) {
         // åbn kuverten: startdatoen fra formularen
         String startDate = ctx.formParam("startDate");
-        int patientId = 1; // TODO: fra session, når login husker hvem der er logget ind
+
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
 
         // bed service oprette forløbet – den kender reglen "kun ét aktivt"
        ServiceResult result = new DashboardService().createJourney(patientId, startDate);
@@ -39,7 +56,12 @@ public class DashboardController {
         // åbn kuverten: behandlingstype ("IVF", "ICSI", "IUI", "FET" = value i dropdownen) og startdato
         String type = ctx.formParam("type");
         String startDate = ctx.formParam("startDate");
-        int patientId = 1; // TODO: fra session
+        Integer patientId = ctx.sessionAttribute("patientId");
+
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
 
         ServiceResult result = new RoundService().startRound(patientId, type, startDate);
 
@@ -59,12 +81,17 @@ public class DashboardController {
         // resultatet er valgfrit: "POSITIVE", "NEGATIVE" eller tomt (kan udfyldes senere)
         String resultParam = ctx.formParam("result");
         Result result = (resultParam == null || resultParam.isBlank()) ? null : Result.valueOf(resultParam);
-        int patientId = 1; // TODO: fra session
+
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
 
         ServiceResult outcome = new RoundService().endRound(patientId, result);
 
         switch (outcome) {
-            case OK -> ctx.redirect("/rundehistorik.html");
+            case OK -> ctx.redirect("/rundehistorik");
             case NO_ACTIVE_ROUND -> ctx.redirect("/dashboard.html?fejl=ingen-runde");
             default -> ctx.redirect("/dashboard.html?fejl=ukendt");
         }
