@@ -9,3 +9,5 @@ target/
 # Database og OS-filer
 *.db
 .DS_Store
+# Uploadede dokumenter (US11) – brugerdata, ikke kode
+uploads/
