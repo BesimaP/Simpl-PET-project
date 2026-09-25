@@ -11,7 +11,36 @@ public class MedicationController {
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: MedicationController.setRoutes(config)
     public static void setRoutes(JavalinConfig config) {
-        config.routes.post("/medicin", ctx -> logDose(ctx)); // formularen "Ny medicin" på medicin.html
+        config.routes.get("/medicin", ctx -> showLogs(ctx));
+        config.routes.post("/medicin", ctx -> logDose(ctx));
+        config.routes.post("/medicin/taget", ctx -> markTaken(ctx));   // knappen på hver dosis
+    }
+
+    // GET /medicin – hent dagens og tidligere doser + medicinnavne, og fyld skabelonen
+    private static void showLogs(Context ctx) {
+        // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        MedicationService service = new MedicationService();
+        ctx.attribute("today", service.getTodayLogs(patientId));   // requestscope -> ${today}
+        ctx.attribute("past", service.getPastLogs(patientId));     // requestscope -> ${past}
+        ctx.attribute("names", service.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
+        ctx.render("medicin");                                     // templates/medicin.html
+    }
+
+    // POST /medicin/taget – knappen "markér som taget" på én dosis (id i et skjult felt)
+    private static void markTaken(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        int logId = Integer.parseInt(ctx.formParam("id"));   // "17" -> 17
+        new MedicationService().markTaken(logId);
+        ctx.redirect("/medicin");
     }
 
     // POST /medicin – når brugeren trykker "Gem". ctx = kuverten fra Javalin
@@ -23,18 +52,23 @@ public class MedicationController {
         String date = ctx.formParam("date");             // fx "2026-09-22"
         String time = ctx.formParam("time");             // fx "08:00"
         boolean taken = ctx.formParam("taken") != null;  // en afkrydset checkbox sendes med, en tom sendes slet ikke (null)
-        int patientId = 1; // TODO: fra session, når login husker hvem der er logget ind
+
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
 
         // 2. bed service gemme dosen – den finder selv forløb, runde og lægemiddel. Svar: OK = ok, ellers hvad der gik galt
         ServiceResult result = new MedicationService().logDose(patientId, medication, dose, unit, date, time, taken);
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
-            case OK -> ctx.redirect("/medicin.html");
-            case INVALID_INPUT -> ctx.redirect("/medicin.html?fejl=felter");            // tomt felt, ugyldigt tal/dato eller ukendt medicin
-            case NO_ACTIVE_JOURNEY -> ctx.redirect("/medicin.html?fejl=ingen-forloeb");
-            case NO_ACTIVE_ROUND -> ctx.redirect("/medicin.html?fejl=ingen-runde");
-            default -> ctx.redirect("/medicin.html?fejl=ukendt");
+            case OK -> ctx.redirect("/medicin");
+            case INVALID_INPUT -> ctx.redirect("/medicin?fejl=felter");            // tomt felt, ugyldigt tal/dato eller ukendt medicin
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/medicin?fejl=ingen-forloeb");
+            case NO_ACTIVE_ROUND -> ctx.redirect("/medicin?fejl=ingen-runde");
+            default -> ctx.redirect("/medicin?fejl=ukendt");
         }
     }
 }

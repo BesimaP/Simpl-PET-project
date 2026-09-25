@@ -12,6 +12,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 // Forretningslogik for medicin (US8). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 // Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldigt tal, dato eller ukendt medicin · NO_ACTIVE_JOURNEY · NO_ACTIVE_ROUND
@@ -62,6 +66,53 @@ public class MedicationService {
                 save(new MedicationLog(0, round.getId(), medication.getId(), scheduled, doseValue, unit, taken));
 
         return ServiceResult.OK;
+    }
+
+    // Doser planlagt i DAG i den runde, der er i gang – til listen "I dag" (GET)
+    public List<MedicationLog> getTodayLogs(int patientId) {
+        List<MedicationLog> today = new ArrayList<>();
+        for (MedicationLog m : getAll(patientId)) {
+            if (m.getScheduledDateTime().toLocalDate().equals(LocalDate.now())) {
+                today.add(m);
+            }
+        }
+        return today;
+    }
+
+    // Doser før i dag – til listen "Tidligere" (GET)
+    public List<MedicationLog> getPastLogs(int patientId) {
+        List<MedicationLog> past = new ArrayList<>();
+        for (MedicationLog m : getAll(patientId)) {
+            if (m.getScheduledDateTime().toLocalDate().isBefore(LocalDate.now())) {
+                past.add(m);
+            }
+        }
+        return past;
+    }
+
+    // Opslag id -> navn (fx 1 -> "Gonal-F"), så skabelonen kan vise navnet. Loggen har kun medicationId
+    public Map<Integer, String> getMedicationNames() {
+        Map<Integer, String> names = new HashMap<>();
+        for (Medication med : new MedicationDAO(DatabaseConnection.getConnection()).findAll()) {
+            names.put(med.getId(), med.getDescription());   // description = det pæne navn ("Gonal-F"), name = koden ("GONAL_F")
+        }
+        return names;
+    }
+
+    // Markér én dosis som taget (US8 AC3)
+    public ServiceResult markTaken(int logId) {
+        new MedicationLogDAO(DatabaseConnection.getConnection()).markTaken(logId);
+        return ServiceResult.OK;
+    }
+
+    // hjælper: alle doser i den runde, der er i gang. Intet forløb eller ingen runde er ikke en fejl her -> tom liste
+    private List<MedicationLog> getAll(int patientId) {
+        try {
+            Round round = new RoundService().findActiveRound(patientId);
+            return new MedicationLogDAO(DatabaseConnection.getConnection()).findByRound(round.getId());
+        } catch (NoActiveJourneyException | NoActiveRoundException e) {
+            return new ArrayList<>();
+        }
     }
 
     // lille hjælper: null eller kun mellemrum tæller som tomt
