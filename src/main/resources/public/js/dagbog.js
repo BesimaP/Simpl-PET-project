@@ -9,16 +9,3 @@ const datoFelt = document.getElementById("date");
 setTodayIn(datoFelt);
 
 
-// --- 2) Tæl noterne og skriv tallet under listen ---
-
-// FIND alle noterne (hvert <li> inde i <ul class="notes"> er én note)
-const noter = document.querySelectorAll(".notes li");
-
-// tæl hvor mange der er
-const count = noter.length;
-
-// FIND teksten "x noter i denne runde"
-const countText = document.getElementById("note-count");
-
-// skriv tallet i teksten
-countText.textContent = count + " noter i denne runde.";

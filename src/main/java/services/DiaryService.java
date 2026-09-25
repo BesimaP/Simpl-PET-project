@@ -10,6 +10,8 @@ import exceptions.NoActiveJourneyException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 // Forretningslogik for dagbogsnoter (US4). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 // Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldig dato · NO_ACTIVE_JOURNEY = intet forløb at lægge noten på
@@ -45,6 +47,17 @@ public class DiaryService {
         diaryDao.save(entry);
 
         return ServiceResult.OK;
+    }
+
+    // Henter alle noter på patientens aktive forløb, nyeste først – til listen på dagbog-siden (GET).
+    // Intet forløb er ikke en fejl her: så er der bare ingen noter at vise -> tom liste
+    public List<DiaryEntry> getEntries(int patientId) {
+        try {
+            FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
+            return new DiaryEntryDAO(DatabaseConnection.getConnection()).findByJourney(journey.getId());
+        } catch (NoActiveJourneyException e) {
+            return new ArrayList<>();
+        }
     }
 
     // lille hjælper: null eller kun mellemrum tæller som tomt
