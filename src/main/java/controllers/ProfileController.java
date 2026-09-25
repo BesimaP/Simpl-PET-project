@@ -25,6 +25,9 @@ public class ProfileController {
             return;
         }
         ctx.attribute("patient", new ProfileService().getPatient(patientId));   // requestscope -> ${patient.name}
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("min-profil");                                              // templates/min-profil.html
     }
 
@@ -68,7 +71,7 @@ public class ProfileController {
         ServiceResult result = new ProfileService().changePassword(accountId, currentPassword, newPassword, repeatPassword);
 
         switch (result) {
-            case OK -> ctx.redirect("/min-profil?kodeord=1");
+            case OK -> ctx.redirect("/min-profil?gemt=kodeord");
             case INVALID_INPUT -> ctx.redirect("/min-profil?fejl=kodeord");
             default -> ctx.redirect("/min-profil?fejl=ukendt");
         }

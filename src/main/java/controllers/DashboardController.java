@@ -70,6 +70,9 @@ public class DashboardController {
         ctx.attribute("latestHormone", logs.isEmpty() ? null : logs.get(0));             // nyeste først
         ctx.attribute("noteCount", new DiaryService().getEntries(patientId).size());
 
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("dashboard");
     }
 
@@ -81,6 +84,9 @@ public class DashboardController {
             return;
         }
         ctx.attribute("rounds", new RoundService().getRounds(patientId));   // requestscope -> ${rounds}
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("rundehistorik");
     }
 
@@ -100,7 +106,7 @@ public class DashboardController {
 
         // dashboard viser selv "start dit forløb"-delen, hvis der stadig intet forløb er
         switch (result) {
-            case OK, ALREADY_EXISTS -> ctx.redirect("/dashboard");   // der findes nu et aktivt forløb
+            case OK, ALREADY_EXISTS -> ctx.redirect("/dashboard?gemt=forloeb");   // der findes nu et aktivt forløb
             case INVALID_INPUT -> ctx.redirect("/dashboard?fejl=dato");
             default -> ctx.redirect("/dashboard?fejl=ukendt");
         }
@@ -122,7 +128,7 @@ public class DashboardController {
 
         // vælg side ud fra svaret
         switch (result) {
-            case OK -> ctx.redirect("/dashboard");
+            case OK -> ctx.redirect("/dashboard?gemt=runde");
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dashboard");                    // dashboard viser "start dit forløb"
             case ROUND_IN_PROGRESS -> ctx.redirect("/dashboard?fejl=runde-i-gang");
             case INVALID_INPUT -> ctx.redirect("/start-runde.html?fejl=felter");    // start-runde ligger stadig i public
@@ -145,7 +151,7 @@ public class DashboardController {
         ServiceResult outcome = new RoundService().endRound(patientId, result);
 
         switch (outcome) {
-            case OK -> ctx.redirect("/rundehistorik");
+            case OK -> ctx.redirect("/rundehistorik?gemt=afsluttet");
             case NO_ACTIVE_ROUND -> ctx.redirect("/dashboard?fejl=ingen-runde");
             default -> ctx.redirect("/dashboard?fejl=ukendt");
         }

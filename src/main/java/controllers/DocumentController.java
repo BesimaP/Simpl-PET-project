@@ -62,6 +62,9 @@ public class DocumentController {
             return;
         }
         ctx.attribute("documents", new DocumentService().getDocuments(patientId));  // requestscope -> ${documents}
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("dokumenter");
     }
 
@@ -86,7 +89,7 @@ public class DocumentController {
                 .uploadDocument(patientId, title, type, file.filename(), file.content(), file.size());
 
         switch (result) {
-            case OK -> ctx.redirect("/dokumenter");
+            case OK -> ctx.redirect("/dokumenter?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/dokumenter?fejl=felter");
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dokumenter?fejl=ingen-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/dokumenter?fejl=ingen-runde");

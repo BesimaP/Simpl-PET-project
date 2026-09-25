@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="da" xmlns:th="http://www.thymeleaf.org">
+<!--
+  Fragment = et stykke HTML, som andre templates kan hente ind (genbrug, ligesom en metode).
+  Bruges sådan i en side:  <div th:replace="~{fragments/besked :: besked}"></div>
+  Controlleren lægger ${gemt} og ${fejl} i request scope ud fra URL'en (?gemt=1 / ?fejl=felter).
+-->
+<body>
+
+<div th:fragment="besked">
+
+  <!-- grøn besked: noget blev gemt. th:if: kun når ?gemt= er sat. Forsvinder af sig selv (CSS-animation, ingen JavaScript) -->
+  <p class="toast" role="status" th:if="${gemt != null}">
+    <span th:switch="${gemt}">
+      <span th:case="'runde'">Runden er startet ✓</span>
+      <span th:case="'forloeb'">Dit forløb er oprettet ✓</span>
+      <span th:case="'afsluttet'">Runden er afsluttet ✓</span>
+      <span th:case="'kodeord'">Adgangskoden er skiftet ✓</span>
+      <span th:case="'oprettet'">Velkommen! Din profil er oprettet ✓</span>
+      <span th:case="*">Gemt ✓</span>
+    </span>
+  </p>
+
+  <!-- rød besked: noget gik galt. th:switch/th:case: én tekst per fejlkode fra controlleren -->
+  <p class="toast toast--error" role="alert" th:if="${fejl != null}">
+    <span th:switch="${fejl}">
+      <span th:case="'felter'">Udfyld alle felter – og tjek at dato og tal er gyldige.</span>
+      <span th:case="'dato'">Datoen er ikke gyldig.</span>
+      <span th:case="'ingen-forloeb'">Start et forløb først.</span>
+      <span th:case="'intet-forloeb'">Start et forløb først.</span>
+      <span th:case="'ingen-runde'">Start en runde først.</span>
+      <span th:case="'runde-i-gang'">Der er allerede en runde i gang.</span>
+      <span th:case="'kodeord'">Adgangskoden kunne ikke skiftes – tjek den nuværende, og at de to nye er ens (mindst 8 tegn).</span>
+      <span th:case="'brugernavn'">Brugernavnet er optaget.</span>
+      <span th:case="*">Noget gik galt. Prøv igen.</span>
+    </span>
+  </p>
+
+</div>
+
+</body>
+</html>

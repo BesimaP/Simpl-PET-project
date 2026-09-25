@@ -72,7 +72,7 @@ public class LoginController {
                     Patient patient = new AuthService().login(username, password);
                     ctx.sessionAttribute("patientId", patient.getId());
                     ctx.sessionAttribute("accountId", patient.getUserAccountId());
-                    ctx.redirect("/dashboard");
+                    ctx.redirect("/dashboard?gemt=oprettet");
                 } catch (UserNotFoundException e) {
                     ctx.redirect("/login"); // burde ikke ske – men så må hun logge ind manuelt
                 }

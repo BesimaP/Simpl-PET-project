@@ -80,6 +80,9 @@
         </div>
     </header>
 
+    <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
+    <div th:replace="~{fragments/besked :: besked}"></div>
+
     <!-- ===== TILSTAND 1: intet forløb (før: dashboardtom.html) ===== -->
     <div class="round-grid" th:if="${journey == null}">
         <section class="card card--dark empty" aria-labelledby="empty-title">

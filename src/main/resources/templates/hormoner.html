@@ -73,6 +73,9 @@
     </div>
   </header>
 
+  <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
+  <div th:replace="~{fragments/besked :: besked}"></div>
+
   <!-- form-layout gør at kortene står i 2 kolonner -->
   <div class="form-layout">
 

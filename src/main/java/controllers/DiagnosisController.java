@@ -29,6 +29,9 @@ public class DiagnosisController {
         ctx.attribute("diagnoses", new DiagnosisService().getDiagnoses(patientId));
 
         // 3. vis skabelonen templates/diagnoser.html
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("diagnoser");
     }
 
@@ -50,7 +53,7 @@ public class DiagnosisController {
 
         // 4. vælg side ud fra svaret – redirect til RUTEN /diagnoser (ikke .html – filen ligger i templates nu)
         switch (result) {
-            case OK -> ctx.redirect("/diagnoser");
+            case OK -> ctx.redirect("/diagnoser?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/diagnoser?fejl=felter"); // navnet var tomt
             default -> ctx.redirect("/diagnoser?fejl=ukendt");
         }

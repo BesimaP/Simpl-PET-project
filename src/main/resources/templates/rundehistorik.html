@@ -76,6 +76,9 @@
       </div>
     </header>
 
+    <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
+    <div th:replace="~{fragments/besked :: besked}"></div>
+
     <!-- ét kort med alle runder -->
     <section class="card">
       <h2 class="eyebrow">Dine runder</h2>

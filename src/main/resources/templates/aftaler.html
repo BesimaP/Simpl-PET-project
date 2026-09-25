@@ -76,6 +76,9 @@
       </div>
     </header>
 
+    <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
+    <div th:replace="~{fragments/besked :: besked}"></div>
+
     <!-- INDHOLD: byg videre her (se tegningen i simpl-sider-plan.html) -->
 
     <!-- form-layout gør at kortene står i 2 kolonner (samme som hormoner.html) -->

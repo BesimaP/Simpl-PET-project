@@ -25,6 +25,9 @@ public class HormoneController {
             return;
         }
         ctx.attribute("logs", new HormoneService().getLogs(patientId));   // requestscope -> ${logs}
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("hormoner");                                            // templates/hormoner.html
     }
 
@@ -44,7 +47,7 @@ public class HormoneController {
         ServiceResult result = new HormoneService().saveLog(patientId, hormone, value, unit, date);
 
         switch (result) {
-            case OK -> ctx.redirect("/hormoner");
+            case OK -> ctx.redirect("/hormoner?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/hormoner?fejl=felter");
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/hormoner?fejl=intet-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/hormoner?fejl=ingen-runde");

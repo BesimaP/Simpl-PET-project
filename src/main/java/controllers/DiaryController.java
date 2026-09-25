@@ -23,6 +23,9 @@ public class DiaryController {
             return;
         }
         ctx.attribute("entries", new DiaryService().getEntries(patientId));   // requestscope -> ${entries}
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("dagbog");
 
     }
@@ -45,7 +48,7 @@ public class DiaryController {
 
         // 3. vælg side ud fra svaret – ét case per udfald (noter hænger på forløbet, så "ingen runde" findes ikke her)
         switch (result) {
-            case OK -> ctx.redirect("/dagbog");
+            case OK -> ctx.redirect("/dagbog?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/dagbog?fejl=felter"); // et felt var tomt
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dagbog?fejl=intet-forloeb");
             default -> ctx.redirect("/dagbog?fejl=ukendt");

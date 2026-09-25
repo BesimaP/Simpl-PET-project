@@ -326,3 +326,25 @@ button.muted-link:hover {
 .rounds li.is-read {
     opacity: 0.55;
 }
+
+
+/* toast = den lille besked under overskriften ("Gemt ✓" / fejl). Kommer fra fragmentet templates/fragments/besked.html */
+.toast {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--on-brand);
+    background: var(--ok);                       /* grøn: noget blev gemt */
+    animation: toast-hide 0.6s ease 4s forwards; /* efter 4 sekunder fader den ud – ren CSS, ingen JavaScript */
+}
+
+.toast--error {
+    background: var(--error);                    /* terracotta: noget gik galt */
+    animation: none;                             /* fejl bliver stående, til brugeren har læst den */
+}
+
+@keyframes toast-hide {
+    to { opacity: 0; height: 0; padding: 0; margin: 0; overflow: hidden; }
+}

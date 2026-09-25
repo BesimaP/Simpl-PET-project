@@ -26,6 +26,9 @@ public class AppointmentController {
         AppointmentService service = new AppointmentService();
         ctx.attribute("upcoming", service.getUpcoming(patientId));   // requestscope -> ${upcoming}
         ctx.attribute("past", service.getPast(patientId));           // requestscope -> ${past}
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("aftaler");                                       // templates/aftaler.html
     }
 
@@ -49,7 +52,7 @@ public class AppointmentController {
 
         // 4. vælg side ud fra svaret – redirect til RUTEN /aftaler (aftaler hænger på forløbet, så "ingen runde" findes ikke her)
         switch (result) {
-            case OK -> ctx.redirect("/aftaler");
+            case OK -> ctx.redirect("/aftaler?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/aftaler?fejl=felter");            // et felt var tomt eller ugyldigt
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/aftaler?fejl=ingen-forloeb");
             default -> ctx.redirect("/aftaler?fejl=ukendt");

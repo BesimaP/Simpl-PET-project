@@ -28,6 +28,9 @@ public class MedicationController {
         ctx.attribute("today", service.getTodayLogs(patientId));   // requestscope -> ${today}
         ctx.attribute("past", service.getPastLogs(patientId));     // requestscope -> ${past}
         ctx.attribute("names", service.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("medicin");                                     // templates/medicin.html
     }
 
@@ -64,7 +67,7 @@ public class MedicationController {
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
-            case OK -> ctx.redirect("/medicin");
+            case OK -> ctx.redirect("/medicin?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/medicin?fejl=felter");            // tomt felt, ugyldigt tal/dato eller ukendt medicin
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/medicin?fejl=ingen-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/medicin?fejl=ingen-runde");
