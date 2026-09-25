@@ -1,5 +1,6 @@
 package controllers;
 
+import enums.HormoneType;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
@@ -24,7 +25,20 @@ public class HormoneController {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("logs", new HormoneService().getLogs(patientId));   // requestscope -> ${logs}
+        HormoneService service = new HormoneService();
+        ctx.attribute("logs", service.getLogs(patientId));   // requestscope -> ${logs}
+
+        // kurven: ?hormon=E2_OESTRADIOL vælger hormonet (knapperne over kurven). Ingen/ukendt værdi -> null -> nyeste måling bestemmer
+        HormoneType chosen = null;
+        try {
+            if (ctx.queryParam("hormon") != null) {
+                chosen = HormoneType.valueOf(ctx.queryParam("hormon"));
+            }
+        } catch (IllegalArgumentException e) {
+            // ukendt hormon i URL'en – ignorér, vis standard
+        }
+        ctx.attribute("curve", service.getCurve(patientId, chosen));   // requestscope -> ${curve}
+        ctx.attribute("hormoneTypes", HormoneType.values());           // requestscope -> ${hormoneTypes} (knapperne)
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));

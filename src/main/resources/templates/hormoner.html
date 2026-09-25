@@ -134,7 +134,54 @@
         </li>
       </ul>
       <p class="muted" th:if="${logs.isEmpty()}">Ingen målinger i denne runde endnu.</p>
-      <p class="muted">Kurven kommer, når der er JavaScript.</p>
+      <!-- KURVE (US9): tegnet som SVG direkte af Thymeleaf – ingen JavaScript og intet bibliotek.
+           HormoneService.getCurve har regnet målingerne om til x/y, så her tegnes der bare -->
+      <h2 class="eyebrow" style="margin-top: 24px">Kurve</h2>
+
+      <!-- th:each over enum-værdierne: én lille knap per hormon. @{...(hormon=...)} = Thymeleaf-link med query-parameter.
+           th:classappend: den valgte får is-active -->
+      <p class="chart-tabs">
+        <a th:each="t : ${hormoneTypes}"
+           th:href="@{/hormoner(hormon=${t.name()})}"
+           th:text="${t.label}"
+           th:classappend="${t == curve.type} ? 'is-active'"
+           class="pill">Østradiol</a>
+      </p>
+
+      <p class="muted" th:if="${curve.points.isEmpty()}">Ingen målinger af dette hormon endnu.</p>
+
+      <!-- th:unless: SVG'en tegnes kun, når der er punkter. viewBox = samme tal som CHART_WIDTH/HEIGHT i HormoneService -->
+      <svg class="chart" viewBox="0 0 320 140" role="img" th:unless="${curve.points.isEmpty()}"
+           th:attr="aria-label='Kurve for ' + ${curve.type.label}">
+        <!-- bundlinje (0) og toplinje (største værdi) -->
+        <line class="chart__axis" x1="20" y1="120" x2="300" y2="120"/>
+        <line class="chart__grid" x1="20" y1="20" x2="300" y2="20"/>
+        <!-- største værdi skrives over toplinjen, højrestillet, så den ikke rammer første punkt -->
+        <text class="chart__label" x="300" y="15" text-anchor="end" th:text="'maks ' + ${curve.max} + ' ' + ${curve.unit}">maks 450 pmol/L</text>
+
+        <!-- gennemsnit: stiplet linje + tekst til venstre. y kommer fra HormoneService (samme skala som punkterne) -->
+        <line class="chart__avg" x1="20" x2="300" th:attr="y1=${curve.averageY}, y2=${curve.averageY}" y1="70" y2="70"/>
+        <text class="chart__label" x="20" text-anchor="start" th:attr="y=${curve.averageY - 3}" y="67"
+              th:text="'dit gns. ' + ${curve.average}">dit gns. 535</text>
+
+        <!-- selve kurven: én polyline gennem alle punkter. points = "x1,y1 x2,y2 …" fra HormoneCurve.getPolyline -->
+        <polyline class="chart__line" th:attr="points=${curve.polyline}" points="20,120 300,20"/>
+
+        <!-- th:each: én prik + dato per måling. <title> = tooltip, når man holder musen over -->
+        <g th:each="p : ${curve.points}">
+          <circle class="chart__dot" r="4" th:attr="cx=${p.x}, cy=${p.y}" cx="20" cy="120">
+            <title th:text="${p.dateLabel} + ': ' + ${p.value} + ' ' + ${curve.unit}">1/9: 450 pmol/L</title>
+          </circle>
+          <text class="chart__label" text-anchor="middle" y="135" th:attr="x=${p.x}" x="20" th:text="${p.dateLabel}">1/9</text>
+          <!-- værdien lige over prikken -->
+          <text class="chart__value" text-anchor="middle" th:attr="x=${p.x}, y=${p.y - 8}" x="20" y="112" th:text="${p.value}">450</text>
+        </g>
+      </svg>
+      <!-- forklaring, så patienten ikke tror, den stiplede linje er en normalværdi -->
+      <p class="muted" th:unless="${curve.points.isEmpty()}">
+        Den stiplede linje er gennemsnittet af <strong>dine egne</strong> målinger i denne runde – ikke en normalværdi.
+        Hvad der er normalt for dig, afhænger af din behandling og cyklusdag – kontakt klinikken, hvis du har spørgsmål til dine værdier.
+      </p>
     </aside>
 
   </div>

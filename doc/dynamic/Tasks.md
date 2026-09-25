@@ -1,6 +1,6 @@
 # Tasks per user story
 
-*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (103 tests i src/test/java/services).*
+*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (106 tests i src/test/java/services).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
 
@@ -107,7 +107,7 @@
 - [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `accountId` sættes ved login; alle controllere læser fra sessionen og sender til /login, hvis den er tom
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
-- [x]  Automatiserede tests: 103 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
+- [x]  Automatiserede tests: 106 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
 - [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)

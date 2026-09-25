@@ -2,6 +2,7 @@ package services;
 
 import dao.DatabaseConnection;
 import dao.HormoneLogDAO;
+import entities.HormoneCurve;
 import entities.HormoneLog;
 import entities.Round;
 import enums.HormoneType;
@@ -12,6 +13,7 @@ import exceptions.NoActiveRoundException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,6 +71,65 @@ public class HormoneService {
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
             return new ArrayList<>();
         }
+    }
+
+    // SVG'ens størrelse – skabelonen bruger samme tal i viewBox
+    public static final int CHART_WIDTH = 320;
+    public static final int CHART_HEIGHT = 140;
+    private static final int PADDING = 20;   // luft til tekst i kanterne
+
+    // Bygger kurven for ét hormon i den runde, der er i gang (US9). type = null -> hormonet fra den nyeste måling.
+    // Målingerne regnes om til SVG-koordinater: x = jævnt fordelt (ældste til venstre), y = skaleret efter største værdi (0 i bunden).
+    // Ingen målinger -> en tom kurve (ikke null), så skabelonen altid kan spørge ${curve.points.isEmpty()}
+    public HormoneCurve getCurve(int patientId, HormoneType type) {
+        List<HormoneLog> all = getLogs(patientId);   // nyeste først
+
+        // 1. hvilket hormon? Det valgte – ellers det fra den nyeste måling
+        if (type == null && !all.isEmpty()) {
+            type = all.get(0).getHormoneType();
+        }
+
+        // 2. kun målinger af det hormon, ældste først (vi vender listen)
+        List<HormoneLog> logs = new ArrayList<>();
+        for (int i = all.size() - 1; i >= 0; i--) {
+            if (all.get(i).getHormoneType() == type) {
+                logs.add(all.get(i));
+            }
+        }
+
+        // 3. største værdi bestemmer skalaen på y-aksen
+        double max = 0;
+        for (HormoneLog log : logs) {
+            if (log.getValue() > max) {
+                max = log.getValue();
+            }
+        }
+        String unit = logs.isEmpty() ? "" : logs.get(0).getUnit();
+        HormoneCurve curve = new HormoneCurve(type, unit, max);
+
+        // 4. ét punkt per måling. Ét punkt alene sættes i midten
+        int n = logs.size();
+        double innerWidth = CHART_WIDTH - 2 * PADDING;
+        double innerHeight = CHART_HEIGHT - 2 * PADDING;
+        for (int i = 0; i < n; i++) {
+            HormoneLog log = logs.get(i);
+            double x = (n == 1) ? CHART_WIDTH / 2.0 : PADDING + innerWidth * i / (n - 1);
+            double y = (max == 0) ? CHART_HEIGHT - PADDING : CHART_HEIGHT - PADDING - innerHeight * log.getValue() / max;
+            String dateLabel = log.getDateTime().format(DateTimeFormatter.ofPattern("d/M"));
+            curve.addPoint(new HormoneCurve.Point(Math.round(x), Math.round(y), log.getValue(), dateLabel));
+        }
+
+        // 5. gennemsnit: sum / antal, afrundet til én decimal – og samme omregning til y som punkterne
+        if (n > 0) {
+            double sum = 0;
+            for (HormoneLog log : logs) {
+                sum += log.getValue();
+            }
+            double average = Math.round(sum / n * 10) / 10.0;
+            double averageY = (max == 0) ? CHART_HEIGHT - PADDING : CHART_HEIGHT - PADDING - innerHeight * average / max;
+            curve.setAverage(average, Math.round(averageY));
+        }
+        return curve;
     }
 
     // lille hjælper: null eller kun mellemrum tæller som tomt

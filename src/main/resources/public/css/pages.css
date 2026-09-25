@@ -352,3 +352,25 @@
     margin-bottom: 24px;
     color: var(--on-brand-muted);
 }
+
+
+/* HORMONKURVE (hormoner.html). SVG'en skalerer med bredden – viewBox i HTML'en bestemmer forholdet */
+.chart {
+    width: 100%;
+    max-width: 480px;   /* SVG'en skalerer med bredden – men ikke ud over 480 px, ellers bliver stregerne for tykke */
+    height: auto;
+    margin-top: 8px;
+}
+
+.chart__axis { stroke: var(--border); stroke-width: 1; }
+.chart__grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 3; }   /* stiplet toplinje */
+.chart__avg  { stroke: var(--link); stroke-width: 1; stroke-dasharray: 4 3; }   /* okker, stiplet: gennemsnit */
+.chart__line { fill: none; stroke: var(--brand); stroke-width: 2; stroke-linejoin: round; }
+.chart__dot  { fill: var(--card); stroke: var(--brand); stroke-width: 2; }
+.chart__label { font-size: 7px; fill: var(--muted); }
+.chart__value { font-size: 7px; font-weight: 600; fill: var(--text); }
+
+/* knapperne over kurven: én pille per hormon. is-active = det valgte */
+.chart-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.chart-tabs .pill { text-decoration: none; }
+.chart-tabs .pill.is-active { background: var(--brand); color: var(--on-brand); }

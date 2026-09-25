@@ -1,6 +1,7 @@
 package services;
 
 import enums.ServiceResult;
+import entities.HormoneCurve;
 import enums.HormoneType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -72,5 +73,41 @@ class HormoneServiceTest {
         // labels bruges i Thymeleaf: ${h.hormoneType.label}
         assertEquals("Østradiol", HormoneType.E2_OESTRADIOL.getLabel());
         assertEquals("Progesteron", HormoneType.PROGESTERONE.getLabel());
+    }
+
+    @Test
+    void getCurveWithoutLogsIsEmptyNotNull() {
+        int patientId = TestData.newPatientWithRound();
+        HormoneCurve curve = new HormoneService().getCurve(patientId, null);
+        assertNotNull(curve);
+        assertTrue(curve.getPoints().isEmpty());
+    }
+
+    @Test
+    void getCurveUsesNewestHormoneWhenNoneChosen() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService().saveLog(patientId, "LH", "5", "IU/L", "2026-09-11");
+        new HormoneService().saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12");
+        assertEquals(HormoneType.E2_OESTRADIOL, new HormoneService().getCurve(patientId, null).getType());
+    }
+
+    @Test
+    void getCurveHasOldestFirstAndMaxAtTop() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService().saveLog(patientId, "E2_OESTRADIOL", "200", "pmol/L", "2026-09-11");
+        new HormoneService().saveLog(patientId, "E2_OESTRADIOL", "800", "pmol/L", "2026-09-13");
+        new HormoneService().saveLog(patientId, "LH", "5", "IU/L", "2026-09-12");   // andet hormon – skal ikke med
+        HormoneCurve curve = new HormoneService().getCurve(patientId, HormoneType.E2_OESTRADIOL);
+        assertEquals(2, curve.getPoints().size());
+        assertEquals(800.0, curve.getMax());
+        assertEquals(200.0, curve.getPoints().get(0).getValue());   // ældste først
+        assertEquals("13/9", curve.getPoints().get(1).getDateLabel());
+        // største værdi ligger øverst (y = PADDING = 20), og x vokser mod højre
+        assertEquals(20.0, curve.getPoints().get(1).getY());
+        assertTrue(curve.getPoints().get(0).getX() < curve.getPoints().get(1).getX());
+        assertEquals("20.0,95.0 300.0,20.0", curve.getPolyline());
+        // gennemsnit af 200 og 800 = 500 -> 500/800 = 62,5 % op: y = 120 - 62,5 = 57,5 -> afrundet 58
+        assertEquals(500.0, curve.getAverage());
+        assertEquals(58.0, curve.getAverageY());   // 200 af 800 = 25 % op ad de 100 px: y = 120 - 25 = 95
     }
 }
