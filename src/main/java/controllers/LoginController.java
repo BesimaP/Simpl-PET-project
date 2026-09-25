@@ -17,6 +17,13 @@ public class LoginController {
         config.routes.get("/login", ctx -> ctx.render("login"));
         config.routes.post("/login", ctx -> login(ctx));
         config.routes.post("/opretprofil", ctx -> createProfile(ctx));
+        config.routes.get("/logout", ctx -> logout(ctx));
+    }
+
+    // GET /logout – glem hvem der er logget ind og send til login. Bruges af "Log ud" i menuen
+    private static void logout(Context ctx) {
+        ctx.req().getSession().invalidate();   // sletter hele sessionen (patientId og accountId)
+        ctx.redirect("/login");
     }
 
     // POST /login – læs kuverten, spørg service, send brugeren videre

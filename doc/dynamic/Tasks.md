@@ -1,6 +1,6 @@
 # Tasks per user story
 
-*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (96 tests i src/test/java/services).*
+*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (103 tests i src/test/java/services).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
 
@@ -97,17 +97,17 @@
 - [x]  Test at dokumenter kan gemmes, listes og åbnes korrekt *(DocumentServiceTest, 8 tests)*
 
 ## User story 12 – Notifikationer
-- [ ]  Implementér logik der genererer en notifikation for dagens planlagte medicindoser, når appen åbnes (MEDICATION_REMINDER)
+- [x]  Implementér logik der genererer en notifikation for dagens planlagte medicindoser, når appen åbnes (MEDICATION_REMINDER) *(NotificationService.createMedicationReminders kaldes fra GET /dashboard; ingen dubletter; rød prik på klokken ved ulæste, 25. sep)*
 - [x]  Lav layout til notifikationslisten (titel, besked, isRead-status) *(Thymeleaf: GET /notifikationer, th:each med is-read)*
 - [x]  Implementér markering af en notifikation som læst *(POST /notifikationer/laest → NotificationService.markRead)*
-- [ ]  Test at notifikationer genereres korrekt og kan markeres som læst *(markRead er testet i NotificationServiceTest – generering venter)*
+- [x]  Test at notifikationer genereres korrekt og kan markeres som læst *(NotificationServiceTest, 9 tests)*
 
 ## Tekniske krav fra undervisningen (24. sep 2026)
 - [x]  Thymeleaf: templates + GET-ruter med `ctx.render` på siderne, der viser data *(25. sep: alle 11 sider – login, diagnoser, dagbog, aftaler, hormoner, medicin, rundehistorik, min-profil, dashboard, tidslinje, notifikationer)*
 - [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `accountId` sættes ved login; alle controllere læser fra sessionen og sender til /login, hvis den er tom
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
-- [x]  Automatiserede tests: 96 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
+- [x]  Automatiserede tests: 103 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
 - [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)
@@ -116,3 +116,4 @@
 - [ ]  Kodeord gemmes i klartekst → BCrypt-hash inden aflevering (AuthService.login/createProfile, ProfileService.changePassword)
 - [x]  `enums/Result.java` ser ud til at være en rest ved siden af `ServiceResult` → slet eller forklar *(ikke en rest: `Result` = rundens resultat POSITIVE/NEGATIVE, bruges i RoundDAO.endRound. `ServiceResult` = svaret fra service til controller. To forskellige ting)*
 - [ ]  Thymeleaf/OGNL: skriv aldrig ét enkelt tegn i enkelte anførselstegn (`'d'`) – det bliver en `char`. Brug `#temporals.day(...)` eller `'dd'` *(fundet 25. sep)*
+- [x]  `/logout`-rute: "Log ud" sletter sessionen (LoginController.logout) *(25. sep)*

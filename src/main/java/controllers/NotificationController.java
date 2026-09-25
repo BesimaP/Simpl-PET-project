@@ -10,6 +10,7 @@ public class NotificationController {
     public static void setRoutes(JavalinConfig config) {
         config.routes.get("/notifikationer", ctx -> showNotifications(ctx));   // vis listen (Thymeleaf)
         config.routes.post("/notifikationer/laest", ctx -> markRead(ctx));     // knappen på én notifikation
+        config.routes.post("/notifikationer/laest-alle", ctx -> markAllRead(ctx));
     }
 
     // GET /notifikationer – hent listen og fyld skabelonen
@@ -19,11 +20,24 @@ public class NotificationController {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("notifications", new NotificationService().getNotifications(patientId));   // requestscope -> ${notifications}
+        NotificationService service = new NotificationService();
+        ctx.attribute("notifications", service.getNotifications(patientId));   // requestscope -> ${notifications}
+        ctx.attribute("unread", service.countUnread(patientId));               // requestscope -> ${unread} (knappen vises kun, hvis > 0)
         ctx.render("notifikationer");
     }
 
-    // POST /notifikationer/laest – markér én som læst (id i et skjult felt)
+    // POST /notifikationer/laest-alle – "Markér alle som læst" øverst på siden
+    private static void markAllRead(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        new NotificationService().markAllRead(patientId);
+        ctx.redirect("/notifikationer");
+    }
+
+    // POST /notifikationer/laest – markér én som læst (id i et skjult felt). Bruges ikke i UI'et lige nu, men ruten findes
     private static void markRead(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {

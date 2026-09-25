@@ -55,7 +55,7 @@
 
   <!-- nederst i menuen -->
   <p class="sidenav__footer desktop-only">
-    <a href="/min-profil">Min profil</a> · <a href="/login">Log ud</a>
+    <a href="/min-profil">Min profil</a> · <a href="/logout">Log ud</a>
   </p>
 </nav>
 
@@ -79,6 +79,10 @@
   <section class="card" aria-labelledby="notif-title">
     <div class="section-head">
       <h2 id="notif-title">Alle notifikationer</h2>
+      <!-- th:if: knappen vises kun, når der faktisk er noget ulæst. En lille formular -> POST /notifikationer/laest-alle -->
+      <form th:if="${unread > 0}" action="/notifikationer/laest-alle" method="post">
+        <button type="submit" class="muted-link">Markér alle som læst</button>
+      </form>
     </div>
     <ul class="rounds">
       <!-- th:each: én notifikation per li. th:classappend: is-read når den er læst -->
@@ -87,11 +91,8 @@
           <strong th:text="${n.title}">Scanning i morgen</strong>
           <span th:text="${n.message} + ' · ' + ${#temporals.format(n.dateTime, 'd. MMM HH:mm')}">5. september kl. 9.30 · Vitanova</span>
         </div>
-        <!-- ulæst: en lille formular, hvor knappen markerer som læst -> POST /notifikationer/laest -->
-        <form th:unless="${n.read}" action="/notifikationer/laest" method="post">
-          <input type="hidden" name="id" th:value="${n.id}">
-          <button type="submit" class="pill">Ny · markér som læst</button>
-        </form>
+        <!-- th:unless: "Ny"-pillen vises kun på ulæste -->
+        <span class="pill" th:unless="${n.read}">Ny</span>
       </li>
     </ul>
     <p class="muted" th:if="${notifications.isEmpty()}">Ingen notifikationer.</p>

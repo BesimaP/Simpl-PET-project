@@ -39,6 +39,11 @@ public class DashboardController {
         ctx.attribute("patient", new ProfileService().getPatient(patientId));
         ctx.attribute("today", LocalDate.now());
 
+        // påmindelser om dagens medicin oprettes, når forsiden åbnes (US12). Tallet bruges til prikken på klokken
+        NotificationService notificationService = new NotificationService();
+        notificationService.createMedicationReminders(patientId);
+        ctx.attribute("unread", notificationService.countUnread(patientId));
+
         // forløb og runde: null, hvis de ikke findes -> skabelonen viser den rigtige tilstand med th:if
         FertilityJourney journey = null;
         Round round = null;

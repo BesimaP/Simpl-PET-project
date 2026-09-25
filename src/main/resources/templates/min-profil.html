@@ -56,7 +56,7 @@
 
   <!-- nederst i menuen -->
   <p class="sidenav__footer desktop-only">
-    <a href="/min-profil">Min profil</a> · <a href="/login">Log ud</a>
+    <a href="/min-profil">Min profil</a> · <a href="/logout">Log ud</a>
   </p>
 </nav>
 
@@ -127,7 +127,7 @@
       <p class="muted">Du er logget ind som <span th:text="${patient.name}">Anna</span>.</p>
 
       <!-- et link der ligner en knap -->
-      <a href="/login" class="btn-primary">Log ud</a>
+      <a href="/logout" class="btn-primary">Log ud</a>
 
       <!-- slet konto er med vilje lille, så man ikke trykker ved en fejl -->
       <p class="muted centered"><a href="#" id="delete-account">Slet konto</a></p>

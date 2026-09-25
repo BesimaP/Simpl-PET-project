@@ -90,6 +90,18 @@ public class NotificationDAO {
         }
     }
 
+    // sætter is_read = 1 på ALLE patientens påmindelser ("Markér alle som læst")
+    public void markAllRead(int patientId) {
+        String sql = "UPDATE notification SET is_read = 1 WHERE patient_id = ?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, patientId);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not mark notifications as read for patient " + patientId, e);
+        }
+    }
+
     // sletter én påmindelse ud fra dens id
     public void delete(int id) {
         String sql = "DELETE FROM notification WHERE id = ?";
