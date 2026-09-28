@@ -105,6 +105,12 @@ public class MedicationService {
         return ServiceResult.OK;
     }
 
+    // Fortryd "markér som taget" (sæt dosen tilbage til planlagt)
+    public ServiceResult markNotTaken(int logId) {
+        new MedicationLogDAO(DatabaseConnection.getConnection()).markNotTaken(logId);
+        return ServiceResult.OK;
+    }
+
     // hjælper: alle doser i den runde, der er i gang. Intet forløb eller ingen runde er ikke en fejl her -> tom liste
     private List<MedicationLog> getAll(int patientId) {
         try {
@@ -119,4 +125,6 @@ public class MedicationService {
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
     }
+
+
 }

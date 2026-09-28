@@ -75,6 +75,18 @@ public class MedicationLogDAO {
         }
     }
 
+    // sætter taken = 0 på én dosis (fortryd "markér som taget")
+    public void markNotTaken(int id) {
+        String sql = "UPDATE medication_log SET taken = 0 WHERE id = ?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not mark medication log " + id + " as not taken", e);
+        }
+    }
+
     // sletter én dosis ud fra dens id
     public void delete(int id) {
         String sql = "DELETE FROM medication_log WHERE id = ?";

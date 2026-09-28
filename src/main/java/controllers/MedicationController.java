@@ -14,6 +14,7 @@ public class MedicationController {
         config.routes.get("/medicin", ctx -> showLogs(ctx));
         config.routes.post("/medicin", ctx -> logDose(ctx));
         config.routes.post("/medicin/taget", ctx -> markTaken(ctx));   // knappen på hver dosis
+        config.routes.post("/medicin/ikke-taget", ctx -> markNotTaken(ctx));   // fortryd på hver dosis
     }
 
     // GET /medicin – hent dagens og tidligere doser + medicinnavne, og fyld skabelonen
@@ -43,6 +44,18 @@ public class MedicationController {
         }
         int logId = Integer.parseInt(ctx.formParam("id"));   // "17" -> 17
         new MedicationService().markTaken(logId);
+        ctx.redirect("/medicin");
+    }
+
+    // POST /medicin/ikke-taget – fortryd "markér som taget" (id i et skjult felt)
+    private static void markNotTaken(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        int logId = Integer.parseInt(ctx.formParam("id"));
+        new MedicationService().markNotTaken(logId);
         ctx.redirect("/medicin");
     }
 

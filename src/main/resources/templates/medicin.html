@@ -140,10 +140,13 @@
       <ul class="meds">
         <!-- th:each: én dosis per li. th:classappend: 'med--taken' (grøn) når den er taget -->
         <li th:each="m : ${today}" class="med" th:classappend="${m.taken} ? 'med--taken' : ''">
-          <!-- taget: vis fluebenet. ikke taget: en lille formular med knappen -> POST /medicin/taget -->
-          <span th:if="${m.taken}" class="med__check">
+          <!-- taget: fluebenet er en knap, der fortryder (-> POST /medicin/ikke-taget). ikke taget: tom knap -> POST /medicin/taget -->
+          <form th:if="${m.taken}" action="/medicin/ikke-taget" method="post">
+            <input type="hidden" name="id" th:value="${m.id}">
+            <button type="submit" class="med__check" aria-label="Fortryd: markér som ikke taget">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor"/></svg>
-            </span>
+            </button>
+          </form>
           <form th:unless="${m.taken}" action="/medicin/taget" method="post">
             <input type="hidden" name="id" th:value="${m.id}">
             <button type="submit" class="med__check" aria-label="Markér som taget"></button>

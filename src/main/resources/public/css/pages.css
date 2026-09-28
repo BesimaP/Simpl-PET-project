@@ -126,6 +126,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0;                        /* knapper har ellers standard-padding */
+    min-width: 0;                      /* knapper kan have en min-width fra components.css */
+    cursor: pointer;                   /* viser, at den er klikbar */
+}
+
+.med form {
+    margin: 0;
+    display: flex;
 }
 
 .med--taken .med__check {
