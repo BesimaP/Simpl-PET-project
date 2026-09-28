@@ -39,6 +39,7 @@ public class LoginController {
             // 3. sessionscope: husk hvem der er logget ind, til browseren lukkes. Alle andre controllere læser herfra
             ctx.sessionAttribute("patientId", patient.getId());              // hvem er patienten
             ctx.sessionAttribute("accountId", patient.getUserAccountId());   // hvilken konto (til kodeord/slet på min profil)
+            ctx.sessionAttribute("patientName", patient.getName());
 
             // 4. ind på dashboard
             ctx.redirect("/dashboard");
@@ -72,6 +73,7 @@ public class LoginController {
                     Patient patient = new AuthService().login(username, password);
                     ctx.sessionAttribute("patientId", patient.getId());
                     ctx.sessionAttribute("accountId", patient.getUserAccountId());
+                    ctx.sessionAttribute("patientName", patient.getName());
                     ctx.redirect("/dashboard?gemt=oprettet");
                 } catch (UserNotFoundException e) {
                     ctx.redirect("/login"); // burde ikke ske – men så må hun logge ind manuelt

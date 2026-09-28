@@ -69,7 +69,8 @@
       <h1>Diagnoser</h1>
     </div>
     <div class="topbar__actions">
-      <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil">A</a>
+      <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil"
+         th:text="${#strings.toUpperCase(#strings.substring(session.patientName, 0, 1))}">A</a>
     </div>
   </header>
 
