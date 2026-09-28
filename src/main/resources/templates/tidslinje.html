@@ -68,7 +68,7 @@
       <a href="/notifikationer" class="iconbtn" aria-label="Notifikationer">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
       </a>
-      <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil">A</a>
+      <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil" th:text="${#strings.substring(patient.name, 0, 1)}">A</a>
     </div>
   </header>
 
@@ -80,14 +80,19 @@
     <p class="muted">Alle runder og vigtige begivenheder, i rækkefølge.</p>
 
     <!-- th:each: ét li per begivenhed (Event) i den runde, der er i gang. e = én begivenhed ad gangen -->
-    <ul class="rounds">
-      <li th:each="e : ${events}">
-        <div class="round__info">
+    <!-- TIDSLINJE: lodret linje med én prik per begivenhed (CSS-klassen .timeline i pages.css).
+         th:classappend: is-past = er sket (udfyldt prik), is-today = i dag, ellers kommende (hul prik).
+         ${today} kommer fra TimelineController; e.dateTime.toLocalDate() = kun datoen, uden klokkeslæt -->
+    <ol class="timeline">
+      <li th:each="e : ${events}"
+          th:classappend="${e.dateTime.toLocalDate().isBefore(today)} ? 'is-past' : (${e.dateTime.toLocalDate().equals(today)} ? 'is-today' : '')">
+        <span class="timeline__dot" aria-hidden="true"></span>
+        <div class="timeline__body">
           <strong th:text="${e.eventType.label}">Blodprøve</strong>
           <span th:text="${#temporals.format(e.dateTime, 'd. MMMM')} + (${e.description != null} ? ' · ' + ${e.description} : '')">1. september</span>
         </div>
       </li>
-    </ul>
+    </ol>
     <p class="muted" th:if="${events.isEmpty()}">Ingen begivenheder i denne runde endnu.</p>
   </section>
 

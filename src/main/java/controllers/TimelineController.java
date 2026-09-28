@@ -19,6 +19,8 @@ public class TimelineController {
             return;
         }
         ctx.attribute("events", new TimelineService().getEvents(patientId));   // requestscope -> ${events}
+        ctx.attribute("today", java.time.LocalDate.now());                      // skabelonen sammenligner: sket eller kommende?
+        ctx.attribute("patient", new services.ProfileService().getPatient(patientId));   // forbogstav i avataren
         ctx.render("tidslinje");
     }
 }
