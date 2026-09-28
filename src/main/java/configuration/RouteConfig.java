@@ -1,6 +1,7 @@
 package configuration;
 import controllers.*;
 import io.javalin.config.JavalinConfig;
+import services.NotificationService;
 
 // Samler registreringen af alle controllere ét sted, så Main slipper for den lange liste.
 public class RouteConfig {
@@ -21,5 +22,14 @@ public class RouteConfig {
         DocumentController.setRoutes(config);
 
         config.routes.get("/", ctx -> ctx.redirect("/login"));
+
+        // before = kører FØR hver eneste rute. Er man logget ind, lægges antal ulæste påmindelser i request scope,
+        // så klokken på ALLE sider kan vise den røde prik (${unread}) – uden at hver controller skal gentage det
+        config.routes.before("/*", ctx -> {
+            Integer patientId = ctx.sessionAttribute("patientId");
+            if (patientId != null) {
+                ctx.attribute("unread", new NotificationService().countUnread(patientId));
+            }
+        });
     }
 }
