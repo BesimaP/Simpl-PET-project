@@ -1,0 +1,106 @@
+erDiagram
+  USER_ACCOUNT ||--|| PATIENT : "logs in as"
+  PATIENT ||--o{ DIAGNOSIS : registers
+  PATIENT ||--o{ FERTILITY_JOURNEY : undergoes
+  PATIENT ||--o{ NOTIFICATION : receives
+  PATIENT ||--o{ DIARY_ENTRY : writes
+  FERTILITY_JOURNEY ||--o{ ROUND : "consists of"
+  FERTILITY_JOURNEY ||--o{ APPOINTMENT : schedules
+  ROUND ||--o{ EVENT : has
+  ROUND ||--o{ HORMONE_LOG : records
+  ROUND ||--o{ DOCUMENT : stores
+  ROUND ||--o{ MEDICATION_LOG : logs
+  MEDICATION ||--o{ MEDICATION_LOG : "is taken in"
+
+  USER_ACCOUNT {
+    serial id PK
+    varchar username UK
+    varchar password_hash
+  }
+  PATIENT {
+    serial id PK
+    int user_account_id FK
+    varchar name
+    date date_of_birth
+  }
+  DIAGNOSIS {
+    serial id PK
+    int patient_id FK
+    varchar name
+    text description
+  }
+  FERTILITY_JOURNEY {
+    serial id PK
+    int patient_id FK
+    date start_date
+    varchar status
+  }
+  ROUND {
+    serial id PK
+    int fertility_journey_id FK
+    int round_number
+    varchar treatment_type
+    date start_date
+    date end_date
+    varchar status
+    varchar result
+  }
+  APPOINTMENT {
+    serial id PK
+    int fertility_journey_id FK
+    timestamp date_time
+    varchar appointment_type
+    varchar location
+  }
+  DIARY_ENTRY {
+    serial id PK
+    int patient_id FK
+    timestamp date_time
+    varchar title
+    text content
+  }
+  EVENT {
+    serial id PK
+    int round_id FK
+    timestamp date_time
+    varchar event_type
+    text description
+  }
+  MEDICATION {
+    serial id PK
+    varchar name UK
+    varchar description
+  }
+  MEDICATION_LOG {
+    serial id PK
+    int round_id FK
+    int medication_id FK
+    timestamp scheduled_date_time
+    numeric dose
+    varchar unit
+    boolean taken
+  }
+  HORMONE_LOG {
+    serial id PK
+    int round_id FK
+    timestamp date_time
+    varchar hormone_type
+    numeric value
+    varchar unit
+  }
+  DOCUMENT {
+    serial id PK
+    int round_id FK
+    varchar title
+    varchar document_type
+    varchar file_path
+  }
+  NOTIFICATION {
+    serial id PK
+    int patient_id FK
+    timestamp date_time
+    varchar notification_type
+    varchar title
+    text message
+    boolean is_read
+  }

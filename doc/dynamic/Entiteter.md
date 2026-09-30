@@ -12,7 +12,7 @@
 - **Patient**
   Den centrale entitet i systemet. Repræsenterer personen, der gennemgår et fertilitetsforløb.
   Important attributes: name, dateOfBirth.
-  Relation: 1 Patient – 0..* Diagnosis, 0..* FertilityJourney, 0..* Notification.
+  Relation: 1 Patient – 0..* Diagnosis, 0..* FertilityJourney, 0..* Notification, 0..* DiaryEntry.
 
 - **Diagnosis**
   Patientens egne registrerede diagnoser med navn og beskrivelse, i stedet for et enkelt tekstfelt på Patient.
@@ -21,7 +21,7 @@
 - **FertilityJourney**
   Patientens overordnede fertilitetsforløb — kan strække sig over flere runder over måneder eller år. En patient har højst ét forløb med status ACTIVE ad gangen.
   Important attributes: startDate, status (ACTIVE / COMPLETED).
-  Relation: 1 FertilityJourney – 0..* Round, 0..* Appointment, 0..* DiaryEntry.
+  Relation: 1 FertilityJourney – 0..* Round, 0..* Appointment.
 
 - **Round**
   Ét komplet behandlingsforsøg inden i et FertilityJourney, fra stimulation til graviditetstest. En patient kan have flere runder under samme forløb.
@@ -33,7 +33,7 @@
   Important attributes: dateTime, appointmentType (CONSULTATION / SCANNING / BLOOD_TEST / EGG_RETRIEVAL / EMBRYO_TRANSFER / PREGNANCY_TEST), location.
 
 - **DiaryEntry**
-  Patientens private rum til at skrive noter om tanker, følelser eller spørgsmål til lægen — knyttet til forløbet, ikke en bestemt runde.
+  Patientens private rum til at skrive noter om tanker, følelser eller spørgsmål til lægen — knyttet til patienten, ikke et forløb (ændret uge 40: man skal kunne skrive dagbog før første kontakt med klinikken, mellem to forløb og efter). Alt om *personen* ligger på Patient (diagnoser, dagbog, notifikationer); alt om *behandlingen* ligger på forløb/runde.
   Important attributes: dateTime, title, content.
 
 - **Event**

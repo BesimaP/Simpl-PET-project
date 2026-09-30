@@ -27,9 +27,11 @@ class DiaryServiceTest {
     }
 
     @Test
-    void saveEntryWithoutJourneyReturnsNoActiveJourney() {
+    void saveEntryWithoutJourneyIsAllowed() {
         int patientId = TestData.newPatient();
-        assertEquals(ServiceResult.NO_ACTIVE_JOURNEY, new DiaryService().saveEntry(patientId, "2026-09-12", "Titel", "Tekst"));
+        // dagbog hører til patienten – man kan skrive før første forløb
+        assertEquals(ServiceResult.OK, new DiaryService().saveEntry(patientId, "2026-09-12", "Før forløbet", "Venter på henvisning."));
+        assertEquals(1, new DiaryService().getEntries(patientId).size());
     }
 
     @Test
@@ -40,7 +42,7 @@ class DiaryServiceTest {
     }
 
     @Test
-    void getEntriesWithoutJourneyReturnsEmptyList() {
+    void newPatientHasNoEntries() {
         int patientId = TestData.newPatient();
         assertTrue(new DiaryService().getEntries(patientId).isEmpty());
     }

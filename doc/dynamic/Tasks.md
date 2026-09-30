@@ -27,7 +27,7 @@
 
 ## User story 4 – Dagbogsnoter (Journey)
 - [x]  Lav layout til at skrive og gemme en note *(HTML/CSS lavet)*
-- [x]  Gem noten i databasen med dato, titel og forløbs-tilknytning *(POST /dagbog → DiaryService.saveEntry)*
+- [x]  Gem noten i databasen med dato, titel og patient-tilknytning *(POST /dagbog → DiaryService.saveEntry. Ændret uge 40: noter ligger på patienten, ikke forløbet – dagbog kan bruges før, mellem og efter forløb)*
 - [x]  Vis listen af tidligere noter til patienten *(Thymeleaf: GET /dagbog, th:each)*
 - [x]  JavaScript: dagens dato sættes automatisk i dato-feltet *(js/dagbog.js)*
 - [x]  JavaScript: antal noter tælles og vises under listen *(js/dagbog.js)*

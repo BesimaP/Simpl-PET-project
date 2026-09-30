@@ -36,7 +36,7 @@ object "<b>Round</b>" as Round #C1E8C1 {
   result
 }
 
-' ---------- Ting på forløbet (US3, US4) ----------
+' ---------- Ting på forløbet (US3) ----------
 
 object "<b>Appointment</b>" as Appointment #FFF3B0 {
   dateTime
@@ -44,7 +44,8 @@ object "<b>Appointment</b>" as Appointment #FFF3B0 {
   location
 }
 
-object "<b>DiaryEntry</b>" as DiaryEntry #FFF3B0 {
+' DiaryEntry ligger på patienten (ændret uge 40): dagbog skal kunne bruges før, mellem og efter forløb
+object "<b>DiaryEntry</b>" as DiaryEntry #FFDAB9 {
   dateTime
   title
   content
@@ -90,6 +91,7 @@ object "<b>Notification</b>" as Notification #FFF3B0 {
   notificationType
   title
   message
+  isRead
 }
 
 ' ---------- Associationer ----------
@@ -99,10 +101,10 @@ UserAccount "1" -- "1" Patient : logs in as >
 Patient "1" *-- "0..*" Diagnosis : registers >
 Patient "1" *-- "0..*" Journey : undergoes >
 Patient "1" *-- "0..*" Notification : receives >
+Patient "1" *-- "0..*" DiaryEntry : writes >
 
 Journey "1" *-- "0..*" Round : consists of >
 Journey "1" *-- "0..*" Appointment : schedules >
-Journey "1" *-- "0..*" DiaryEntry : contains >
 
 Round "1" *-- "0..*" Event : has >
 Round "1" *-- "0..*" HormoneLog : records >

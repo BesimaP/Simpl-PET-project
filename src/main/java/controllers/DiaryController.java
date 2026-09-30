@@ -47,11 +47,10 @@ public class DiaryController {
         // 2. bed service gemme noten – den finder selv forløbet. Svar: OK = ok, ellers hvad der gik galt
         ServiceResult result = new DiaryService().saveEntry(patientId, date, title, note);
 
-        // 3. vælg side ud fra svaret – ét case per udfald (noter hænger på forløbet, så "ingen runde" findes ikke her)
+        // 3. vælg side ud fra svaret – ét case per udfald (noter hænger på patienten, så der kræves hverken forløb eller runde)
         switch (result) {
             case OK -> ctx.redirect("/dagbog?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/dagbog?fejl=felter"); // et felt var tomt
-            case NO_ACTIVE_JOURNEY -> ctx.redirect("/dagbog?fejl=intet-forloeb");
             default -> ctx.redirect("/dagbog?fejl=ukendt");
         }
     }

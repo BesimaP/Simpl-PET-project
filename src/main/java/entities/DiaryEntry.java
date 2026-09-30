@@ -6,15 +6,15 @@ import java.time.LocalDateTime;
 public class DiaryEntry {
 
     private int id;
-    private int fertilityJourneyId;   // FK til fertility_journey.id
+    private int patientId;   // FK til patient.id – noter hører til patienten, ikke et forløb
     private LocalDateTime dateTime;
     private String title;
     private String content;
 
     // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
-    public DiaryEntry(int id, int fertilityJourneyId, LocalDateTime dateTime, String title, String content) {
+    public DiaryEntry(int id, int patientId, LocalDateTime dateTime, String title, String content) {
         this.id = id;
-        this.fertilityJourneyId = fertilityJourneyId;
+        this.patientId = patientId;
         this.dateTime = dateTime;
         this.title = title;
         this.content = content;
@@ -29,8 +29,8 @@ public class DiaryEntry {
         this.id = id;
     }
 
-    public int getFertilityJourneyId() {
-        return fertilityJourneyId;
+    public int getPatientId() {
+        return patientId;
     }
 
     public LocalDateTime getDateTime() {

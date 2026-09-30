@@ -85,15 +85,16 @@ CREATE TABLE IF NOT EXISTS appointment (
     FOREIGN KEY (fertility_journey_id) REFERENCES fertility_journey(id) ON DELETE CASCADE
 );
 
--- DiaryEntry — patientens private noter, knyttet til forløbet (ikke en runde).
+-- DiaryEntry — patientens private noter. Ligger på PATIENTEN, ikke forløbet (ændret uge 40):
+-- man skal kunne skrive dagbog før første kontakt med klinikken, mellem to forløb og efter.
 -- content NOT NULL: UC6 afviser tomme noter.
 CREATE TABLE IF NOT EXISTS diary_entry (
-    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-    fertility_journey_id INTEGER NOT NULL,
-    date_time            TEXT NOT NULL,
-    title                TEXT NOT NULL,
-    content              TEXT NOT NULL,
-    FOREIGN KEY (fertility_journey_id) REFERENCES fertility_journey(id) ON DELETE CASCADE
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    patient_id INTEGER NOT NULL,
+    date_time  TEXT NOT NULL,
+    title      TEXT NOT NULL,
+    content    TEXT NOT NULL,
+    FOREIGN KEY (patient_id) REFERENCES patient(id) ON DELETE CASCADE
 );
 
 -- ---------- Ting på runden (US2, US8, US9, US11) ----------
