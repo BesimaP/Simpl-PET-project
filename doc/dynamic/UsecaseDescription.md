@@ -62,9 +62,9 @@ Regnvejrsdag:
 
 
 ## UC6: WriteDiaryEntry (US4)
-Systemet viser en skærm med patientens tidligere dagbogsnoter for det aktive forløb.
+Systemet viser en skærm med patientens tidligere dagbogsnoter.
 Brugeren klikker Ny note og udfylder dato, titel og indhold.
-Brugeren klikker Gem. Systemet gemmer noten i databasen, tilknyttet det aktive forløb, og opdaterer listen.
+Brugeren klikker Gem. Systemet gemmer noten i databasen, tilknyttet patienten, og opdaterer listen.
 
 Regnvejrsdag:
 - Titel er tom: Systemet viser en fejlbesked og gemmer ikke.

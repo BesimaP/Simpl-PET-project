@@ -82,7 +82,7 @@ SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første
 - `fertility_journey` — patientens overordnede forløb (kun ét aktivt ad gangen)
 - `round` — én behandlingsrunde i et forløb (IVF/ICSI/IUI/FET, status, resultat)
 - `appointment` — aftaler på forløbet
-- `diary_entry` — dagbogsnoter på forløbet
+- `diary_entry` — patientens dagbogsnoter (hører til patienten, ikke forløbet, så man kan skrive før og efter et forløb)
 - `event` — trin i en runde (vises på tidslinjen)
 - `medication` — stamdata for lægemidler
 - `medication_log` — planlagte doser i en runde, og om de er taget
@@ -114,6 +114,7 @@ Dokumentationen findes i `doc/`-mappen:
 
 - `doc/dynamic/` — idébeskrivelse, VPC, krav, entiteter, user stories med acceptkriterier, tasks, use case-beskrivelser, use case-diagram (`Usecase.puml`), navigationsdiagram (`Navigation.puml`) og sekvensdiagrammer for UC1–UC14 (`UC1 - LogIn.puml` … `UC14 - EndRound.puml`)
 - `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` model/enums, `Klassediagram4b` DAO-laget) og gruppekontrakt
+- `doc/database/` — ERD (`ERD.mmd`/`ERD.png`), PostgreSQL-schema (`schema_postgres.sql`) og testdata (`data_postgres.sql`)
 
 Sekvensdiagrammer og klassediagrammer er tegnet før backend og opdateres, når controllerne er færdige.
 
@@ -122,6 +123,12 @@ Alle diagrammer er skrevet i PlantUML og gemt som PNG ved siden af kildefilen, s
 ### Domænemodel
 
 ![Domænemodel](doc/static/Domænemodel1.png)
+
+### ERD
+
+Normaliseret database (3NF) afledt af domænemodellen. Kragetæer viser kardinaliteterne.
+
+![ERD](doc/database/ERD.png)
 
 ### Use case-diagram
 

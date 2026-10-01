@@ -58,7 +58,7 @@ package "model" {
 
   class DiaryEntry {
     - int id
-    - int fertilityJourneyId
+    - int patientId
     - LocalDateTime dateTime
     - String title
     - String content
@@ -187,10 +187,10 @@ UserAccount "1" -- "1" Patient
 Patient "1" *-- "0..*" Diagnosis
 Patient "1" *-- "0..*" FertilityJourney
 Patient "1" *-- "0..*" Notification
+Patient "1" *-- "0..*" DiaryEntry
 
 FertilityJourney "1" *-- "0..*" Round
 FertilityJourney "1" *-- "0..*" Appointment
-FertilityJourney "1" *-- "0..*" DiaryEntry
 
 Round "1" *-- "0..*" Event
 Round "1" *-- "0..*" HormoneLog
