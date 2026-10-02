@@ -40,9 +40,13 @@
 
             <form action="/opretprofil" method="post">
                 <!-- for og id skal være ens, så label og felt hører sammen -->
-                <label for="name">Navn</label>
-                <input type="text" id="name" name="name"
-                       placeholder="Dit fulde navn" autocomplete="name" required>
+                <label for="firstName">Fornavn</label>
+                <input type="text" id="firstName" name="firstName"
+                       placeholder="Dit fornavn" autocomplete="given-name" required>
+
+                <label for="lastName">Efternavn</label>
+                <input type="text" id="lastName" name="lastName"
+                       placeholder="Dit efternavn" autocomplete="family-name" required>
 
                 <!-- type date = browseren viser en kalender -->
                 <label for="dateOfBirth">Fødselsdato</label>

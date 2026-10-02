@@ -11,7 +11,8 @@ object "<b>UserAccount</b>" as UserAccount #FFDAB9 {
 }
 
 object "<b>Patient</b>" as Patient #FFDAB9 {
-  name
+  firstName
+  lastName
   dateOfBirth
 }
 

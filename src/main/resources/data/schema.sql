@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS user_account (
 CREATE TABLE IF NOT EXISTS patient (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     user_account_id INTEGER NOT NULL UNIQUE,
-    name            TEXT NOT NULL,
+    first_name      TEXT NOT NULL,
+    last_name       TEXT NOT NULL,
     date_of_birth   TEXT NOT NULL,
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
 );

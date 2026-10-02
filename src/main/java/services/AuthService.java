@@ -29,10 +29,10 @@ public class AuthService {
 
     // Opret profil: konto + patient (+ forløb, hvis brugeren allerede er i gang med et).
     // OK = oprettet · INVALID_INPUT = tomt felt/ugyldig dato · ALREADY_EXISTS = brugernavnet er optaget
-    public ServiceResult createProfile(String name, String dateOfBirth, String username, String password, String hasJourney, String journeyStart) {
+    public ServiceResult createProfile(String firstName, String lastName, String dateOfBirth, String username, String password, String hasJourney, String journeyStart) {
 
         // 0. regel: ingen tomme felter
-        if (isBlank(name) || isBlank(dateOfBirth) || isBlank(username) || isBlank(password)) {
+        if (isBlank(firstName) || isBlank(lastName) || isBlank(dateOfBirth) || isBlank(username) || isBlank(password)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -71,7 +71,7 @@ public class AuthService {
 
         // 3. gem patienten, knyttet til kontoen via accountId
         PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
-        int patientId = patientDao.save(new Patient(0, accountId, name, dob)); // id'et skal bruges til forløbet
+        int patientId = patientDao.save(new Patient(0, accountId, firstName.trim(), lastName.trim(), dob)); // id'et skal bruges til forløbet
 
         // 4. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
         if (wantsJourney) {

@@ -20,12 +20,13 @@ public class PatientDAO {
 
     // Gemmer en ny patient og returnerer det id, databasen gav den
     public int save(Patient patient) {
-        String sql = "INSERT INTO patient (user_account_id, name, date_of_birth) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO patient (user_account_id, first_name, last_name, date_of_birth) VALUES (?, ?, ?, ?)";
         try {
             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             statement.setInt(1, patient.getUserAccountId());
-            statement.setString(2, patient.getName());
-            statement.setString(3, patient.getDateOfBirth().toString());
+            statement.setString(2, patient.getFirstName());
+            statement.setString(3, patient.getLastName());
+            statement.setString(4, patient.getDateOfBirth().toString());
             statement.executeUpdate();
 
             ResultSet keys = statement.getGeneratedKeys();
@@ -56,7 +57,7 @@ public class PatientDAO {
             // if, ikke while: der kan højst være én række, fordi user_account_id er UNIQUE (én konto = én patient)
             if (rs.next()) {
                 // rækken -> et Patient-objekt (kortet). date_of_birth er gemt som tekst, derfor LocalDate.parse
-                return new Patient(rs.getInt("id"), rs.getInt("user_account_id"), rs.getString("name"), LocalDate.parse(rs.getString("date_of_birth")));
+                return new Patient(rs.getInt("id"), rs.getInt("user_account_id"), rs.getString("first_name"), rs.getString("last_name"), LocalDate.parse(rs.getString("date_of_birth")));
             }
             return null; // ingen række = kontoen har ingen patient
 
@@ -66,14 +67,15 @@ public class PatientDAO {
     }
 
     // Retter patientens navn (min-profil). UPDATE ændrer en række, der findes
-    public void updateName(int id, String name) {
+    public void updateName(int id, String firstName, String lastName) {
         // SET = hvad der ændres, WHERE = hvilken række. Uden WHERE ville ALLE patienter få det nye navn!
-        String sql = "UPDATE patient SET name = ? WHERE id = ?";
+        String sql = "UPDATE patient SET first_name = ?, last_name = ? WHERE id = ?";
 
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setString(1, name); // første ? = det nye navn
-            statement.setInt(2, id);      // andet ? = patientens id
+            statement.setString(1, firstName); // første ? = nyt fornavn
+            statement.setString(2, lastName);  // andet ? = nyt efternavn
+            statement.setInt(3, id);           // tredje ? = patientens id
             statement.executeUpdate();            // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
 
         } catch (SQLException e) {
@@ -91,7 +93,7 @@ public class PatientDAO {
 
             // if, ikke while: id er PRIMARY KEY, så der er højst én række
             if (rs.next()) {
-                return new Patient(rs.getInt("id"), rs.getInt("user_account_id"), rs.getString("name"), LocalDate.parse(rs.getString("date_of_birth")));
+                return new Patient(rs.getInt("id"), rs.getInt("user_account_id"), rs.getString("first_name"), rs.getString("last_name"), LocalDate.parse(rs.getString("date_of_birth")));
             }
             return null;
         } catch (SQLException e) {

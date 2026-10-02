@@ -55,7 +55,8 @@ public class LoginController {
     // POST /opretprofil – læs kuverten, spørg service, send brugeren videre
     private static void createProfile(Context ctx) {
         // 1. åbn kuverten: felterne fra opretprofil.html
-        String name = ctx.formParam("name");
+        String firstName = ctx.formParam("firstName");
+        String lastName = ctx.formParam("lastName");
         String dateOfBirth = ctx.formParam("dateOfBirth");
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
@@ -63,7 +64,7 @@ public class LoginController {
         String journeyStart = ctx.formParam("journeyStart"); // startdato for forløbet – kun brugt ved "yes"
 
         // 2. bed service oprette konto + patient (+ forløb ved "yes"). Svar: OK, ellers hvad der gik galt
-        ServiceResult result = new AuthService().createProfile(name, dateOfBirth, username, password, hasJourney, journeyStart);
+        ServiceResult result = new AuthService().createProfile(firstName, lastName, dateOfBirth, username, password, hasJourney, journeyStart);
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {

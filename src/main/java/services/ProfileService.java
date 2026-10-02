@@ -17,14 +17,14 @@ public class ProfileService {
     }
 
     // Retter patientens navn
-    public ServiceResult updateName(int patientId, String name) {
-        // 1. regel: navnet må ikke være tomt
-        if (isBlank(name)) {
+    public ServiceResult updateName(int patientId, String firstName, String lastName) {
+        // 1. regel: hverken for- eller efternavn må være tomt
+        if (isBlank(firstName) || isBlank(lastName)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. bed arkivaren rette navnet på patientens kort (UPDATE patient SET name = ? WHERE id = ?)
-        new PatientDAO(DatabaseConnection.getConnection()).updateName(patientId, name);
+        // 2. bed arkivaren rette navnet på patientens kort (UPDATE patient SET first_name = ?, last_name = ? WHERE id = ?)
+        new PatientDAO(DatabaseConnection.getConnection()).updateName(patientId, firstName.trim(), lastName.trim());
 
         // 3. gik godt
         return ServiceResult.OK;

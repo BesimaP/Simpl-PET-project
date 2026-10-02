@@ -28,7 +28,8 @@ CREATE TABLE user_account (
 CREATE TABLE patient (
     id              INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_account_id INT NOT NULL UNIQUE REFERENCES user_account(id) ON DELETE CASCADE,
-    name            VARCHAR(100) NOT NULL,
+    first_name      VARCHAR(50) NOT NULL,
+    last_name       VARCHAR(50) NOT NULL,
     date_of_birth   DATE NOT NULL
 );
 

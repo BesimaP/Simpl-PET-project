@@ -11,7 +11,8 @@
 
 - **Patient**
   Den centrale entitet i systemet. Repræsenterer personen, der gennemgår et fertilitetsforløb.
-  Important attributes: name, dateOfBirth.
+  Important attributes: firstName, lastName, dateOfBirth.
+  Navnet er delt i for- og efternavn (1NF: atomare værdier), så fornavnet kan bruges alene ("Hej, Mette") og efternavnet til søgning/sortering senere.
   Relation: 1 Patient – 0..* Diagnosis, 0..* FertilityJourney, 0..* Notification, 0..* DiaryEntry.
 
 - **Diagnosis**

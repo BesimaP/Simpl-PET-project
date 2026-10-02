@@ -18,7 +18,8 @@ package "model" {
   class Patient {
     - int id
     - int userAccountId
-    - String name
+    - String firstName
+    - String lastName
     - LocalDate dateOfBirth
   }
 

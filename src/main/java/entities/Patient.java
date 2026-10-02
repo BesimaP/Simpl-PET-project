@@ -7,14 +7,16 @@ public class Patient {
 
     private int id;
     private int userAccountId;   // FK til user_account.id (1–1)
-    private String name;
+    private String firstName;
+    private String lastName;
     private LocalDate dateOfBirth;
 
     // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
-    public Patient(int id, int userAccountId, String name, LocalDate dateOfBirth) {
+    public Patient(int id, int userAccountId, String firstName, String lastName, LocalDate dateOfBirth) {
         this.id = id;
         this.userAccountId = userAccountId;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.dateOfBirth = dateOfBirth;
     }
 
@@ -31,8 +33,17 @@ public class Patient {
         return userAccountId;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    // fulde navn – bruges i views (${patient.name}); gemmes ikke, sættes sammen her
     public String getName() {
-        return name;
+        return firstName + " " + lastName;
     }
 
     public LocalDate getDateOfBirth() {
@@ -40,8 +51,11 @@ public class Patient {
     }
 
     // Redigér profil (UC2 / US6b): navn og fødselsdato kan ændres
-    public void setName(String name) {
-        this.name = name;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
     public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;

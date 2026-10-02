@@ -26,49 +26,49 @@ class AuthServiceTest {
     @Test
     void loginWithWrongPasswordThrowsException() {
         AuthService authService = new AuthService();
-        authService.createProfile("Test", "1996-01-01", "auth1", "rigtigt1", "no", null);
+        authService.createProfile("Test", "Bruger", "1996-01-01", "auth1", "rigtigt1", "no", null);
         assertThrows(UserNotFoundException.class, () -> authService.login("auth1", "forkert1"));
     }
 
     @Test
     void loginWithCorrectPasswordReturnsPatientId() throws UserNotFoundException {
         AuthService authService = new AuthService();
-        authService.createProfile("Test", "1996-01-01", "auth2", "hemmelig1", "no", null);
+        authService.createProfile("Test", "Bruger", "1996-01-01", "auth2", "hemmelig1", "no", null);
         //assertTrue(authService.login("auth2", "hemmelig1") > 0);   // et rigtigt id er altid > 0
     }
 
     @Test
     void createProfileWithBlankNameReturnsInvalidInput() {
-        ServiceResult result = new AuthService().createProfile("", "1996-01-01", "auth3", "hemmelig1", "no", null);
+        ServiceResult result = new AuthService().createProfile("", "Bruger", "1996-01-01", "auth3", "hemmelig1", "no", null);
         // assertEquals(forventet, faktisk)
         assertEquals(ServiceResult.INVALID_INPUT, result);
     }
 
     @Test
     void createProfileWithInvalidDateReturnsInvalidInput() {
-        ServiceResult result = new AuthService().createProfile("Test", "ikke-en-dato", "auth4", "hemmelig1", "no", null);
+        ServiceResult result = new AuthService().createProfile("Test", "Bruger", "ikke-en-dato", "auth4", "hemmelig1", "no", null);
         assertEquals(ServiceResult.INVALID_INPUT, result);
     }
 
     @Test
     void createProfileWithTakenUsernameReturnsAlreadyExists() {
         AuthService authService = new AuthService();
-        authService.createProfile("Første", "1996-01-01", "auth5", "hemmelig1", "no", null);            // første gang: OK
-        ServiceResult result = authService.createProfile("Anden", "1996-01-01", "auth5", "hemmelig1", "no", null); // samme brugernavn igen
+        authService.createProfile("Første", "Bruger", "1996-01-01", "auth5", "hemmelig1", "no", null);            // første gang: OK
+        ServiceResult result = authService.createProfile("Anden", "Bruger", "1996-01-01", "auth5", "hemmelig1", "no", null); // samme brugernavn igen
         assertEquals(ServiceResult.ALREADY_EXISTS, result);
     }
 
     @Test
     void createProfileWithJourneyButNoDateReturnsInvalidInput() {
         // "ja" til forløb, men ingen startdato -> afvises FØR noget gemmes
-        ServiceResult result = new AuthService().createProfile("Test", "1996-01-01", "auth6", "hemmelig1", "yes", "");
+        ServiceResult result = new AuthService().createProfile("Test", "Bruger", "1996-01-01", "auth6", "hemmelig1", "yes", "");
         assertEquals(ServiceResult.INVALID_INPUT, result);
     }
 
     @Test
     void createProfileWithJourneyCreatesActiveJourney() throws Exception {
         AuthService authService = new AuthService();
-        assertEquals(ServiceResult.OK, authService.createProfile("Test", "1996-01-01", "auth7", "hemmelig1", "yes", "2026-09-01"));
+        assertEquals(ServiceResult.OK, authService.createProfile("Test", "Bruger", "1996-01-01", "auth7", "hemmelig1", "yes", "2026-09-01"));
         // forløbet findes: login giver patientens id, og findActiveJourney kaster IKKE
         //int patientId = authService.login("auth7", "hemmelig1");
        // assertNotNull(new DashboardService().findActiveJourney(patientId));

@@ -20,7 +20,7 @@ class TestData {
     // opretter konto + patient via AuthService og returnerer patientens id
     static int newPatient() {
         String username = "testuser" + (++counter);
-        new AuthService().createProfile("Test Bruger", "1996-01-01", username, "hemmelig1", "no", null);
+        new AuthService().createProfile("Test", "Bruger", "1996-01-01", username, "hemmelig1", "no", null);
         int accountId = new UserAccountDAO(DatabaseConnection.getConnection()).findByUsername(username).getId();
         return new PatientDAO(DatabaseConnection.getConnection()).findByUserAccount(accountId).getId();
     }
@@ -28,7 +28,7 @@ class TestData {
     // kontoens id for en patient (bruges af ProfileService-tests)
     static int newAccount() {
         String username = "testaccount" + (++counter);
-        new AuthService().createProfile("Test Bruger", "1996-01-01", username, "hemmelig1", "no", null);
+        new AuthService().createProfile("Test", "Bruger", "1996-01-01", username, "hemmelig1", "no", null);
         return new UserAccountDAO(DatabaseConnection.getConnection()).findByUsername(username).getId();
     }
 

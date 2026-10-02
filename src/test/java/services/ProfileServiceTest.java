@@ -21,13 +21,19 @@ class ProfileServiceTest {
     @Test
     void updateNameWithBlankNameReturnsInvalidInput() {
         int patientId = TestData.newPatient();
-        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().updateName(patientId, ""));
+        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().updateName(patientId, "", "Navn"));
+    }
+
+    @Test
+    void updateNameWithBlankLastNameReturnsInvalidInput() {
+        int patientId = TestData.newPatient();
+        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().updateName(patientId, "Nyt", ""));
     }
 
     @Test
     void updateNameChangesNameInDatabase() {
         int patientId = TestData.newPatient();
-        assertEquals(ServiceResult.OK, new ProfileService().updateName(patientId, "Nyt Navn"));
+        assertEquals(ServiceResult.OK, new ProfileService().updateName(patientId, "Nyt", "Navn"));
         // læs navnet direkte fra databasen og se, at det er ændret
         assertEquals("Nyt Navn", findPatientName(patientId));
     }
@@ -71,8 +77,8 @@ class ProfileServiceTest {
     private static String findPatientName(int patientId) {
         try {
             var rs = DatabaseConnection.getConnection().createStatement()
-                    .executeQuery("SELECT name FROM patient WHERE id = " + patientId);
-            return rs.next() ? rs.getString("name") : null;
+                    .executeQuery("SELECT first_name, last_name FROM patient WHERE id = " + patientId);
+            return rs.next() ? rs.getString("first_name") + " " + rs.getString("last_name") : null;
         } catch (java.sql.SQLException e) {
             throw new RuntimeException(e);
         }
@@ -82,6 +88,8 @@ class ProfileServiceTest {
     void getPatientReturnsNameAndDateOfBirth() {
         int patientId = TestData.newPatient(); // oprettes med "Test Bruger" og 1996-01-01
         assertEquals("Test Bruger", new ProfileService().getPatient(patientId).getName());
+        assertEquals("Test", new ProfileService().getPatient(patientId).getFirstName());
+        assertEquals("Bruger", new ProfileService().getPatient(patientId).getLastName());
         assertEquals(LocalDate.of(1996, 1, 1), new ProfileService().getPatient(patientId).getDateOfBirth());
     }
 }

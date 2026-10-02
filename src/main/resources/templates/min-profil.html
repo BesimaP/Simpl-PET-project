@@ -89,9 +89,12 @@
     <section class="card">
       <h2 class="eyebrow">Profil</h2>
       <form action="/min-profil" method="post">
-        <!-- th:value: feltet er forudfyldt med det nuværende navn fra databasen -->
-        <label for="name">Navn</label>
-        <input type="text" id="name" name="name" th:value="${patient.name}" placeholder="Dit fulde navn" autocomplete="name" required>
+        <!-- th:value: felterne er forudfyldt med det nuværende navn fra databasen -->
+        <label for="firstName">Fornavn</label>
+        <input type="text" id="firstName" name="firstName" th:value="${patient.firstName}" placeholder="Dit fornavn" autocomplete="given-name" required>
+
+        <label for="lastName">Efternavn</label>
+        <input type="text" id="lastName" name="lastName" th:value="${patient.lastName}" placeholder="Dit efternavn" autocomplete="family-name" required>
 
         <!-- fødselsdato vises, men kan ikke ændres endnu (ProfileService.updateName retter kun navnet). readonly = grå, ikke redigerbar -->
         <label for="dateOfBirth">Fødselsdato</label>

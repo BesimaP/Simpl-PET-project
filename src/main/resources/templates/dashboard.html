@@ -67,7 +67,7 @@
     <header class="topbar">
         <div>
             <!-- th:text: navnet og dagens dato fra controlleren -->
-            <h1 th:text="'Hej, ' + ${#strings.capitalize(patient.name)}">Godmorgen, Anna</h1>
+            <h1 th:text="'Hej, ' + ${#strings.capitalize(patient.firstName)}">Godmorgen, Anna</h1>
             <p class="muted" th:text="${#temporals.format(today, 'EEEE d. MMMM')}">Onsdag 2. september</p>
         </div>
         <div class="topbar__actions">

@@ -39,11 +39,12 @@ public class ProfileController {
             return;
         }
 
-        // åbn kuverten: det nye navn
-        String name = ctx.formParam("name");
+        // åbn kuverten: det nye for- og efternavn
+        String firstName = ctx.formParam("firstName");
+        String lastName = ctx.formParam("lastName");
 
         // bed service rette navnet – den tjekker, at feltet ikke er tomt
-        ServiceResult result = new ProfileService().updateName(patientId, name);
+        ServiceResult result = new ProfileService().updateName(patientId, firstName, lastName);
 
         // vælg side ud fra svaret
         switch (result) {
