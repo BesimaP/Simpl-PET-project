@@ -1,25 +1,28 @@
 erDiagram
-  USER_ACCOUNT ||--|| PATIENT : "logs in as"
   PATIENT ||--o{ DIAGNOSIS : registers
   PATIENT ||--o{ FERTILITY_JOURNEY : undergoes
   PATIENT ||--o{ NOTIFICATION : receives
   PATIENT ||--o{ DIARY_ENTRY : writes
+  PATIENT ||--o{ DOCUMENT : uploads
   FERTILITY_JOURNEY ||--o{ ROUND : "consists of"
   FERTILITY_JOURNEY ||--o{ APPOINTMENT : schedules
   ROUND ||--o{ EVENT : has
   ROUND ||--o{ HORMONE_LOG : records
-  ROUND ||--o{ DOCUMENT : stores
   ROUND ||--o{ MEDICATION_LOG : logs
   MEDICATION ||--o{ MEDICATION_LOG : "is taken in"
+  JOURNEY_STATUS ||--o{ FERTILITY_JOURNEY : describes
+  TREATMENT_TYPE ||--o{ ROUND : classifies
+  RESULT |o--o{ ROUND : ends
+  APPOINTMENT_TYPE ||--o{ APPOINTMENT : classifies
+  EVENT_TYPE ||--o{ EVENT : classifies
+  HORMONE_TYPE ||--o{ HORMONE_LOG : classifies
+  DOCUMENT_TYPE ||--o{ DOCUMENT : classifies
+  NOTIFICATION_TYPE ||--o{ NOTIFICATION : classifies
 
-  USER_ACCOUNT {
+  PATIENT {
     serial id PK
     varchar username UK
     varchar password_hash
-  }
-  PATIENT {
-    serial id PK
-    int user_account_id FK
     varchar first_name
     varchar last_name
     date date_of_birth
@@ -34,23 +37,22 @@ erDiagram
     serial id PK
     int patient_id FK
     date start_date
-    varchar status
+    int journey_status_id FK
   }
   ROUND {
     serial id PK
     int fertility_journey_id FK
     int round_number
-    varchar treatment_type
+    int treatment_type_id FK
     date start_date
     date end_date
-    varchar status
-    varchar result
+    int result_id FK
   }
   APPOINTMENT {
     serial id PK
     int fertility_journey_id FK
     timestamp date_time
-    varchar appointment_type
+    int appointment_type_id FK
     varchar location
   }
   DIARY_ENTRY {
@@ -64,7 +66,7 @@ erDiagram
     serial id PK
     int round_id FK
     timestamp date_time
-    varchar event_type
+    int event_type_id FK
     text description
   }
   MEDICATION {
@@ -85,23 +87,56 @@ erDiagram
     serial id PK
     int round_id FK
     timestamp date_time
-    varchar hormone_type
+    int hormone_type_id FK
     numeric value
     varchar unit
   }
   DOCUMENT {
     serial id PK
-    int round_id FK
+    int patient_id FK
+    date upload_date
     varchar title
-    varchar document_type
+    int document_type_id FK
     varchar file_path
   }
   NOTIFICATION {
     serial id PK
     int patient_id FK
     timestamp date_time
-    varchar notification_type
+    int notification_type_id FK
     varchar title
     text message
     boolean is_read
+  }
+  JOURNEY_STATUS {
+    serial id PK
+    varchar name UK
+  }
+  TREATMENT_TYPE {
+    serial id PK
+    varchar name UK
+  }
+  RESULT {
+    serial id PK
+    varchar name UK
+  }
+  APPOINTMENT_TYPE {
+    serial id PK
+    varchar name UK
+  }
+  EVENT_TYPE {
+    serial id PK
+    varchar name UK
+  }
+  HORMONE_TYPE {
+    serial id PK
+    varchar name UK
+  }
+  DOCUMENT_TYPE {
+    serial id PK
+    varchar name UK
+  }
+  NOTIFICATION_TYPE {
+    serial id PK
+    varchar name UK
   }

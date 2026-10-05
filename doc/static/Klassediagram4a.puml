@@ -9,15 +9,10 @@ title Klassediagram 4a — model og enums (Simpl v2)
 
 package "model" {
 
-  class UserAccount {
+  class Patient {
     - int id
     - String username
     - String passwordHash
-  }
-
-  class Patient {
-    - int id
-    - int userAccountId
     - String firstName
     - String lastName
     - LocalDate dateOfBirth
@@ -101,7 +96,8 @@ package "model" {
 
   class Document {
     - int id
-    - int roundId
+    - int patientId
+    - LocalDate uploadDate
     - String title
     - DocumentType documentType
     - String filePath
@@ -170,6 +166,7 @@ package "enums" {
   }
 
   enum DocumentType {
+    REFERRAL
     BLOOD_TEST_RESULT
     TREATMENT_PLAN
     OTHER
@@ -184,11 +181,11 @@ package "enums" {
 
 ' ---------- Associationer (samme som domænemodellen) ----------
 
-UserAccount "1" -- "1" Patient
 Patient "1" *-- "0..*" Diagnosis
 Patient "1" *-- "0..*" FertilityJourney
 Patient "1" *-- "0..*" Notification
 Patient "1" *-- "0..*" DiaryEntry
+Patient "1" *-- "0..*" Document
 
 FertilityJourney "1" *-- "0..*" Round
 FertilityJourney "1" *-- "0..*" Appointment
@@ -196,7 +193,6 @@ FertilityJourney "1" *-- "0..*" Appointment
 Round "1" *-- "0..*" Event
 Round "1" *-- "0..*" HormoneLog
 Round "1" *-- "0..*" MedicationLog
-Round "1" *-- "0..*" Document
 Medication "1" -- "0..*" MedicationLog
 
 @enduml

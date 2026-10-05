@@ -21,14 +21,12 @@ alt Fields are empty
   c --> v : showError()
   v --> u : "Please fill in all fields"
 else Fields filled
-  c -> db : SELECT * FROM user_account WHERE username = ?
+  c -> db : SELECT * FROM patient WHERE username = ?
   db --> c : ResultSet
-  alt No account found or hash does not match
+  alt No patient found or hash does not match
     c --> v : showError()
     v --> u : "Wrong username or password"
   else Login OK
-    c -> db : SELECT * FROM patient WHERE user_account_id = ?
-    db --> c : ResultSet
     c -> m : setPatient(patient)
     c -> db : SELECT * FROM fertility_journey WHERE patient_id = ? AND status = 'ACTIVE'
     db --> c : ResultSet

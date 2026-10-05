@@ -8,7 +8,7 @@ Simpl er vores **Pet Project for 2. semester** (Datamatiker, Systemudvikling I).
 
 **Gruppe:** Besima & Louise
 
-I dette semester bygges det om til et fullstack-system med en hjemmeside som frontend (HTML/CSS/JavaScript) og Javalin som backend, i tråd med semesterets krav til Pet Project. Datamodellen er udvidet med UserAccount, Diagnosis, Medication, Document og Notification, og Round er adskilt fra FertilityJourney, så et forløb kan indeholde flere runder.
+I dette semester bygges det om til et fullstack-system med en hjemmeside som frontend (HTML/CSS/JavaScript) og Javalin som backend, i tråd med semesterets krav til Pet Project. Datamodellen er udvidet med Diagnosis, Medication, Document og Notification, og Round er adskilt fra FertilityJourney, så et forløb kan indeholde flere runder.
 
 ## Målgruppe
 
@@ -31,7 +31,7 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 ## Status (september 2026)
 
 - Frontend: alle 15 sider er bygget i HTML/CSS med lidt JavaScript (dato, enheder, tællere, fejlbeskeder)
-- Database: `schema.sql` med 13 tabeller, alle entity- og DAO-klasser er skrevet
+- Database: `schema.sql` med 12 tabeller, alle entity- og DAO-klasser er skrevet
 - Backend: Javalin kører og serverer siderne; login, opret profil (evt. med forløb), forløb/runde, hormoner, dagbog, diagnoser, medicin, aftaler og min profil gemmer i databasen via controller → service → DAO
 - Næste: dokumenter (upload), session (hvem er logget ind), Thymeleaf-templates til at vise data, skift fra SQLite til PostgreSQL
 
@@ -75,9 +75,8 @@ Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST
 
 SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første gang applikationen køres. Strukturen er defineret i `src/main/resources/data/schema.sql` og køres af `DatabaseInitializer` ved opstart. `simpl.db` er ikke i git.
 
-**Tabeller (13):**
-- `user_account` — login (brugernavn, kodeord-hash)
-- `patient` — persondata, knyttet 1–1 til en konto
+**Tabeller (12):**
+- `patient` — login og persondata i én tabel (brugernavn, kodeord-hash, navn, fødselsdato)
 - `diagnosis` — patientens diagnoser
 - `fertility_journey` — patientens overordnede forløb (kun ét aktivt ad gangen)
 - `round` — én behandlingsrunde i et forløb (IVF/ICSI/IUI/FET, status, resultat)
@@ -87,10 +86,18 @@ SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første
 - `medication` — stamdata for lægemidler
 - `medication_log` — planlagte doser i en runde, og om de er taget
 - `hormone_log` — hormonmålinger i en runde
-- `document` — dokumenter på en runde (kun stien gemmes)
+- `document` — patientens dokumenter, fx henvisning og blodprøvesvar (kun stien og upload-datoen gemmes; hører til patienten, så de kan uploades før første runde)
 - `notification` — påmindelser til patienten
 
 Gyldige værdier (fx hormontyper, aftaletyper) er låst med `CHECK` i `schema.sql` og matcher enum-klasserne i `enums` og `value` i HTML-dropdowns.
+
+### PostgreSQL (pgAdmin)
+
+Den nye version af databasen ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.).
+
+Her har **hver type sin egen tabel** (20 tabeller i alt): de 12 ovenfor + `journey_status`, `treatment_type`, `result`, `appointment_type`, `event_type`, `hormone_type`, `document_type` og `notification_type` (hver med `id` og `name`). Andre tabeller peger på dem med fx `treatment_type_id`, i stedet for `CHECK`. `round` har ingen status-kolonne: en runde er i gang, så længe `end_date` er tom. ERD: `doc/database/ERD.mmd`.
+
+Appen kører indtil videre på SQLite (`schema.sql`); Java-koden flyttes over til PostgreSQL og typetabellerne senere.
 
 ## Kom i gang
 
@@ -106,7 +113,7 @@ Gyldige værdier (fx hormontyper, aftaletyper) er låst med `CHECK` i `schema.sq
 3. Åbn `http://localhost:7070` i browseren – du lander på login-siden.
 
 Databasen oprettes automatisk. Der er ingen brugere fra start; opret en via "Opret profil" (når ruten er lavet) eller i terminalen:
-`sqlite3 simpl.db "INSERT INTO user_account (username, password_hash) VALUES ('test','1234');"`
+`sqlite3 simpl.db "INSERT INTO patient (username, password_hash, first_name, last_name, date_of_birth) VALUES ('test','1234','Test','Testesen','1990-01-01');"`
 
 ## Dokumentation
 

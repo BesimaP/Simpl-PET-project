@@ -10,8 +10,8 @@ participant "Document" as m
 database "SQLite" as db
 
 u -> v : Opens documents screen
-v -> c : loadDocuments(roundId)
-c -> db : SELECT * FROM document WHERE round_id = ?
+v -> c : loadDocuments(patientId)
+c -> db : SELECT * FROM document WHERE patient_id = ? ORDER BY upload_date DESC
 db --> c : ResultSet
 
 alt No documents found
@@ -30,8 +30,8 @@ alt Title or file missing
   c --> v : showError()
   v --> u : "Title and file are required"
 else All OK
-  c -> m : new Document(title, documentType, filePath, roundId)
-  c -> db : INSERT INTO document (round_id, title, document_type, file_path) VALUES (?, ?, ?, ?)
+  c -> m : new Document(patientId, uploadDate, title, documentType, filePath)
+  c -> db : INSERT INTO document (patient_id, upload_date, title, document_type, file_path) VALUES (?, ?, ?, ?, ?)
   db --> c : OK
   c --> v : refreshList()
   v --> u : Shows updated list

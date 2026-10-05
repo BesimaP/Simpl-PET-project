@@ -56,9 +56,9 @@ public class ProfileController {
 
     // POST /skift-kodeord
     private static void changePassword(Context ctx) {
-        // kontoens id (sat i sessionen ved login) – kodeordet ligger på kontoen, ikke på patienten
-        Integer accountId = ctx.sessionAttribute("accountId");
-        if (accountId == null) {
+        // patientens id (sat i sessionen ved login) – kodeordet ligger på patienten
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
@@ -69,7 +69,7 @@ public class ProfileController {
         String repeatPassword = ctx.formParam("repeat-password");
 
         // bed service skifte kodeord – den tjekker tomme felter, at de to nye er ens, og at det gamle passer
-        ServiceResult result = new ProfileService().changePassword(accountId, currentPassword, newPassword, repeatPassword);
+        ServiceResult result = new ProfileService().changePassword(patientId, currentPassword, newPassword, repeatPassword);
 
         switch (result) {
             case OK -> ctx.redirect("/min-profil?gemt=kodeord");
@@ -80,14 +80,14 @@ public class ProfileController {
 
     // POST /slet-konto
     private static void deleteAccount(Context ctx) {
-        Integer accountId = ctx.sessionAttribute("accountId");
-        if (accountId == null) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
 
-        // bed service slette kontoen (patient og alt under den ryger med via CASCADE)
-        new ProfileService().deleteAccount(accountId);
+        // bed service slette kontoen = patienten (alt under den ryger med via CASCADE)
+        new ProfileService().deleteAccount(patientId);
 
         // kontoen findes ikke mere: glem sessionen, og tilbage til login
         ctx.req().getSession().invalidate();

@@ -2,7 +2,6 @@ package services;
 
 import dao.DatabaseConnection;
 import dao.PatientDAO;
-import dao.UserAccountDAO;
 import enums.ServiceResult;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeAll;
@@ -40,37 +39,36 @@ class ProfileServiceTest {
 
     @Test
     void changePasswordWithBlankFieldReturnsInvalidInput() {
-        int accountId = TestData.newAccount();
-        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().changePassword(accountId, "hemmelig1", "", ""));
+        int patientId = TestData.newPatient();
+        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().changePassword(patientId, "hemmelig1", "", ""));
     }
 
     @Test
     void changePasswordWithMismatchReturnsInvalidInput() {
-        int accountId = TestData.newAccount();
+        int patientId = TestData.newPatient();
         // de to nye er ikke ens
-        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().changePassword(accountId, "hemmelig1", "nyt12345", "nyt54321"));
+        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().changePassword(patientId, "hemmelig1", "nyt12345", "nyt54321"));
     }
 
     @Test
     void changePasswordWithWrongCurrentReturnsInvalidInput() {
-        int accountId = TestData.newAccount();
-        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().changePassword(accountId, "forkert1", "nyt12345", "nyt12345"));
+        int patientId = TestData.newPatient();
+        assertEquals(ServiceResult.INVALID_INPUT, new ProfileService().changePassword(patientId, "forkert1", "nyt12345", "nyt12345"));
     }
 
     @Test
     void changePasswordReturnsOkAndNewPasswordIsSaved() {
-        int accountId = TestData.newAccount();
-        assertEquals(ServiceResult.OK, new ProfileService().changePassword(accountId, "hemmelig1", "nyt12345", "nyt12345"));
-        assertEquals("nyt12345", new UserAccountDAO(DatabaseConnection.getConnection()).findById(accountId).getPasswordHash());
+        int patientId = TestData.newPatient();
+        assertEquals(ServiceResult.OK, new ProfileService().changePassword(patientId, "hemmelig1", "nyt12345", "nyt12345"));
+        assertEquals("nyt12345", new PatientDAO(DatabaseConnection.getConnection()).findById(patientId).getPasswordHash());
     }
 
     @Test
-    void deleteAccountRemovesAccountAndPatient() {
-        int accountId = TestData.newAccount();
-        assertEquals(ServiceResult.OK, new ProfileService().deleteAccount(accountId));
-        // kontoen er væk – og patienten fulgte med (ON DELETE CASCADE)
-        assertNull(new UserAccountDAO(DatabaseConnection.getConnection()).findById(accountId));
-        assertNull(new PatientDAO(DatabaseConnection.getConnection()).findByUserAccount(accountId));
+    void deleteAccountRemovesPatient() {
+        int patientId = TestData.newPatient();
+        assertEquals(ServiceResult.OK, new ProfileService().deleteAccount(patientId));
+        // patienten (= kontoen) er væk
+        assertNull(new PatientDAO(DatabaseConnection.getConnection()).findById(patientId));
     }
 
     // lille hjælper: patientens navn direkte fra databasen

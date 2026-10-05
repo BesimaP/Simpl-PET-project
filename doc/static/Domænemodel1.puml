@@ -3,14 +3,12 @@
 
 title Domain Model - Simpl (Fertilitetsforløb)
 
-' ---------- Bruger og patient (US5, US6, US7) ----------
+' ---------- Patient (US5, US6, US7) ----------
 
-object "<b>UserAccount</b>" as UserAccount #FFDAB9 {
+' UserAccount er samlet ind i Patient (uge 41): de var 1-1 og oprettes altid sammen
+object "<b>Patient</b>" as Patient #FFDAB9 {
   username
   password
-}
-
-object "<b>Patient</b>" as Patient #FFDAB9 {
   firstName
   lastName
   dateOfBirth
@@ -25,23 +23,18 @@ object "<b>Diagnosis</b>" as Diagnosis #FFDAB9 {
 
 object "<b>FertilityJourney</b>" as Journey #D6EAD8 {
   startDate
-  status
 }
 
 object "<b>Round</b>" as Round #C1E8C1 {
   roundNumber
-  treatmentType
   startDate
   endDate
-  status
-  result
 }
 
 ' ---------- Ting på forløbet (US3) ----------
 
 object "<b>Appointment</b>" as Appointment #FFF3B0 {
   dateTime
-  appointmentType
   location
 }
 
@@ -52,11 +45,10 @@ object "<b>DiaryEntry</b>" as DiaryEntry #FFDAB9 {
   content
 }
 
-' ---------- Ting på runden (US2, US8, US9, US11) ----------
+' ---------- Ting på runden (US2, US8, US9) + Document på patienten (US11) ----------
 
 object "<b>Event</b>" as Event #FFF3B0 {
   dateTime
-  eventType
   description
 }
 
@@ -74,14 +66,14 @@ object "<b>MedicationLog</b>" as MedicationLog #FFF3B0 {
 
 object "<b>HormoneLog</b>" as HormoneLog #FFF3B0 {
   dateTime
-  hormoneType
   value
   unit
 }
 
-object "<b>Document</b>" as Document #FFF3B0 {
+' Document ligger på patienten (ændret uge 41): fx henvisning og blodprøvesvar kommer før første runde
+object "<b>Document</b>" as Document #FFDAB9 {
+  uploadDate
   title
-  documentType
   filePath
 }
 
@@ -89,29 +81,70 @@ object "<b>Document</b>" as Document #FFF3B0 {
 
 object "<b>Notification</b>" as Notification #FFF3B0 {
   dateTime
-  notificationType
   title
   message
   isRead
 }
 
-' ---------- Associationer ----------
+' ---------- Typer (uge 41): hver type har sin egen tabel, ligesom Medication ----------
+' Round har ingen status mere: en runde er i gang, så længe endDate er tom
 
-UserAccount "1" -- "1" Patient : logs in as >
+object "<b>JourneyStatus</b>" as JourneyStatus #E8E8E8 {
+  name
+}
+
+object "<b>TreatmentType</b>" as TreatmentType #E8E8E8 {
+  name
+}
+
+object "<b>Result</b>" as Result #E8E8E8 {
+  name
+}
+
+object "<b>AppointmentType</b>" as AppointmentType #E8E8E8 {
+  name
+}
+
+object "<b>EventType</b>" as EventType #E8E8E8 {
+  name
+}
+
+object "<b>HormoneType</b>" as HormoneType #E8E8E8 {
+  name
+}
+
+object "<b>DocumentType</b>" as DocumentType #E8E8E8 {
+  name
+}
+
+object "<b>NotificationType</b>" as NotificationType #E8E8E8 {
+  name
+}
+
+' ---------- Associationer ----------
 
 Patient "1" *-- "0..*" Diagnosis : registers >
 Patient "1" *-- "0..*" Journey : undergoes >
 Patient "1" *-- "0..*" Notification : receives >
 Patient "1" *-- "0..*" DiaryEntry : writes >
+Patient "1" *-- "0..*" Document : uploads >
 
 Journey "1" *-- "0..*" Round : consists of >
 Journey "1" *-- "0..*" Appointment : schedules >
 
 Round "1" *-- "0..*" Event : has >
 Round "1" *-- "0..*" HormoneLog : records >
-Round "1" *-- "0..*" Document : stores >
 Round "1" *-- "0..*" MedicationLog : logs >
 Medication "1" -- "0..*" MedicationLog : is taken in >
+
+JourneyStatus "1" -- "0..*" Journey : describes >
+TreatmentType "1" -- "0..*" Round : classifies >
+Result "0..1" -- "0..*" Round : ends >
+AppointmentType "1" -- "0..*" Appointment : classifies >
+EventType "1" -- "0..*" Event : classifies >
+HormoneType "1" -- "0..*" HormoneLog : classifies >
+DocumentType "1" -- "0..*" Document : classifies >
+NotificationType "1" -- "0..*" Notification : classifies >
 
 note left of Journey
   En patient har højst ét forløb

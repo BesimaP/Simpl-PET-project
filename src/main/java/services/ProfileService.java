@@ -2,9 +2,7 @@ package services;
 
 import dao.DatabaseConnection;
 import dao.PatientDAO;
-import dao.UserAccountDAO;
 import entities.Patient;
-import entities.UserAccount;
 import enums.ServiceResult;
 
 // Forretningslogik for min-profil (US6b). Kender IKKE Javalin – ProfileController læser formularen og kalder én metode her.
@@ -31,7 +29,7 @@ public class ProfileService {
     }
 
     // Skifter kodeord. Alle tjek giver INVALID_INPUT, så man ikke afslører hvad der var galt
-    public ServiceResult changePassword(int accountId, String currentPassword, String newPassword, String repeat) {
+    public ServiceResult changePassword(int patientId, String currentPassword, String newPassword, String repeat) {
         // 1. regel: ingen tomme felter
         if (isBlank(currentPassword) || isBlank(newPassword) || isBlank(repeat)) {
             return ServiceResult.INVALID_INPUT;
@@ -42,28 +40,28 @@ public class ProfileService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 3. hent kontoens kort fra databasen – null = findes ikke
-        UserAccount account = new UserAccountDAO(DatabaseConnection.getConnection()).findById(accountId);
-        if (account == null) {
+        // 3. hent patientens kort fra databasen – null = findes ikke
+        Patient patient = new PatientDAO(DatabaseConnection.getConnection()).findById(patientId);
+        if (patient == null) {
             return ServiceResult.INVALID_INPUT;
         }
 
         // 4. regel: det gamle kodeord skal passe med det, der ligger i databasen (senere: BCrypt.checkpw)
-        if (!currentPassword.equals(account.getPasswordHash())) {
+        if (!currentPassword.equals(patient.getPasswordHash())) {
             return ServiceResult.INVALID_INPUT;
         }
 
         // 5. bed arkivaren gemme det nye kodeord (senere: hash det først)
-        new UserAccountDAO(DatabaseConnection.getConnection()).updatePassword(accountId, newPassword);
+        new PatientDAO(DatabaseConnection.getConnection()).updatePassword(patientId, newPassword);
 
         // 6. gik godt
         return ServiceResult.OK;
     }
 
-    // Sletter kontoen – patient og alt under den ryger med (ON DELETE CASCADE i schema.sql)
-    public ServiceResult deleteAccount(int accountId) {
-        // 1. bed arkivaren slette kortet (DELETE FROM user_account WHERE id = ?)
-        new UserAccountDAO(DatabaseConnection.getConnection()).delete(accountId);
+    // Sletter kontoen = patienten – alt under den ryger med (ON DELETE CASCADE i schema.sql)
+    public ServiceResult deleteAccount(int patientId) {
+        // 1. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?)
+        new PatientDAO(DatabaseConnection.getConnection()).delete(patientId);
 
         // 2. gik godt
         return ServiceResult.OK;

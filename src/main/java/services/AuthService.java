@@ -2,9 +2,7 @@ package services;
 
 import dao.DatabaseConnection;
 import dao.PatientDAO;
-import dao.UserAccountDAO;
 import entities.Patient;
-import entities.UserAccount;
 import enums.ServiceResult;
 import exceptions.UserNotFoundException;
 
@@ -16,18 +14,17 @@ public class AuthService {
 
     // Login: giver patientens id tilbage (det er det, sessionen skal huske) – ellers kastes UserNotFoundException
     public Patient login(String username, String password) throws UserNotFoundException {
-        UserAccountDAO dao = new UserAccountDAO(DatabaseConnection.getConnection());
-        UserAccount user = dao.findByUsername(username);
+        Patient patient = new PatientDAO(DatabaseConnection.getConnection()).findByUsername(username);
 
-        if (user == null || !password.equals(user.getPasswordHash())) {
+        if (patient == null || !password.equals(patient.getPasswordHash())) {
             throw new UserNotFoundException("Forkert brugernavn eller kodeord");
         }
 
-        // kontoen passer – giv patientens kort tilbage (har både patientId og accountId til sessionen)
-        return new PatientDAO(DatabaseConnection.getConnection()).findByUserAccount(user.getId());
+        // brugernavn og kodeord passer – giv patientens kort tilbage (id'et skal i sessionen)
+        return patient;
     }
 
-    // Opret profil: konto + patient (+ forløb, hvis brugeren allerede er i gang med et).
+    // Opret profil: patient (+ forløb, hvis brugeren allerede er i gang med et).
     // OK = oprettet · INVALID_INPUT = tomt felt/ugyldig dato · ALREADY_EXISTS = brugernavnet er optaget
     public ServiceResult createProfile(String firstName, String lastName, String dateOfBirth, String username, String password, String hasJourney, String journeyStart) {
 
@@ -58,22 +55,18 @@ public class AuthService {
             }
         }
 
-        UserAccountDAO accountDao = new UserAccountDAO(DatabaseConnection.getConnection());
+        PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
 
         // 1. regel: brugernavn skal være unikt
-        if (accountDao.findByUsername(username) != null) {
+        if (patientDao.findByUsername(username) != null) {
             return ServiceResult.ALREADY_EXISTS; // brugernavnet er optaget
         }
 
-        // 2. gem kontoen – id'et fra databasen skal bruges til patienten lige efter
+        // 2. gem patienten (login + persondata i én række). id'et fra databasen skal bruges til forløbet
         //    (TODO senere: hash kodeordet med BCrypt før det gemmes)
-        int accountId = accountDao.save(new UserAccount(0, username, password));
+        int patientId = patientDao.save(new Patient(0, username, password, firstName.trim(), lastName.trim(), dob));
 
-        // 3. gem patienten, knyttet til kontoen via accountId
-        PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
-        int patientId = patientDao.save(new Patient(0, accountId, firstName.trim(), lastName.trim(), dob)); // id'et skal bruges til forløbet
-
-        // 4. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
+        // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
         if (wantsJourney) {
             new DashboardService().createJourney(patientId, journeyStart);
         }

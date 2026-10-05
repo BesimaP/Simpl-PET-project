@@ -76,15 +76,12 @@ class DocumentServiceTest {
     }
 
     @Test
-    void uploadWithoutJourneyReturnsNoActiveJourney() {
+    void uploadWithoutJourneyIsAllowed() {
+        // dokumentet ligger på patienten – en henvisning kan uploades, før der er noget forløb eller nogen runde
         int patientId = TestData.newPatient();
-        assertEquals(ServiceResult.NO_ACTIVE_JOURNEY, new DocumentService().uploadDocument(patientId, "Plan", "TREATMENT_PLAN", "plan.pdf", fakeFile(), 100));
-    }
-
-    @Test
-    void uploadWithoutRoundReturnsNoActiveRound() {
-        int patientId = TestData.newPatientWithJourney();
-        assertEquals(ServiceResult.NO_ACTIVE_ROUND, new DocumentService().uploadDocument(patientId, "Plan", "TREATMENT_PLAN", "plan.pdf", fakeFile(), 100));
+        patients.add(patientId); // husk til oprydningen
+        assertEquals(ServiceResult.OK, new DocumentService().uploadDocument(patientId, "Henvisning", "REFERRAL", "henvisning.pdf", fakeFile(), 100));
+        assertEquals(1, new DocumentService().getDocuments(patientId).size());
     }
 
     @Test

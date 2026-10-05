@@ -1,12 +1,12 @@
 # Krav
 
-*Kravene afspejler domænemodellen (Patient → FertilityJourney → Round) med separat login (UserAccount), diagnoser, medicin-stamdata, dokumenter og notifikationer. Hvert funktionelt krav svarer til én user story.*
+*Kravene afspejler domænemodellen (Patient → FertilityJourney → Round) med login på Patient (brugernavn + adgangskode), diagnoser, medicin-stamdata, dokumenter og notifikationer. Hvert funktionelt krav svarer til én user story.*
 
 ## Funktionelle krav
 
 *Beskriver hvad systemet skal kunne gøre – konkrete handlinger/features.*
 
-1. Patienten skal kunne oprette en brugerkonto (UserAccount) og logge ind (US5, US6a)
+1. Patienten skal kunne oprette en brugerkonto (Patient med brugernavn og adgangskode) og logge ind (US5, US6a)
 2. Patienten skal kunne oprette, redigere og slette sin profil (navn, fødselsdato) (US6a, US6b)
 3. Patienten skal kunne registrere sine diagnoser (Diagnosis) på profilen (US7)
 4. Patienten skal kunne oprette et nyt fertilitetsforløb (FertilityJourney) (US1)
@@ -24,7 +24,7 @@
 
 *Beskriver hvordan systemet skal være – kvalitetsegenskaber, ikke konkrete handlinger.*
 
-1. **Sikkerhed** – Adgangskoder gemmes aldrig i klartekst i databasen (UserAccount.password gemmes som hash); kun den enkelte patient kan tilgå sit eget forløb
+1. **Sikkerhed** – Adgangskoder gemmes aldrig i klartekst i databasen (Patient.password gemmes som hash); kun den enkelte patient kan tilgå sit eget forløb
 2. **Dataintegritet** – Sletning af en konto skal automatisk fjerne alt patientens data (forløb, runder, logs, dokumenter og notifikationer)
 3. **Ydeevne** – Oversigtssiden skal indlæses på under 2 sekunder ved normal brug
 4. **Brugervenlighed** – En patient skal kunne registrere en dagbogsnote på maks. 3 klik fra dashboardet

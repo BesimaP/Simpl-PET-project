@@ -2,19 +2,22 @@ package entities;
 
 import java.time.LocalDate;
 
-// Patienten — den centrale entitet (tabel patient). Hører til præcis én UserAccount.
+// Patienten — den centrale entitet (tabel patient). Login (brugernavn + kodeord) og persondata i ét kort
+// (UserAccount er samlet ind i Patient, uge 41: de var 1-1 og blev altid oprettet sammen).
 public class Patient {
 
     private int id;
-    private int userAccountId;   // FK til user_account.id (1–1)
+    private String username;
+    private String passwordHash;   // gem et hash (BCrypt senere), aldrig klartekst
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
 
     // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
-    public Patient(int id, int userAccountId, String firstName, String lastName, LocalDate dateOfBirth) {
+    public Patient(int id, String username, String passwordHash, String firstName, String lastName, LocalDate dateOfBirth) {
         this.id = id;
-        this.userAccountId = userAccountId;
+        this.username = username;
+        this.passwordHash = passwordHash;
         this.firstName = firstName;
         this.lastName = lastName;
         this.dateOfBirth = dateOfBirth;
@@ -29,8 +32,12 @@ public class Patient {
         this.id = id;
     }
 
-    public int getUserAccountId() {
-        return userAccountId;
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
     public String getFirstName() {

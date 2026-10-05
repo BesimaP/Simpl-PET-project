@@ -6,7 +6,7 @@
 ## UC1: LogIn (US5)
 Systemet starter og viser en login-skærm.
 Brugeren indtaster brugernavn og adgangskode og klikker Log ind.
-Systemet validerer oplysningerne mod UserAccount og indlæser patientdata fra databasen.
+Systemet validerer brugernavn og adgangskode mod Patient og indlæser patientdata fra databasen.
 Hvis patienten har et forløb med status ACTIVE, vises dashboardet.
 Hvis patienten endnu ikke har et aktivt forløb, sendes brugeren til UC3: CreateJourney.
 Fra login-skærmen kan brugeren vælge "Opret profil" (UC2).
@@ -20,7 +20,7 @@ Regnvejrsdag:
 ## UC2: ManageProfile (US6a, US6b)
 Systemet viser en skærm med felter til navn, fødselsdato, brugernavn og adgangskode.
 Brugeren udfylder felterne og klikker Gem.
-Systemet opretter en UserAccount (adgangskoden gemmes som hash) og en tilknyttet Patient, og gemmer dem i databasen.
+Systemet opretter en Patient med login og persondata (adgangskoden gemmes som hash) og gemmer den i databasen.
 Brugeren sendes videre til UC3: CreateJourney.
 En logget-ind bruger kan efterfølgende åbne profilen for at redigere navn og fødselsdato, eller slette sin konto og alle tilknyttede data efter bekræftelse.
 
@@ -123,13 +123,13 @@ Regnvejrsdag:
 
 
 ## UC12: ManageDocuments (US11)
-Systemet viser en skærm med dokumenter tilknyttet den aktive runde med titel og type.
+Systemet viser en skærm med patientens dokumenter med titel, type og upload-dato.
 Brugeren klikker Tilføj Dokument, udfylder titel, vælger dokumenttype (blodprøvesvar, behandlingsplan, andet) og vælger en fil.
 Brugeren klikker Gem. Systemet gemmer dokumentets titel, type og filsti i databasen og opdaterer listen.
 Brugeren kan vælge et dokument for at åbne det via den gemte filePath.
 
 Regnvejrsdag:
-- Ingen dokumenter findes for runden: Systemet viser en besked om, at listen er tom.
+- Patienten har ingen dokumenter: Systemet viser en besked om, at listen er tom.
 - Filen kan ikke findes/åbnes: Systemet viser en fejlbesked.
 - Titel eller fil mangler ved tilføjelse: Systemet viser en fejlbesked og gemmer ikke.
 

@@ -36,14 +36,14 @@
 
 ## User story 5 – Login
 - [x]  Lav layout til login-skærmen *(HTML/CSS lavet)*
-- [x]  Tjek brugernavn/adgangskode mod databasen *(POST /login → AuthService.login → UserAccountDAO.findByUsername)*
+- [x]  Tjek brugernavn/adgangskode mod databasen *(POST /login → AuthService.login → PatientDAO.findByUsername)*
 - [x]  Håndter fejlscenariet: bruger uden profil henvises til oprettelse (User story 6a) *(fejlbeskeden siger bevidst ikke, OM brugernavnet findes – det er god sikkerhedsskik; "Opret profil"-linket står lige under. 25. sep)*
 - [x]  Håndter fejlscenariet: forkert brugernavn/adgangskode giver fejlbesked *(UserNotFoundException → ${error} på login-siden)*
 - [x]  Test både succesfuldt login og fejlscenarierne *(AuthServiceTest)*
 
 ## User story 6a – Oprette profil
 - [x]  Lav layout til profiloprettelse (navn, fødselsdato, brugernavn, adgangskode) *(HTML/CSS lavet)*
-- [x]  Gem den nye profil i databasen (UserAccount + Patient), adgangskode gemmes som hash *(POST /opretprofil → AuthService.createProfile – hash venter, se teknisk gæld. Brugeren logges ind direkte efter oprettelse, 25. sep)*
+- [x]  Gem den nye profil i databasen (Patient med brugernavn + adgangskode), adgangskode gemmes som hash *(POST /opretprofil → AuthService.createProfile – hash venter, se teknisk gæld. Brugeren logges ind direkte efter oprettelse, 25. sep)*
 - [x]  Tilføj validering: brugernavn allerede taget / manglende felter *(ALREADY_EXISTS / INVALID_INPUT i AuthService.createProfile)*
 - [x]  Test både succesfuld oprettelse og fejlmeddelelser *(AuthServiceTest)*
 
@@ -91,7 +91,7 @@
 - [x]  Test historikvisning *(RoundServiceTest.getRounds…)*
 
 ## User story 11 – Dokumenter
-- [x]  Lav layout til dokumentlisten for en runde (titel, type) *(HTML/CSS lavet)*
+- [x]  Lav layout til dokumentlisten (titel, type) *(HTML/CSS lavet)*
 - [x]  Lav layout til at tilføje et dokument (titel, dokumenttype som dropdown: Blodprøvesvar, Behandlingsplan, Andet, filvalg) *(HTML/CSS lavet)*
 - [x]  JavaScript: filtype (PDF/JPG/PNG) og størrelse (maks 10 MB) tjekkes, når filen vælges; forkert fil afvises med fejlbesked; "Fjern fil"-knap *(js/dokumenter.js)*
 - [x]  Implementér gemning af dokumenter med filePath *(POST /dokumenter → DocumentService.uploadDocument, filen gemmes i uploads/, stien i databasen – Louise, 25. sep)*
@@ -106,7 +106,7 @@
 
 ## Tekniske krav fra undervisningen (24. sep 2026)
 - [x]  Thymeleaf: templates + GET-ruter med `ctx.render` på siderne, der viser data *(25. sep: alle 11 sider – login, diagnoser, dagbog, aftaler, hormoner, medicin, rundehistorik, min-profil, dashboard, tidslinje, notifikationer)*
-- [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `accountId` sættes ved login; alle controllere læser fra sessionen og sender til /login, hvis den er tom
+- [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `patientName` sættes ved login (accountId fjernet, uge 41: UserAccount er samlet ind i Patient); alle controllere læser fra sessionen og sender til /login, hvis den er tom
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
 - [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*

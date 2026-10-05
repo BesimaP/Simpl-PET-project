@@ -12,26 +12,17 @@
 -- CREATE TABLE IF NOT EXISTS: ændres skemaet, slettes simpl.db og bygges forfra.
 -- ============================================================
 
--- Login-oplysninger, adskilt fra persondata.
+-- Patient — login og persondata i én tabel (UserAccount er samlet ind i Patient, uge 41: de var 1–1 og blev altid oprettet sammen).
 -- password_hash: adgangskoden gemmes aldrig i klartekst (NFR1).
 -- username UNIQUE: databasen håndhæver "brugernavn er taget" (US6a).
-CREATE TABLE IF NOT EXISTS user_account (
+-- ON DELETE CASCADE på tabellerne under patienten: slettes patienten, slettes alt under den (NFR2).
+CREATE TABLE IF NOT EXISTS patient (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT NOT NULL UNIQUE,
-    password_hash TEXT NOT NULL
-);
-
-
--- Patient — persondata, adskilt fra login.
--- user_account_id UNIQUE: én konto hører til præcis én patient (1–1 i domænemodellen).
--- ON DELETE CASCADE: slettes kontoen, slettes patienten (og via CASCADE alt under den — NFR2).
-CREATE TABLE IF NOT EXISTS patient (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_account_id INTEGER NOT NULL UNIQUE,
-    first_name      TEXT NOT NULL,
-    last_name       TEXT NOT NULL,
-    date_of_birth   TEXT NOT NULL,
-    FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE CASCADE
+    password_hash TEXT NOT NULL,
+    first_name    TEXT NOT NULL,
+    last_name     TEXT NOT NULL,
+    date_of_birth TEXT NOT NULL
 );
 
 -- Diagnosis — patientens egne registrerede diagnoser (US7).
@@ -152,14 +143,16 @@ CREATE TABLE IF NOT EXISTS hormone_log (
     FOREIGN KEY (round_id) REFERENCES round(id) ON DELETE CASCADE
 );
 
--- Document — dokumenter på en runde (US11). Selve filen ligger på disken; kun stien gemmes.
+-- Document — patientens dokumenter (US11). Ligger på patienten (ikke runden): fx henvisning og blodprøvesvar kommer før første runde.
+-- Selve filen ligger på disken; kun stien gemmes. upload_date gør, at dokumenter kan vises under den rigtige runde (via dato).
 CREATE TABLE IF NOT EXISTS document (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    round_id      INTEGER NOT NULL,
+    patient_id    INTEGER NOT NULL,
+    upload_date   TEXT NOT NULL,
     title         TEXT NOT NULL,
-    document_type TEXT NOT NULL CHECK (document_type IN ('BLOOD_TEST_RESULT', 'TREATMENT_PLAN', 'OTHER')),
+    document_type TEXT NOT NULL CHECK (document_type IN ('REFERRAL', 'BLOOD_TEST_RESULT', 'TREATMENT_PLAN', 'OTHER')),
     file_path     TEXT NOT NULL,
-    FOREIGN KEY (round_id) REFERENCES round(id) ON DELETE CASCADE
+    FOREIGN KEY (patient_id) REFERENCES patient(id) ON DELETE CASCADE
 );
 
 -- ---------- Notifikationer (US12) ----------

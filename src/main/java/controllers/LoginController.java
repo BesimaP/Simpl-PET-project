@@ -22,7 +22,7 @@ public class LoginController {
 
     // GET /logout – glem hvem der er logget ind og send til login. Bruges af "Log ud" i menuen
     private static void logout(Context ctx) {
-        ctx.req().getSession().invalidate();   // sletter hele sessionen (patientId og accountId)
+        ctx.req().getSession().invalidate();   // sletter hele sessionen (patientId og patientName)
         ctx.redirect("/login");
     }
 
@@ -38,7 +38,6 @@ public class LoginController {
 
             // 3. sessionscope: husk hvem der er logget ind, til browseren lukkes. Alle andre controllere læser herfra
             ctx.sessionAttribute("patientId", patient.getId());              // hvem er patienten
-            ctx.sessionAttribute("accountId", patient.getUserAccountId());   // hvilken konto (til kodeord/slet på min profil)
             ctx.sessionAttribute("patientName", patient.getName());
 
             // 4. ind på dashboard
@@ -63,7 +62,7 @@ public class LoginController {
         String hasJourney = ctx.formParam("hasJourney");     // "yes" eller "no" (radio-knapperne)
         String journeyStart = ctx.formParam("journeyStart"); // startdato for forløbet – kun brugt ved "yes"
 
-        // 2. bed service oprette konto + patient (+ forløb ved "yes"). Svar: OK, ellers hvad der gik galt
+        // 2. bed service oprette patienten (+ forløb ved "yes"). Svar: OK, ellers hvad der gik galt
         ServiceResult result = new AuthService().createProfile(firstName, lastName, dateOfBirth, username, password, hasJourney, journeyStart);
 
         // 3. vælg side ud fra svaret – ét case per udfald
@@ -73,7 +72,6 @@ public class LoginController {
                 try {
                     Patient patient = new AuthService().login(username, password);
                     ctx.sessionAttribute("patientId", patient.getId());
-                    ctx.sessionAttribute("accountId", patient.getUserAccountId());
                     ctx.sessionAttribute("patientName", patient.getName());
                     ctx.redirect("/dashboard?gemt=oprettet");
                 } catch (UserNotFoundException e) {

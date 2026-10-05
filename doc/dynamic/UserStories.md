@@ -1,6 +1,6 @@
 # User stories med acceptkriterier
 
-*Hvert acceptkriterie følger Givet/Når/Så-formatet (Gherkin), med en kort forklaring af, hvad det konkret tester. User stories matcher domænemodellen (Patient → FertilityJourney → Round, med UserAccount, Diagnosis, Document og Notification): hver kasse og attribut i modellen kan spores til en story herunder.*
+*Hvert acceptkriterie følger Givet/Når/Så-formatet (Gherkin), med en kort forklaring af, hvad det konkret tester. User stories matcher domænemodellen (Patient → FertilityJourney → Round, med Diagnosis, Document og Notification): hver kasse og attribut i modellen kan spores til en story herunder.*
 
 ### User story 1
 Som patient vil jeg kunne oprette et nyt fertilitetsforløb, så jeg kan begynde at følge min behandling fra start.
@@ -97,12 +97,12 @@ Som patient vil jeg kunne se min rundehistorik, så jeg kan følge, hvordan mine
 *US10 er splittet i 10a og 10b efter INVEST-vurdering (Small): at starte/afslutte en runde og at se historik er to selvstændige features.*
 
 ### User story 11
-Som patient vil jeg kunne tilføje og se dokumenter tilknyttet min runde, så jeg har adgang til blodprøvesvar og behandlingsplan ét sted.
+Som patient vil jeg kunne tilføje og se mine dokumenter, så jeg har adgang til henvisning, blodprøvesvar og behandlingsplan ét sted – også før første runde.
 
 **Acceptkriterier:**
-- Acceptkriterie 1: "Givet en runde med tilknyttede dokumenter, når dokumentlisten åbnes, så vises alle dokumenter med titel og type" → tester at dokumenter vises korrekt
+- Acceptkriterie 1: "Givet en patient med tilknyttede dokumenter, når dokumentlisten åbnes, så vises alle dokumenter med titel, type og upload-dato" → tester at dokumenter vises korrekt
 - Acceptkriterie 2: "Givet et dokument vælges, når det åbnes, så vises filens indhold via den gemte filPath" → tester at det faktiske dokument kan tilgås
-- Acceptkriterie 3: "Givet et dokument tilføjes med titel, dokumenttype og fil, når dokumenttype vælges, så kan der vælges mellem Blodprøvesvar, Behandlingsplan og Andet" → tester at patienten selv kan tilføje dokumenter, og at dokumenttyperne er faste værdier, der matcher ordlisten
+- Acceptkriterie 3: "Givet et dokument tilføjes med titel, dokumenttype og fil, når dokumenttype vælges, så kan der vælges mellem Henvisning, Blodprøvesvar, Behandlingsplan og Andet" → tester at patienten selv kan tilføje dokumenter, og at dokumenttyperne er faste værdier, der matcher ordlisten
 
 ### User story 12
 Som patient vil jeg kunne modtage notifikationer, så jeg ikke overser vigtige påmindelser om medicin eller aftaler.

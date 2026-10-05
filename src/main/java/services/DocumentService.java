@@ -3,23 +3,21 @@ package services;
 import dao.DatabaseConnection;
 import dao.DocumentDAO;
 import entities.Document;
-import entities.FertilityJourney;
-import entities.Round;
 import enums.DocumentType;
 import enums.ServiceResult;
-import exceptions.NoActiveJourneyException;
-import exceptions.NoActiveRoundException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
 import java.util.UUID;
 
 // Forretningslogik for dokumenter (US11). Kender IKKE Javalin.
-// Regler: titel og type udfyldt, filtype PDF/JPG/PNG, maks 10 MB, aktiv runde skal findes.
-// Svarer med ServiceResult: OK · INVALID_INPUT · NO_ACTIVE_JOURNEY · NO_ACTIVE_ROUND
+// Regler: titel og type udfyldt, filtype PDF/JPG/PNG, maks 10 MB.
+// Dokumentet ligger på patienten, så det kan uploades når som helst – også før første runde (fx en henvisning).
+// Svarer med ServiceResult: OK · INVALID_INPUT
 public class DocumentService {
 
     private static final String UPLOAD_DIR = "uploads";
@@ -52,17 +50,7 @@ public class DocumentService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 5. find den aktive runde – et dokument hører til en runde
-        Round round;
-        try {
-            round = new RoundService().findActiveRound(patientId);
-        } catch (NoActiveJourneyException e) {
-            return ServiceResult.NO_ACTIVE_JOURNEY;
-        } catch (NoActiveRoundException e) {
-            return ServiceResult.NO_ACTIVE_ROUND;
-        }
-
-        // 6. gem filen på disken under et unikt navn
+        // 5. gem filen på disken under et unikt navn
         String storedName = UUID.randomUUID() + "-" + originalFileName.replaceAll("[^a-zA-Z0-9._-]", "_");
         Path target = Path.of(UPLOAD_DIR, storedName);
         try {
@@ -72,21 +60,16 @@ public class DocumentService {
             throw new RuntimeException("Could not save uploaded file", e);
         }
 
-        // 7. gem rækken i databasen – kun stien til filen
+        // 6. gem rækken i databasen – kun stien til filen og dagens dato
         new DocumentDAO(DatabaseConnection.getConnection())
-                .save(new Document(0, round.getId(), title, documentType, target.toString()));
+                .save(new Document(0, patientId, LocalDate.now(), title, documentType, target.toString()));
 
         return ServiceResult.OK;
     }
 
-    // Hent alle dokumenter i den runde, der er i gang – til listen på siden
+    // Hent alle patientens dokumenter – til listen på siden
     public java.util.List<Document> getDocuments(int patientId) {
-        try {
-            Round round = new RoundService().findActiveRound(patientId);
-            return new DocumentDAO(DatabaseConnection.getConnection()).findByRound(round.getId());
-        } catch (NoActiveJourneyException | NoActiveRoundException e) {
-            return new java.util.ArrayList<>();
-        }
+        return new DocumentDAO(DatabaseConnection.getConnection()).findByPatient(patientId);
     }
 
     // Finder ét dokument ud fra id – men kun blandt patientens egne, så man ikke kan åbne andres filer ved at gætte et id.

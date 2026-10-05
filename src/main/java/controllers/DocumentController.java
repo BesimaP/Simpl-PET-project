@@ -91,8 +91,6 @@ public class DocumentController {
         switch (result) {
             case OK -> ctx.redirect("/dokumenter?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/dokumenter?fejl=felter");
-            case NO_ACTIVE_JOURNEY -> ctx.redirect("/dokumenter?fejl=ingen-forloeb");
-            case NO_ACTIVE_ROUND -> ctx.redirect("/dokumenter?fejl=ingen-runde");
             default -> ctx.redirect("/dokumenter?fejl=ukendt");
         }
     }

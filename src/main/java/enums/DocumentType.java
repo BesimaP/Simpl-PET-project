@@ -3,6 +3,7 @@ package enums;
 // Dokumenttyper (ordlisten). Matcher CHECK på document.document_type.
 // label = den danske tekst, der vises på siden (Thymeleaf: ${d.documentType.label})
 public enum DocumentType {
+    REFERRAL("Henvisning"),
     BLOOD_TEST_RESULT("Blodprøvesvar"),
     TREATMENT_PLAN("Behandlingsplan"),
     OTHER("Andet");

@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,13 +23,14 @@ public class DocumentDAO {
 
     // gemmer ét dokument (titel, type og sti til filen) og returnerer det id, databasen gav det
     public int save(Document document) {
-        String sql = "INSERT INTO document (round_id, title, document_type, file_path) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO document (patient_id, upload_date, title, document_type, file_path) VALUES (?, ?, ?, ?, ?)";
         try {
             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
-            statement.setInt(1, document.getRoundId());
-            statement.setString(2, document.getTitle());
-            statement.setString(3, document.getDocumentType().name()); // enum -> "BLOOD_TEST_RESULT" (matcher CHECK)
-            statement.setString(4, document.getFilePath());            // fx "uploads/blodprove-sep.pdf"
+            statement.setInt(1, document.getPatientId());
+            statement.setString(2, document.getUploadDate().toString()); // LocalDate -> "2026-10-05"
+            statement.setString(3, document.getTitle());
+            statement.setString(4, document.getDocumentType().name()); // enum -> "BLOOD_TEST_RESULT" (matcher CHECK)
+            statement.setString(5, document.getFilePath());            // fx "uploads/blodprove-sep.pdf"
             statement.executeUpdate();
 
             ResultSet keys = statement.getGeneratedKeys();
@@ -42,13 +44,13 @@ public class DocumentDAO {
         }
     }
 
-    // henter alle dokumenter i én runde – til listen "Mine dokumenter"
-    public List<Document> findByRound(int roundId) {
-        String sql = "SELECT * FROM document WHERE round_id = ? ORDER BY title";
+    // henter alle patientens dokumenter, nyeste først – til listen "Mine dokumenter"
+    public List<Document> findByPatient(int patientId) {
+        String sql = "SELECT * FROM document WHERE patient_id = ? ORDER BY upload_date DESC, title";
         List<Document> documents = new ArrayList<>();
         try {
             PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, roundId);
+            statement.setInt(1, patientId);
             ResultSet rs = statement.executeQuery();
 
             while (rs.next()) {
@@ -57,7 +59,7 @@ public class DocumentDAO {
             return documents;
 
         } catch (SQLException e) {
-            throw new DatabaseException("Could not find documents for round " + roundId, e);
+            throw new DatabaseException("Could not find documents for patient " + patientId, e);
         }
     }
 
@@ -77,7 +79,8 @@ public class DocumentDAO {
     private Document mapRow(ResultSet rs) throws SQLException {
         return new Document(
                 rs.getInt("id"),
-                rs.getInt("round_id"),
+                rs.getInt("patient_id"),
+                LocalDate.parse(rs.getString("upload_date")),               // "2026-10-05" -> LocalDate
                 rs.getString("title"),
                 DocumentType.valueOf(rs.getString("document_type")), // "OTHER" -> enum
                 rs.getString("file_path")

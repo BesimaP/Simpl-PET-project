@@ -6,7 +6,7 @@ title UC2: ManageProfile
 actor "Patient" as u
 participant "ProfileView" as v
 participant "ProfileController" as c
-participant "UserAccount / Patient" as m
+participant "Patient" as m
 database "SQLite" as db
 
 u -> v : Clicks "Opret profil"
@@ -20,19 +20,16 @@ alt Required fields empty
   c --> v : showError()
   v --> u : "Please fill in all fields"
 else Fields filled
-  c -> db : SELECT id FROM user_account WHERE username = ?
+  c -> db : SELECT id FROM patient WHERE username = ?
   db --> c : ResultSet
   alt Username already taken
     c --> v : showError()
     v --> u : "Username is already in use"
   else Username free
     c -> c : passwordHash = hash(password)
-    c -> m : new UserAccount(username, passwordHash)
-    c -> db : INSERT INTO user_account (username, password_hash) VALUES (?, ?)
+    c -> m : new Patient(username, passwordHash, firstName, lastName, dateOfBirth)
+    c -> db : INSERT INTO patient (username, password_hash, first_name, last_name, date_of_birth) VALUES (?, ?, ?, ?, ?)
     db --> c : OK (id)
-    c -> m : new Patient(name, dateOfBirth, userAccountId)
-    c -> db : INSERT INTO patient (name, date_of_birth, user_account_id) VALUES (?, ?, ?)
-    db --> c : OK
     c --> v : showCreateJourney()
     v --> u : Shows "Start nyt forløb" (UC3)
   end
@@ -51,8 +48,6 @@ v --> u : Shows confirmation dialog
 u -> v : Confirms
 v -> c : handleDeleteAccount()
 c -> db : DELETE FROM patient WHERE id = ? (cascade to journeys, rounds, logs, documents, notifications)
-db --> c : OK
-c -> db : DELETE FROM user_account WHERE id = ?
 db --> c : OK
 c --> v : showLogin()
 v --> u : Shows login screen

@@ -3,7 +3,6 @@ package services;
 import dao.DatabaseConnection;
 import dao.DatabaseInitializer;
 import dao.PatientDAO;
-import dao.UserAccountDAO;
 
 // Hjælper til alle testklasser: sætter testdatabasen op og laver de "kort", en test skal bruge (patient, forløb, runde).
 // Ligger i src/test – er ikke med i selve programmet.
@@ -17,19 +16,11 @@ class TestData {
         DatabaseInitializer.initialize();
     }
 
-    // opretter konto + patient via AuthService og returnerer patientens id
+    // opretter en patient via AuthService og returnerer patientens id
     static int newPatient() {
         String username = "testuser" + (++counter);
         new AuthService().createProfile("Test", "Bruger", "1996-01-01", username, "hemmelig1", "no", null);
-        int accountId = new UserAccountDAO(DatabaseConnection.getConnection()).findByUsername(username).getId();
-        return new PatientDAO(DatabaseConnection.getConnection()).findByUserAccount(accountId).getId();
-    }
-
-    // kontoens id for en patient (bruges af ProfileService-tests)
-    static int newAccount() {
-        String username = "testaccount" + (++counter);
-        new AuthService().createProfile("Test", "Bruger", "1996-01-01", username, "hemmelig1", "no", null);
-        return new UserAccountDAO(DatabaseConnection.getConnection()).findByUsername(username).getId();
+        return new PatientDAO(DatabaseConnection.getConnection()).findByUsername(username).getId();
     }
 
     // patient med et aktivt forløb
