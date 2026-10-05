@@ -43,7 +43,7 @@
 
 ## User story 6a – Oprette profil
 - [x]  Lav layout til profiloprettelse (navn, fødselsdato, brugernavn, adgangskode) *(HTML/CSS lavet)*
-- [x]  Gem den nye profil i databasen (Patient med brugernavn + adgangskode), adgangskode gemmes som hash *(POST /opretprofil → AuthService.createProfile – hash venter, se teknisk gæld. Brugeren logges ind direkte efter oprettelse, 25. sep)*
+- [x]  Gem den nye profil i databasen (Patient med brugernavn + adgangskode), adgangskode gemmes som hash *(POST /opretprofil → AuthService.createProfile – BCrypt.hashpw (5. okt). Brugeren logges ind direkte efter oprettelse, 25. sep)*
 - [x]  Tilføj validering: brugernavn allerede taget / manglende felter *(ALREADY_EXISTS / INVALID_INPUT i AuthService.createProfile)*
 - [x]  Test både succesfuld oprettelse og fejlmeddelelser *(AuthServiceTest)*
 
@@ -115,7 +115,7 @@
 - [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)
 - [x]  `AuthService.createProfile`: tilføj blank-tjek på name/username/password → INVALID_INPUT (som i DiagnosisService) *(lavet 22. sep)*
 - [x]  `LocalDate.parse(dateOfBirth)` kaster exception ved tom/ugyldig dato → skal give INVALID_INPUT i stedet for 500-fejl *(try/catch i createProfile, 22. sep – forløbs-startdato tages, når "forløb ved oprettelse" laves)*
-- [ ]  Kodeord gemmes i klartekst → BCrypt-hash inden aflevering (AuthService.login/createProfile, ProfileService.changePassword)
+- [x]  Kodeord gemmes i klartekst → BCrypt-hash inden aflevering (AuthService.login/createProfile, ProfileService.changePassword) *(jbcrypt 0.4 i pom; hashpw ved opret profil og skift kodeord, checkpw ved login og skift kodeord; ProfileServiceTest tjekker, at kodeordet ikke står i klartekst – 5. okt)*
 - [x]  `enums/Result.java` ser ud til at være en rest ved siden af `ServiceResult` → slet eller forklar *(ikke en rest: `Result` = rundens resultat POSITIVE/NEGATIVE, bruges i RoundDAO.endRound. `ServiceResult` = svaret fra service til controller. To forskellige ting)*
 - [ ]  Thymeleaf/OGNL: skriv aldrig ét enkelt tegn i enkelte anførselstegn (`'d'`) – det bliver en `char`. Brug `#temporals.day(...)` eller `'dd'` *(fundet 25. sep)*
 - [x]  `/logout`-rute: "Log ud" sletter sessionen (LoginController.logout) *(25. sep)*
