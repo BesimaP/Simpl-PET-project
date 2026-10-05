@@ -4,6 +4,7 @@ import dao.DatabaseConnection;
 import dao.PatientDAO;
 import entities.Patient;
 import enums.ServiceResult;
+import org.mindrot.jbcrypt.BCrypt;
 
 // Forretningslogik for min-profil (US6b). Kender IKKE Javalin – ProfileController læser formularen og kalder én metode her.
 // Alle tre metoder gemmer/ændrer noget, så de svarer med ServiceResult. Controlleren vælger side ud fra svaret.
@@ -47,12 +48,12 @@ public class ProfileService {
         }
 
         // 4. regel: det gamle kodeord skal passe med det, der ligger i databasen (senere: BCrypt.checkpw)
-        if (!currentPassword.equals(patient.getPasswordHash())) {
+        if (!BCrypt.checkpw(currentPassword, patient.getPasswordHash())) {
             return ServiceResult.INVALID_INPUT;
         }
 
         // 5. bed arkivaren gemme det nye kodeord (senere: hash det først)
-        new PatientDAO(DatabaseConnection.getConnection()).updatePassword(patientId, newPassword);
+        new PatientDAO(DatabaseConnection.getConnection()).updatePassword(patientId, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
 
         // 6. gik godt
         return ServiceResult.OK;

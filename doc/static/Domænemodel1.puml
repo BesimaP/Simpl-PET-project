@@ -78,12 +78,12 @@ object "<b>Document</b>" as Document #FFDAB9 {
 }
 
 ' ---------- Notifikationer (US12) ----------
+' isRead står ikke her (vejledning aug.): læst/ulæst er et acceptkriterie på US12; kolonnen is_read findes kun i databasen
 
 object "<b>Notification</b>" as Notification #FFF3B0 {
   dateTime
   title
   message
-  isRead
 }
 
 ' ---------- Typer (uge 41): hver type har sin egen tabel, ligesom Medication ----------

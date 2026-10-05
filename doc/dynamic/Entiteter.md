@@ -61,7 +61,7 @@
 
 - **Notification**
   Påmindelser til patienten, som systemet selv genererer ud fra kommende medicindoser og aftaler.
-  Important attributes: dateTime, title, message, isRead.
+  Important attributes: dateTime, title, message. (Læst/ulæst er ikke en attribut i domænemodellen, men et acceptkriterie på US12 — kolonnen is_read findes kun i databasen.)
   Type: NotificationType (MEDICATION_REMINDER / APPOINTMENT_REMINDER).
 
 - **Typerne** (JourneyStatus, TreatmentType, Result, AppointmentType, EventType, HormoneType, DocumentType, NotificationType)

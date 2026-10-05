@@ -5,6 +5,7 @@ import dao.PatientDAO;
 import entities.Patient;
 import enums.ServiceResult;
 import exceptions.UserNotFoundException;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -16,7 +17,7 @@ public class AuthService {
     public Patient login(String username, String password) throws UserNotFoundException {
         Patient patient = new PatientDAO(DatabaseConnection.getConnection()).findByUsername(username);
 
-        if (patient == null || !password.equals(patient.getPasswordHash())) {
+        if (patient == null || !BCrypt.checkpw(password, patient.getPasswordHash())) {
             throw new UserNotFoundException("Forkert brugernavn eller kodeord");
         }
 
@@ -63,8 +64,7 @@ public class AuthService {
         }
 
         // 2. gem patienten (login + persondata i én række). id'et fra databasen skal bruges til forløbet
-        //    (TODO senere: hash kodeordet med BCrypt før det gemmes)
-        int patientId = patientDao.save(new Patient(0, username, password, firstName.trim(), lastName.trim(), dob));
+        int patientId = patientDao.save(new Patient(0, username, BCrypt.hashpw(password, BCrypt.gensalt()), firstName.trim(), lastName.trim(), dob));
 
         // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
         if (wantsJourney) {

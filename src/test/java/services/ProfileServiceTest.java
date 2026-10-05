@@ -6,6 +6,7 @@ import enums.ServiceResult;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -60,7 +61,9 @@ class ProfileServiceTest {
     void changePasswordReturnsOkAndNewPasswordIsSaved() {
         int patientId = TestData.newPatient();
         assertEquals(ServiceResult.OK, new ProfileService().changePassword(patientId, "hemmelig1", "nyt12345", "nyt12345"));
-        assertEquals("nyt12345", new PatientDAO(DatabaseConnection.getConnection()).findById(patientId).getPasswordHash());
+        String hash = new PatientDAO(DatabaseConnection.getConnection()).findById(patientId).getPasswordHash();
+        assertNotEquals("nyt12345", hash);               // kodeordet er IKKE gemt i klartekst
+        assertTrue(BCrypt.checkpw("nyt12345", hash));     // men hashen passer med det nye kodeord
     }
 
     @Test
