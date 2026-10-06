@@ -2,11 +2,12 @@ package configuration;
 import controllers.*;
 import io.javalin.config.JavalinConfig;
 import services.NotificationService;
+import persistence.ConnectionPool;
 
 // Samler registreringen af alle controllere ét sted, så Main slipper for den lange liste.
 public class RouteConfig {
 
-    public static void register(JavalinConfig config) {
+    public static void register(JavalinConfig config, ConnectionPool connectionPool) {
         // hver controller skriver sine ruter (config.routes.post("/…")) på Javalins liste –
         // står en controller ikke her, virker dens formularer ikke
         LoginController.setRoutes(config);
