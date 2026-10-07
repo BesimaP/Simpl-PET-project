@@ -21,9 +21,11 @@ import java.util.List;
 // Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen DAO'er her.
 public class DashboardController {
     private ProfileService profileService;
+    private DashboardService dashboardService;
 
     public DashboardController(ConnectionPool connectionPool) {
         this.profileService = new ProfileService(connectionPool);
+        this.dashboardService = new DashboardService(connectionPool);
     }
 
     public void setRoutes(JavalinConfig config) {
@@ -55,7 +57,7 @@ public class DashboardController {
         FertilityJourney journey = null;
         Round round = null;
         try {
-            journey = new DashboardService().findActiveJourney(patientId);
+            journey = dashboardService.findActiveJourney(patientId);
             round = new RoundService().findActiveRound(patientId);
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
             // ingen fejl – bare en af de to tilstande
@@ -109,7 +111,7 @@ public class DashboardController {
         String startDate = ctx.formParam("startDate");
 
         // bed service oprette forløbet – den kender reglen "kun ét aktivt"
-        ServiceResult result = new DashboardService().createJourney(patientId, startDate);
+        ServiceResult result = dashboardService.createJourney(patientId, startDate);
 
         // dashboard viser selv "start dit forløb"-delen, hvis der stadig intet forløb er
         switch (result) {
