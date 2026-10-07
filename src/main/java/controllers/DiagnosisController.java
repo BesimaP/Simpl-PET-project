@@ -26,7 +26,6 @@ public class DiagnosisController {
             ctx.redirect("/login");   // ikke logget ind -> til login
             return;
         }
-
         // 2. bed service om listen, og læg den i requestscope – Thymeleaf læser den som ${diagnoses}
         ctx.attribute("diagnoses", diagnosisService.getDiagnoses(patientId));
 
