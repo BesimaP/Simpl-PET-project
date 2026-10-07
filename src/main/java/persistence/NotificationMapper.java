@@ -49,9 +49,11 @@ public class NotificationMapper {
 
     // henter alle patientens påmindelser, nyeste først – til notifikationer-siden
     public List<Notification> findByPatient(int patientId) {
-        String sql = "SELECT n.*, nt.name AS notification_type FROM notification n "
-                + "JOIN notification_type nt ON nt.id = n.notification_type_id "
-                + "WHERE n.patient_id = ? ORDER BY n.date_time DESC";
+        String sql = "SELECT notification.*, notification_type.name AS notification_type "
+                + "FROM notification "
+                + "JOIN notification_type ON notification_type.id = notification.notification_type_id "
+                + "WHERE notification.patient_id = ? "
+                + "ORDER BY notification.date_time DESC";
         List<Notification> notifications = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)){

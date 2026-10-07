@@ -55,7 +55,11 @@ public class HormoneLogMapper {
 
     // henter alle målinger i én runde, nyeste først – bruges til listen (og senere kurven) på hormoner-siden
     public List<HormoneLog> findByRound(int roundId) {
-        String sql = "SELECT h.*, ht.name AS hormone_type FROM hormone_log h JOIN hormone_type ht ON ht.id = h.hormone_type_id WHERE h.round_id = ? ORDER BY h.date_time DESC";
+        String sql = "SELECT hormone_log.*, hormone_type.name AS hormone_type "
+                   + "FROM hormone_log "
+                   + "JOIN hormone_type ON hormone_type.id = hormone_log.hormone_type_id "
+                   + "WHERE hormone_log.round_id = ? "
+                   + "ORDER BY hormone_log.date_time DESC";
         List<HormoneLog> logs = new ArrayList<>(); // tom liste, som vi fylder op
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)){

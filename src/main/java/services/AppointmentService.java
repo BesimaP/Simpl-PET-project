@@ -1,6 +1,6 @@
 package services;
 
-import dao.AppointmentDAO;
+import persistence.AppointmentMapper;
 import dao.DatabaseConnection;
 import entities.Appointment;
 import entities.FertilityJourney;
@@ -10,6 +10,8 @@ import entities.Round;
 import exceptions.NoActiveRoundException;
 import enums.ServiceResult;
 import exceptions.NoActiveJourneyException;
+import persistence.ConnectionPool;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -21,6 +23,17 @@ import java.util.List;
 // Aftaler hænger på forløbet, ikke runden (første konsultation sker før nogen runde).
 // Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldig type eller dato · NO_ACTIVE_JOURNEY = intet forløb
 public class AppointmentService {
+    private AppointmentMapper appointmentMapper;
+    private DashboardService dashboardService;
+    private RoundService roundService;
+    private TimelineService timelineService;
+
+    public AppointmentService(ConnectionPool connectionPool) {
+        this.appointmentMapper = new AppointmentMapper(connectionPool);
+        this.dashboardService = new DashboardService(connectionPool);
+        this.roundService = new RoundService(connectionPool);
+        this.timelineService = new TimelineService(connectionPool);
+    }
 
     // Gemmer én aftale på patientens aktive forløb
     public ServiceResult addAppointment(int patientId, String type, String location, String date, String time) {
@@ -49,7 +62,7 @@ public class AppointmentService {
         }
 
         // 4. byg kortet (id 0 = databasen giver et) og læg det i skuffen appointment
-        new AppointmentDAO(DatabaseConnection.getConnection()).save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
+        new AppointmentMapper(DatabaseConnection.getConnection()).save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
 
         // 5. de store trin (ægudtagning, oplægning, graviditetstest) skal også på tidslinjen (US2) – men kun hvis en runde er i gang
         EventType eventType = toEventType(appointmentType);
@@ -101,7 +114,7 @@ public class AppointmentService {
     private List<Appointment> getAll(int patientId) {
         try {
             FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
-            return new AppointmentDAO(DatabaseConnection.getConnection()).findByJourney(journey.getId());
+            return new AppointmentMapper(DatabaseConnection.getConnection()).findByJourney(journey.getId());
         } catch (NoActiveJourneyException e) {
             return new ArrayList<>();
         }
