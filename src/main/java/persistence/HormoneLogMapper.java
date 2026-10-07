@@ -1,4 +1,4 @@
-package dao;
+package persistence;
 
 import exceptions.DatabaseException;
 
@@ -13,29 +13,28 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-// DAO = Data Access Object. Det eneste sted, der taler med tabellen hormone_log (US9).
+// Mapper = arkivaren. Det eneste sted, der taler med tabellen hormone_log (US9).
 // Resten af programmet kalder bare save/findByRound/delete og behøver ikke kende SQL.
-public class HormoneLogDAO {
-    // forbindelsen til databasen – vi får den udefra, så alle DAO'er deler den samme
-    private Connection connection;
+public class HormoneLogMapper {
+    // nøgleringen – vi låner en nøgle, hver gang vi skal i databasen
+    private ConnectionPool connectionPool;
 
-    public HormoneLogDAO(Connection connection) {
-        this.connection = connection;
+    public HormoneLogMapper(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
     }
 
     // gemmer én hormonmåling og returnerer det id, databasen gav rækken
     public int save(HormoneLog log) {
         // id er ikke med – databasen laver det selv. ? = pladsholdere, der fyldes ud nedenfor
-        String sql = "INSERT INTO hormone_log (round_id, date_time, hormone_type, value, unit) VALUES (?, ?, ?, ?, ?)";
-        try {
-            // RETURN_GENERATED_KEYS = vi vil gerne have det nye id tilbage bagefter
-            PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+        String sql = "INSERT INTO hormone_log (round_id, date_time, hormone_type_id, value, unit) VALUES (?, ?, (SELECT id FROM hormone_type WHERE name = ?), ?, ?)";
+        try (Connection connection = connectionPool.getConnection();
+                PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             // fyld de fem ? ud – nummeret er rækkefølgen i sql-strengen (1 = første ?)
             statement.setInt(1, log.getRoundId());
-            statement.setString(2, log.getDateTime().toString()); // LocalDateTime -> "2026-09-14T10:30" (PostgreSQL: setTimestamp)
-            statement.setString(3, log.getHormoneType().name());  // enum -> "FSH" (skal matche CHECK i schema.sql)
-            statement.setDouble(4, log.getValue());               // REAL i databasen = double i Java
+            statement.setObject(2, log.getDateTime()); // LocalDateTime direkte – PostgreSQL forstår selv datoen
+            statement.setString(3, log.getHormoneType().name());  // ordet, fx "FSH" -> databasen finder selv id'et
+            statement.setDouble(4, log.getValue());               // NUMERIC i databasen = double i Java
             statement.setString(5, log.getUnit());
 
             // kør INSERT'en
@@ -56,10 +55,11 @@ public class HormoneLogDAO {
 
     // henter alle målinger i én runde, nyeste først – bruges til listen (og senere kurven) på hormoner-siden
     public List<HormoneLog> findByRound(int roundId) {
-        String sql = "SELECT * FROM hormone_log WHERE round_id = ? ORDER BY date_time DESC";
+        String sql = "SELECT h.*, ht.name AS hormone_type FROM hormone_log h JOIN hormone_type ht ON ht.id = h.hormone_type_id WHERE h.round_id = ? ORDER BY h.date_time DESC";
         List<HormoneLog> logs = new ArrayList<>(); // tom liste, som vi fylder op
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)){
+
             statement.setInt(1, roundId);
 
             // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
@@ -79,8 +79,8 @@ public class HormoneLogDAO {
     // sletter én måling ud fra dens id
     public void delete(int id) {
         String sql = "DELETE FROM hormone_log WHERE id = ?";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)){
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -93,7 +93,7 @@ public class HormoneLogDAO {
         return new HormoneLog(
                 rs.getInt("id"),
                 rs.getInt("round_id"),
-                LocalDateTime.parse(rs.getString("date_time")),      // "2026-09-14T10:30" -> LocalDateTime
+                rs.getObject("date_time", LocalDateTime.class),   // PostgreSQL giver selv en LocalDateTime
                 HormoneType.valueOf(rs.getString("hormone_type")),  // "FSH" -> enum
                 rs.getDouble("value"),
                 rs.getString("unit")

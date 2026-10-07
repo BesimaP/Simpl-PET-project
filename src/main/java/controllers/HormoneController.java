@@ -4,14 +4,20 @@ import enums.HormoneType;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
+import persistence.ConnectionPool;
 import services.HormoneService;
 
 // Koordinatoren for hormoner.html (US9). Læser formularen, kalder HormoneService og sender brugeren videre.
 // Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
 public class HormoneController {
+    private HormoneService hormoneService; // "den der bestemmer" for hormoner
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: HormoneController.setRoutes(config)
-    public static void setRoutes(JavalinConfig config) {
+    public HormoneController(ConnectionPool connectionPool) {
+        this.hormoneService = new HormoneService(connectionPool);
+    }
+
+    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new HormoneController(connectionPool).setRoutes(config)
+    public void setRoutes(JavalinConfig config) {
         // "når der kommer POST til /hormoner (formularen på hormoner.html), så kald saveLog med den ctx, Javalin rækker os"
         config.routes.post("/hormoner", ctx -> saveLog(ctx));
         config.routes.get("/hormoner", ctx -> showLogs(ctx));
@@ -19,15 +25,14 @@ public class HormoneController {
     }
 
     // GET /hormoner – hent rundens målinger og fyld skabelonen
-    public static void showLogs(Context ctx) {
+    public void showLogs(Context ctx) {
         // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        HormoneService service = new HormoneService();
-        ctx.attribute("logs", service.getLogs(patientId));   // requestscope -> ${logs}
+        ctx.attribute("logs", hormoneService.getLogs(patientId));   // requestscope -> ${logs}
 
         // kurven: ?hormon=E2_OESTRADIOL vælger hormonet (knapperne over kurven). Ingen/ukendt værdi -> null -> nyeste måling bestemmer
         HormoneType chosen = null;
@@ -38,7 +43,7 @@ public class HormoneController {
         } catch (IllegalArgumentException e) {
             // ukendt hormon i URL'en – ignorér, vis standard
         }
-        ctx.attribute("curve", service.getCurve(patientId, chosen));   // requestscope -> ${curve}
+        ctx.attribute("curve", hormoneService.getCurve(patientId, chosen));   // requestscope -> ${curve}
         ctx.attribute("hormoneTypes", HormoneType.values());           // requestscope -> ${hormoneTypes} (knapperne)
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
@@ -47,7 +52,7 @@ public class HormoneController {
     }
 
     // POST /hormoner – når brugeren trykker "Gem måling". ctx = kuverten fra Javalin: felterne ligger i den, og svaret sendes gennem den
-    public static void saveLog(Context ctx) {
+    public void saveLog(Context ctx) {
         String hormone = ctx.formParam("hormone");
         String value = ctx.formParam("value");
         String unit = ctx.formParam("unit");
@@ -59,7 +64,7 @@ public class HormoneController {
             return;
         }
 
-        ServiceResult result = new HormoneService().saveLog(patientId, hormone, value, unit, date);
+        ServiceResult result = hormoneService.saveLog(patientId, hormone, value, unit, date);
 
         switch (result) {
             case OK -> ctx.redirect("/hormoner?gemt=1");
@@ -71,7 +76,7 @@ public class HormoneController {
     }
 
     // POST /hormoner/slet – slet én måling (id i et skjult felt). Service tjekker, at målingen er patientens egen
-    private static void deleteLog(Context ctx) {
+    private void deleteLog(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -84,7 +89,7 @@ public class HormoneController {
             ctx.redirect("/hormoner?fejl=ukendt");
             return;
         }
-        ServiceResult result = new HormoneService().deleteLog(patientId, logId);
+        ServiceResult result = hormoneService.deleteLog(patientId, logId);
         ctx.redirect(result == ServiceResult.OK ? "/hormoner?gemt=slettet" : "/hormoner?fejl=ukendt");
     }
 }

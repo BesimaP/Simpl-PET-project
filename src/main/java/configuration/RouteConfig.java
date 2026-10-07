@@ -12,7 +12,7 @@ public class RouteConfig {
         // står en controller ikke her, virker dens formularer ikke
         new LoginController(connectionPool).setRoutes(config);
         new DashboardController(connectionPool).setRoutes(config);
-        HormoneController.setRoutes(config);
+        new HormoneController(connectionPool).setRoutes(config);
         new DiaryController(connectionPool).setRoutes(config);
         DiagnosisController.setRoutes(config, connectionPool);
         MedicationController.setRoutes(config);
