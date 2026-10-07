@@ -1,6 +1,6 @@
 /* pages.css — det der kun findes på én bestemt side:
    dashboard (runde-kort, ring, dagens medicin, statistik-kort),
-   formular-sider (form-layout) og den tomme tilstand (dashboardtom). */
+   formular-sider (form-layout) og den tomme tilstand på dashboardet ("Start dit forløb"). */
 
 /* runde-kortet: flex = ring og tekst side om side, gap = luft imellem */
 .round {
@@ -354,7 +354,7 @@ button.med__check:hover {
     }
 }
 
-/* empty = tom-tilstanden på dashboardtom.html: alt centreret */
+/* empty = tom-tilstanden på dashboardet ("Start dit forløb" / "Ingen runde i gang"): alt centreret */
 .dashboard .empty {
     display: flex;
     flex-direction: column;

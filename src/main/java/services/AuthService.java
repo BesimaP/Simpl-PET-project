@@ -89,7 +89,7 @@ public class AuthService {
         // 2. gem patienten (login + persondata i én række). id'et fra databasen skal bruges til forløbet
         int patientId = patientMapper.save(new Patient(0, username, BCrypt.hashpw(password, BCrypt.gensalt()), firstName.trim(), lastName.trim(), dob));
 
-        // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
+        // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardet
         if (wantsJourney) {
             dashboardService.createJourney(patientId, journeyStart);
         }
