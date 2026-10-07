@@ -92,4 +92,28 @@ c --> j : ctx.redirect("/medicin")
 j --> u : Dose shown as taken
 note over c, lm : POST /medicin/ikke-taget → markNotTaken(patientId, logId)\nworks the same way (incl. the ownership check) with SET taken = FALSE (undo)
 
+== Delete a dose ==
+u -> v : Clicks "Slet" on a dose (e.g. a typo: 1500 instead of 150)
+v -> j : POST /medicin/slet (id in hidden field)
+j -> c : deleteDose(ctx)
+c -> c : Integer.parseInt(ctx.formParam("id"))
+alt id is not a number
+  c --> j : ctx.redirect("/medicin?fejl=ukendt")
+else id OK
+  c -> s : deleteDose(patientId, logId)
+  s -> s : isOwnDose(patientId, logId)
+  alt Not found / not hers
+    s --> c : NOT_FOUND
+    c --> j : ctx.redirect("/medicin?fejl=ukendt")
+  else Her own dose
+    s -> lm : delete(logId)
+    lm -> cp : getConnection()
+    cp --> lm : Connection
+    lm -> db : DELETE FROM medication_log WHERE id = ?
+    s --> c : OK
+    c --> j : ctx.redirect("/medicin?gemt=slettet")
+  end
+end
+j --> u : Updated checklist with "Slettet ✓"
+
 @enduml
