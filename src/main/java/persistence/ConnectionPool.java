@@ -59,7 +59,8 @@ public class ConnectionPool {
         return new HikariDataSource(config);
     }
 
-    public static Connection getConnection() throws SQLException {
+    // Ikke static: man skal have nøgleringen (ConnectionPool-objektet) for at låne en nøgle – den gives videre Main → … → Mapper
+    public Connection getConnection() throws SQLException {
         if (ds == null) {
             throw new SQLException("Connection pool is not initialized.");
         }
@@ -67,7 +68,7 @@ public class ConnectionPool {
         return ds.getConnection();
     }
 
-    public static void close() {
+    public void close() {
         if (ds != null) {
             ds.close();
             ds = null;

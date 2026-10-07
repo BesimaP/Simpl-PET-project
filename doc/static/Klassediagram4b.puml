@@ -25,8 +25,8 @@ package "persistence" {
     - {static} ds : HikariDataSource
     - ConnectionPool()
     + {static} getInstance(user : String, password : String, url : String, db : String) : ConnectionPool
-    + {static} getConnection() : Connection
-    + {static} close() : void
+    + getConnection() : Connection
+    + close() : void
   }
 
   class PatientMapper {
