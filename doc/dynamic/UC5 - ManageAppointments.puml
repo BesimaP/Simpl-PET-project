@@ -21,15 +21,22 @@ database "PostgreSQL" as db
 note over j, c : Both routes start with ctx.sessionAttribute("patientId")\nnull (not logged in) → ctx.redirect("/login")
 
 == Show appointments ==
-u -> j : GET /aftaler
+u -> j : GET /aftaler (menu) or GET /aftaler?forloeb={id}\n(from rundehistorik or the journey links at the top)
 j -> c : showAppointments(ctx)
-c -> s : getUpcoming(patientId), getPast(patientId)
-s -> ds : findActiveJourney(patientId) (FertilityJourneyMapper)
-alt No active journey
-  ds --> s : throw NoActiveJourneyException
-  s --> c : empty lists
-else Journey found
-  ds --> s : FertilityJourney
+c -> ds : findActiveJourney(patientId)
+ds --> c : FertilityJourney (or NoActiveJourneyException → active = null)
+opt ?forloeb= is given (and is a number)
+  c -> ds : findJourney(patientId, journeyId)
+  note right of ds : getJourneys(patientId) (FertilityJourneyMapper.findByPatient)\n– only the patient's own journeys, also completed ones
+  ds --> c : FertilityJourney (or null if not hers → show the active one)
+end
+c -> ds : getJourneys(patientId)
+ds --> c : all journeys (for the links at the top, shown when > 1)
+c -> c : shown = chosen journey or the active one\ncanAdd = shown is the active journey
+
+opt shown != null
+  c -> s : getUpcoming(patientId, journeyId), getPast(patientId, journeyId)
+  s -> ds : findJourney(patientId, journeyId) (ownership check)
   s -> am : findByJourney(journeyId)
   am -> cp : getConnection()
   cp --> am : Connection
@@ -41,9 +48,13 @@ else Journey found
   s -> s : split on dateTime.isAfter(now())
   s --> c : upcoming, past
 end
-c -> c : ctx.attribute("upcoming"/"past"/"gemt"/"fejl")
+c -> c : ctx.attribute("journeys"/"shown"/"canAdd"/"upcoming"/"past"/"gemt"/"fejl")
 c --> j : ctx.render("aftaler")
-j --> u : aftaler.html ("Ingen kommende aftaler." if list is empty)
+alt canAdd (the active journey)
+  j --> u : aftaler.html with the form "Ny aftale" + the lists
+else A completed journey
+  j --> u : aftaler.html with "Afsluttet forløb – nye aftaler kan kun\ntilføjes til forløbet, der er i gang" + the lists
+end
 
 == Add appointment ==
 u -> v : Fills in type, "Klinik", "Dato", "Klokkeslæt", clicks "Gem aftale"

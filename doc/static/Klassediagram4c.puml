@@ -69,6 +69,7 @@ package "controllers" {
   class TimelineController {
     - timelineService : TimelineService
     - profileService : ProfileService
+    - roundService : RoundService
     + TimelineController(connectionPool : ConnectionPool)
     + setRoutes(config : JavalinConfig) : void
     - showTimeline(ctx : Context) : void
@@ -91,10 +92,12 @@ package "controllers" {
     - logDose(ctx : Context) : void
     - markTaken(ctx : Context) : void
     - markNotTaken(ctx : Context) : void
+    - deleteDose(ctx : Context) : void
   }
 
   class AppointmentController {
     - appointmentService : AppointmentService
+    - dashboardService : DashboardService
     + AppointmentController(connectionPool : ConnectionPool)
     + setRoutes(config : JavalinConfig) : void
     - showAppointments(ctx : Context) : void
@@ -166,6 +169,8 @@ package "services" {
     + createJourney(patientId : int, startDate : String) : ServiceResult
     + endJourney(patientId : int) : ServiceResult
     + findActiveJourney(patientId : int) : FertilityJourney
+    + getJourneys(patientId : int) : List<FertilityJourney>
+    + findJourney(patientId : int, journeyId : int) : FertilityJourney
   }
 
   class RoundService {
@@ -177,6 +182,8 @@ package "services" {
     + endRound(patientId : int, result : Result) : ServiceResult
     + findActiveRound(patientId : int) : Round
     + getRounds(patientId : int) : List<Round>
+    + getRoundsPerJourney(patientId : int) : Map<Integer, List<Round>>
+    + findRound(patientId : int, roundId : int) : Round
   }
 
   class TimelineService {
@@ -185,6 +192,7 @@ package "services" {
     + TimelineService(connectionPool : ConnectionPool)
     + addEvent(roundId : int, dateTime : LocalDateTime, type : EventType, description : String) : void
     + getEvents(patientId : int) : List<Event>
+    + getEvents(patientId : int, roundId : int) : List<Event>
   }
 
   class HormoneService {
@@ -212,6 +220,7 @@ package "services" {
     + getMedicationNames() : Map<Integer, String>
     + markTaken(patientId : int, logId : int) : ServiceResult
     + markNotTaken(patientId : int, logId : int) : ServiceResult
+    + deleteDose(patientId : int, logId : int) : ServiceResult
   }
 
   class AppointmentService {
@@ -223,6 +232,8 @@ package "services" {
     + addAppointment(patientId : int, type : String, location : String, date : String, time : String) : ServiceResult
     + getUpcoming(patientId : int) : List<Appointment>
     + getPast(patientId : int) : List<Appointment>
+    + getUpcoming(patientId : int, journeyId : int) : List<Appointment>
+    + getPast(patientId : int, journeyId : int) : List<Appointment>
   }
 
   class NotificationService {

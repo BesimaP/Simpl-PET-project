@@ -84,6 +84,7 @@ package "persistence" {
     + FertilityJourneyMapper(connectionPool : ConnectionPool)
     + save(journey : FertilityJourney) : int
     + findActiveByPatient(patientId : int) : FertilityJourney
+    + findByPatient(patientId : int) : List<FertilityJourney>
     + endJourney(id : int) : void
   }
 

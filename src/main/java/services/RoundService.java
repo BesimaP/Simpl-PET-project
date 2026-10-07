@@ -15,7 +15,9 @@ import persistence.RoundMapper;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 // Forretningslogik for runder (Round, US10a/10b). Kender IKKE Javalin.
 // Metoderne svarer med ServiceResult. Controlleren vælger side ud fra svaret.
@@ -105,6 +107,29 @@ public class RoundService {
             throw new NoActiveRoundException("Der er ingen runde i gang");
         }
         return round;
+    }
+
+    // Runderne for ALLE patientens forløb: forløbets id -> dets runder (ældste først).
+    // LinkedHashMap husker rækkefølgen, så forløbene står nyeste først, ligesom getJourneys
+    public Map<Integer, List<Round>> getRoundsPerJourney(int patientId) {
+        Map<Integer, List<Round>> rounds = new LinkedHashMap<>();
+        for (FertilityJourney journey : dashboardService.getJourneys(patientId)) {
+            rounds.put(journey.getId(), roundMapper.findByJourney(journey.getId()));
+        }
+        return rounds;
+    }
+
+    // Finder én af patientens EGNE runder ud fra id (i alle hendes forløb) – null, hvis den ikke findes eller er en andens.
+    // Bruges af tidslinjen, så man kan se en gammel rundes tidslinje (?runde= i adressen)
+    public Round findRound(int patientId, int roundId) {
+        for (List<Round> list : getRoundsPerJourney(patientId).values()) {
+            for (Round r : list) {
+                if (r.getId() == roundId) {
+                    return r;
+                }
+            }
+        }
+        return null;
     }
 
     // Henter alle runder i patientens aktive forløb, ældste først – til rundehistorik (GET). Intet forløb -> tom liste

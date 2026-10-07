@@ -10,6 +10,7 @@ import persistence.RoundMapper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 
 // Forretningslogik for forløb (FertilityJourney, US1). Kender IKKE Javalin.
 public class DashboardService {
@@ -65,6 +66,22 @@ public class DashboardService {
         // 3. sæt status til COMPLETED
         journeyMapper.endJourney(journey.getId());
         return ServiceResult.OK;
+    }
+
+    // Alle patientens forløb, nyeste først (aktive og afsluttede) – til rundehistorik og valg af forløb på aftaler
+    public List<FertilityJourney> getJourneys(int patientId) {
+        return journeyMapper.findByPatient(patientId);
+    }
+
+    // Finder ét af patientens EGNE forløb ud fra id – null, hvis det ikke findes eller tilhører en anden
+    // (så man ikke kan se andres aftaler ved at rette ?forloeb= i adressen)
+    public FertilityJourney findJourney(int patientId, int journeyId) {
+        for (FertilityJourney j : getJourneys(patientId)) {
+            if (j.getId() == journeyId) {
+                return j;
+            }
+        }
+        return null;
     }
 
     // Finder patientens aktive forløb. Findes der ikke et, KASTES NoActiveJourneyException (i stedet for at returnere null,

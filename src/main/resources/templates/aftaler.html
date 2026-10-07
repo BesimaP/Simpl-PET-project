@@ -44,13 +44,26 @@
     <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>
 
-    <!-- INDHOLD: byg videre her (se tegningen i simpl-sider-plan.html) -->
+    <!-- hvilket forløb vises? Kun når patienten har mere end ét forløb: links til hvert af dem (?forloeb=id).
+         Virker uden JavaScript. ${shown} = det forløb, siden viser lige nu -->
+    <nav class="card journey-picker" th:if="${journeys.size() > 1}" aria-label="Vælg forløb">
+      <p class="eyebrow">Forløb</p>
+      <p>
+        <span th:each="j, iterStat : ${journeys}">
+          <a th:href="@{/aftaler(forloeb=${j.id})}"
+             th:text="${#temporals.format(j.startDate, 'd. MMM yyyy')} + (${j.status.name() == 'ACTIVE'} ? ' (i gang)' : ' (afsluttet)')"
+             th:classappend="${shown != null and shown.id == j.id} ? 'is-current'"
+             th:attr="aria-current=${shown != null and shown.id == j.id} ? 'page' : null">1. mar 2026 (afsluttet)</a>
+          <span th:unless="${iterStat.last}"> · </span>
+        </span>
+      </p>
+    </nav>
 
     <!-- form-layout gør at kortene står i 2 kolonner (samme som hormoner.html) -->
     <div class="form-layout">
 
-      <!-- VENSTRE: formular til at oprette en aftale -->
-      <section class="card form-card" aria-labelledby="aftale-title">
+      <!-- VENSTRE: formular til at oprette en aftale – kun på det aktive forløb (${canAdd} fra AppointmentController) -->
+      <section class="card form-card" aria-labelledby="aftale-title" th:if="${canAdd}">
         <h2 id="aftale-title">Ny aftale</h2>
         <p class="subtitle">Skriv aftalen ind, så den dukker op i din oversigt.</p>
 
@@ -86,6 +99,13 @@
         </form>
 
         <p class="link-line"><a href="/dashboard">Annullér</a></p>
+      </section>
+
+      <!-- i stedet for formularen, når man kigger på et afsluttet forløb -->
+      <section class="card form-card" th:unless="${canAdd}">
+        <h2>Afsluttet forløb</h2>
+        <p class="subtitle" th:text="'Du kigger på aftalerne fra forløbet, der startede ' + ${#temporals.format(shown.startDate, 'd. MMMM yyyy')} + '. Nye aftaler kan kun tilføjes til forløbet, der er i gang.'">Du kigger på et afsluttet forløb.</p>
+        <p class="link-line"><a href="/aftaler">Tilbage til forløbet, der er i gang</a></p>
       </section>
 
       <!-- HØJRE: kommende og tidligere aftaler, som .rounds-underkort med datebox (samme mønster som rundehistorik/dashboard) -->

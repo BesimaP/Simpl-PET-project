@@ -60,6 +60,7 @@ Brugeren klikker Tilføj Aftale og udfylder dato/tidspunkt, type (konsultation, 
 Brugeren klikker Gem. Systemet gemmer aftalen i databasen og opdaterer listen.
 Er aftalen en ægudtagning, ægoplægning eller graviditetstest, og er en runde i gang, tilføjer systemet også en hændelse på tidslinjen (UC11).
 Dashboardet viser de kommende aftaler.
+Brugeren kan også se aftalerne fra et afsluttet forløb (valgt fra rundehistorikken eller fra linkene øverst på siden). Her kan der ikke tilføjes nye aftaler.
 
 Regnvejrsdag:
 - Et eller flere påkrævede felter er tomme: Systemet viser en fejlbesked og gemmer ikke.
@@ -125,6 +126,7 @@ Regnvejrsdag:
 Systemet viser en skærm med alle hændelser (Event) for den aktive runde i kronologisk rækkefølge.
 Hver hændelse vises med dato, type og beskrivelse.
 Systemet opretter selv hændelserne: når en runde startes (UC8), og når der oprettes en aftale om ægudtagning, ægoplægning eller graviditetstest (UC5).
+Som standard vises runden, der er i gang. Fra rundehistorikken (UC13) kan brugeren åbne tidslinjen for en tidligere runde – også fra et afsluttet forløb.
 
 Regnvejrsdag:
 - Ingen hændelser findes for den aktive runde: Systemet viser en besked om, at tidslinjen er tom.
@@ -145,8 +147,8 @@ Regnvejrsdag:
 
 
 ## UC13: ViewRoundHistory (US10b)
-Systemet viser en skærm med alle runder for det aktive forløb, i rækkefølge efter rundenummer.
-For hver runde vises rundenummer, behandlingstype, start- og slutdato, status (i gang/afsluttet) og resultat.
+Systemet viser en skærm med alle patientens forløb (nyeste først, både i gang og afsluttede) og runderne i hvert forløb, i rækkefølge efter rundenummer.
+For hver runde vises rundenummer, behandlingstype, start- og slutdato, status (i gang/afsluttet) og resultat, med et link til rundens tidslinje (UC11). For hvert forløb er der et link til forløbets aftaler (UC5).
 
 Regnvejrsdag:
 - Ingen runder findes: Systemet viser en besked om, at der ingen historik er.

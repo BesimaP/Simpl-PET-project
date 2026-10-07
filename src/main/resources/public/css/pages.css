@@ -471,3 +471,16 @@ button.med__check:hover {
 .timeline li:not(.is-past) .timeline__body strong {
     color: var(--muted);               /* kommende: lidt dæmpet tekst */
 }
+
+/* VÆLG FORLØB (aftaler.html): kortet med links til patientens forløb.
+   margin-bottom = samme luft (16px) som mellem kortene i form-layout nedenunder */
+.journey-picker {
+    margin-bottom: 16px;
+}
+
+/* det forløb, siden viser lige nu: fed og uden understregning, så man kan se, hvor man er */
+.journey-picker a.is-current {
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--text);
+}

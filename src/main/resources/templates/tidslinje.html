@@ -40,9 +40,14 @@
   <!-- Tidslinjen genbruger .rounds-mønsteret (samme som rundehistorik), da der ikke findes en separat timeline-klasse -->
   <section class="card" aria-labelledby="tidslinje-title">
     <div class="section-head">
-      <h2 id="tidslinje-title">Dit forløb</h2>
+      <!-- overskriften viser, hvilken runde tidslinjen hører til (${round} fra TimelineController – null = ingen runde) -->
+      <h2 id="tidslinje-title" th:text="${round != null} ? 'Runde ' + ${round.roundNumber} + ' · ' + ${round.treatmentType} : 'Dit forløb'">Runde 2 · IVF</h2>
+      <!-- tidligere runder (også fra afsluttede forløb) vælges i rundehistorik -->
+      <a href="/rundehistorik">Andre runder →</a>
     </div>
-    <p class="muted">Alle runder og vigtige begivenheder, i rækkefølge.</p>
+    <p class="muted" th:if="${round != null and round.endDate != null}"
+       th:text="'Afsluttet runde (' + ${#temporals.format(round.startDate, 'd. MMM')} + ' – ' + ${#temporals.format(round.endDate, 'd. MMM yyyy')} + ').'">Afsluttet runde.</p>
+    <p class="muted">Vigtige begivenheder i runden, i rækkefølge.</p>
 
     <!-- th:each: ét li per begivenhed (Event) i den runde, der er i gang. e = én begivenhed ad gangen -->
     <!-- TIDSLINJE: lodret linje med én prik per begivenhed (CSS-klassen .timeline i pages.css).

@@ -108,6 +108,35 @@ public class AppointmentService {
         return past;
     }
 
+    // Samme to lister, men for ét bestemt forløb (også et afsluttet) – kun patientens eget, ellers tomme lister
+    public List<Appointment> getUpcoming(int patientId, int journeyId) {
+        List<Appointment> upcoming = new ArrayList<>();
+        for (Appointment a : getAllForJourney(patientId, journeyId)) {
+            if (a.getDateTime().isAfter(LocalDateTime.now())) {
+                upcoming.add(a);
+            }
+        }
+        return upcoming;
+    }
+
+    public List<Appointment> getPast(int patientId, int journeyId) {
+        List<Appointment> past = new ArrayList<>();
+        for (Appointment a : getAllForJourney(patientId, journeyId)) {
+            if (!a.getDateTime().isAfter(LocalDateTime.now())) {
+                past.add(a);
+            }
+        }
+        return past;
+    }
+
+    // hjælper: aftaler på ét af patientens egne forløb. Tilhører forløbet en anden -> tom liste
+    private List<Appointment> getAllForJourney(int patientId, int journeyId) {
+        if (dashboardService.findJourney(patientId, journeyId) == null) {
+            return new ArrayList<>();
+        }
+        return appointmentMapper.findByJourney(journeyId);
+    }
+
     // hjælper: alle aftaler på forløbet, tidligste først (mapperen sorterer). Bruges af de to ovenfor
     private List<Appointment> getAll(int patientId) {
         try {

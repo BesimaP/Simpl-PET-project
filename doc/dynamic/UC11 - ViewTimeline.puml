@@ -17,18 +17,28 @@ participant "EventMapper" as em
 participant "ConnectionPool" as cp
 database "PostgreSQL" as db
 
-u -> j : GET /tidslinje (clicks "Tidslinje")
+u -> j : GET /tidslinje (menu) or GET /tidslinje?runde={id} (from rundehistorik, UC13)
 j -> c : showTimeline(ctx)
 note right of c : patientId == null (not logged in)\n→ ctx.redirect("/login")
-c -> s : getEvents(patientId)
-s -> rs : new RoundService(connectionPool).findActiveRound(patientId)
-note right of rs : findActiveJourney(patientId) (DashboardService)\n+ findActiveByJourney(journeyId) (RoundMapper)
 
-alt No active journey or no active round
-  rs --> s : throw NoActiveJourneyException / NoActiveRoundException
-  s --> c : empty list
-else Round in progress
-  rs --> s : Round
+opt ?runde= is given (and is a number)
+  c -> rs : findRound(patientId, roundId)
+  note right of rs : looks through ALL the patient's journeys\n(getRoundsPerJourney) – only her own rounds,\nalso from a completed journey
+  rs --> c : Round (or null if not hers)
+end
+opt No round yet (no ?runde= or not hers)
+  c -> rs : findActiveRound(patientId)
+  alt No active journey or no active round
+    rs --> c : throw NoActiveJourneyException / NoActiveRoundException (caught)
+    c -> c : round = null → empty timeline
+  else Round in progress
+    rs --> c : Round
+  end
+end
+
+opt round != null
+  c -> s : getEvents(patientId, roundId)
+  s -> rs : findRound(patientId, roundId) (ownership check again)
   s -> em : findByRound(roundId)
   em -> cp : getConnection()
   cp --> em : Connection
@@ -40,6 +50,7 @@ else Round in progress
   s --> c : List<Event> (oldest first)
 end
 
+c -> c : ctx.attribute("round", round) (heading "Runde 2 · IVF", "Afsluttet runde (…)")
 c -> c : ctx.attribute("events", ...), ctx.attribute("today", LocalDate.now())
 c -> ps : getPatient(patientId) (PatientMapper)
 ps --> c : Patient (initial in avatar)

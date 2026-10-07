@@ -9,6 +9,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FertilityJourneyMapper {
 
@@ -72,6 +74,35 @@ public class FertilityJourneyMapper {
         } catch (SQLException e) {
             // e sendes med, så den rigtige databasefejl kan ses bagved vores egen besked
             throw new DatabaseException("Could not find active journey for patient " + patientId, e);
+        }
+    }
+
+    // Henter ALLE patientens forløb – aktive og afsluttede – nyeste først. Bruges af rundehistorik, aftaler og tidslinje,
+    // så patienten også kan se gamle forløb. JOIN: status hentes som ord ("ACTIVE"/"COMPLETED") fra journey_status
+    public List<FertilityJourney> findByPatient(int patientId) {
+        String sql = "SELECT fertility_journey.*, journey_status.name AS journey_status "
+                + "FROM fertility_journey "
+                + "JOIN journey_status ON journey_status.id = fertility_journey.journey_status_id "
+                + "WHERE fertility_journey.patient_id = ? "
+                + "ORDER BY fertility_journey.start_date DESC, fertility_journey.id DESC";
+        List<FertilityJourney> journeys = new ArrayList<>();
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, patientId);
+            ResultSet rs = statement.executeQuery();
+
+            // while: en patient kan have mange forløb over tid
+            while (rs.next()) {
+                journeys.add(new FertilityJourney(
+                        rs.getInt("id"),
+                        rs.getInt("patient_id"),
+                        rs.getObject("start_date", LocalDate.class),
+                        JourneyStatus.valueOf(rs.getString("journey_status"))));   // "COMPLETED" -> enum
+            }
+            return journeys;
+
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not find journeys for patient " + patientId, e);
         }
     }
 

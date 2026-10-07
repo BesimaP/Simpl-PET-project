@@ -43,25 +43,36 @@
     <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>
 
-    <!-- ét kort med alle runder -->
-    <section class="card">
-      <h2 class="eyebrow">Dine runder</h2>
-      <!-- hver li = én runde: navn + periode, status-pil og et link videre til tidslinjen -->
+    <!-- ét kort per forløb, nyeste først – også afsluttede forløb, så patienten kan se sine tidligere forsøg.
+         th:each j : ${journeys} = ét forløb ad gangen. ${roundsPerJourney[j.id]} = runderne i netop det forløb -->
+    <section class="card" th:each="j : ${journeys}">
+      <div class="section-head">
+        <!-- overskrift: hvornår forløbet startede, og om det er i gang eller afsluttet -->
+        <h2 class="eyebrow" th:text="'Forløb startet ' + ${#temporals.format(j.startDate, 'd. MMM yyyy')} + (${j.status.name() == 'ACTIVE'} ? ' · i gang' : ' · afsluttet')">Forløb startet 1. mar 2026 · afsluttet</h2>
+        <!-- aftalerne i netop dette forløb -->
+        <a th:href="@{/aftaler(forloeb=${j.id})}">Aftaler →</a>
+      </div>
+      <!-- hver li = én runde: navn + periode, status-pil og et link til rundens tidslinje -->
       <ul class="rounds">
-        <!-- th:each: én runde per li. r = én runde ad gangen -->
-        <li th:each="r : ${rounds}">
+        <li th:each="r : ${roundsPerJourney[j.id]}">
           <div class="round__info">
             <strong th:text="'Runde ' + ${r.roundNumber} + ' · ' + ${r.treatmentType}">Runde 2 · IVF</strong>
             <!-- th:if / th:unless: endDate er null, mens runden er i gang -->
             <span th:if="${r.endDate == null}" th:text="${#temporals.format(r.startDate, 'd. MMM yyyy')} + ' – i gang'">21 aug – i gang</span>
-            <span th:unless="${r.endDate == null}" th:text="${#temporals.format(r.startDate, 'd. MMM')} + ' – ' + ${#temporals.format(r.endDate, 'd. MMM yyyy')} + (${r.result != null} ? ' · ' + ${r.result} : '')">3 maj – 4 jun 2026 · NEGATIVE</span>
+            <span th:unless="${r.endDate == null}" th:text="${#temporals.format(r.startDate, 'd. MMM')} + ' – ' + ${#temporals.format(r.endDate, 'd. MMM yyyy')} + (${r.result != null} ? ' · ' + ${r.result.label} : '')">3 maj – 4 jun 2026 · Negativ</span>
           </div>
           <!-- pill = den lille afrundede status-boks -->
           <span class="pill" th:text="${r.status.name() == 'IN_PROGRESS'} ? 'Aktiv' : 'Afsluttet'">Aktiv</span>
-          <a href="/tidslinje">→</a>
+          <!-- ?runde= = tidslinjen for netop denne runde (også en gammel) -->
+          <a th:href="@{/tidslinje(runde=${r.id})}" aria-label="Se rundens tidslinje">→</a>
         </li>
       </ul>
-      <p class="muted" th:if="${rounds.isEmpty()}">Ingen runder endnu.</p>
+      <p class="muted" th:if="${roundsPerJourney[j.id].isEmpty()}">Ingen runder i dette forløb.</p>
+    </section>
+
+    <!-- slet ingen forløb endnu -->
+    <section class="card" th:if="${journeys.isEmpty()}">
+      <p class="muted">Ingen forløb endnu. Start dit forløb på forsiden.</p>
     </section>
 
   </main>

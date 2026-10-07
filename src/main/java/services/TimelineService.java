@@ -30,6 +30,15 @@ public class TimelineService {
         eventMapper.save(new Event(0, roundId, dateTime, type, description));
     }
 
+    // Henter trinene for én bestemt runde – kun hvis runden er patientens egen (ellers tom liste)
+    public List<Event> getEvents(int patientId, int roundId) {
+        Round round = new RoundService(connectionPool).findRound(patientId, roundId);
+        if (round == null) {
+            return new ArrayList<>();
+        }
+        return eventMapper.findByRound(round.getId());
+    }
+
     // Henter rundens trin til tidslinjen – tom liste, hvis der ikke er forløb/runde (ikke en fejl, bare ingenting at vise)
     public List<Event> getEvents(int patientId) {
         // 1. find den runde, der er i gang – trinene hænger på runden. findActiveRound kaster, hvis der ikke er forløb eller runde

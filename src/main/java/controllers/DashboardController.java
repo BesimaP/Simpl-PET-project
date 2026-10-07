@@ -111,7 +111,9 @@ public class DashboardController {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("rounds", roundService.getRounds(patientId));   // requestscope -> ${rounds}
+        // ALLE forløb (nyeste først) og runderne i hvert af dem – så afsluttede forløb også kan ses
+        ctx.attribute("journeys", dashboardService.getJourneys(patientId));             // requestscope -> ${journeys}
+        ctx.attribute("roundsPerJourney", roundService.getRoundsPerJourney(patientId)); // requestscope -> ${roundsPerJourney[j.id]}
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));

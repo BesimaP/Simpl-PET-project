@@ -5,14 +5,19 @@ import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import persistence.ConnectionPool;
 import services.AppointmentService;
+import services.DashboardService;
+import entities.FertilityJourney;
+import exceptions.NoActiveJourneyException;
 
 // Koordinatoren for aftaler (US3). Læser formularen, kalder AppointmentService og sender brugeren videre.
 // Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
 public class AppointmentController {
     private AppointmentService appointmentService;
+    private DashboardService dashboardService;   // til at finde patientens forløb (det aktive og de afsluttede)
 
     public AppointmentController(ConnectionPool connectionPool) {
         this.appointmentService = new AppointmentService(connectionPool);
+        this.dashboardService = new DashboardService(connectionPool);
     }
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig
@@ -29,8 +34,37 @@ public class AppointmentController {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("upcoming", appointmentService.getUpcoming(patientId));   // requestscope -> ${upcoming}
-        ctx.attribute("past", appointmentService.getPast(patientId));           // requestscope -> ${past}
+        // hvilket forløb vises? ?forloeb=7 i adressen (fx fra rundehistorik) – ellers det aktive.
+        // findJourney giver kun patientens EGNE forløb, så man ikke kan se andres ved at rette tallet
+        FertilityJourney active = null;
+        try {
+            active = dashboardService.findActiveJourney(patientId);
+        } catch (NoActiveJourneyException e) {
+            // intet aktivt forløb – så vises enten det valgte eller ingenting
+        }
+        FertilityJourney shown = active;
+        try {
+            if (ctx.queryParam("forloeb") != null) {
+                FertilityJourney chosen = dashboardService.findJourney(patientId, Integer.parseInt(ctx.queryParam("forloeb")));
+                if (chosen != null) {
+                    shown = chosen;
+                }
+            }
+        } catch (NumberFormatException e) {
+            // ugyldigt tal i adressen – vis det aktive
+        }
+
+        ctx.attribute("journeys", dashboardService.getJourneys(patientId));   // requestscope -> links til de andre forløb
+        ctx.attribute("shown", shown);                                       // det forløb, siden viser (kan være null)
+        // formularen "Ny aftale" vises kun på det aktive forløb – man kan ikke tilføje aftaler til et afsluttet
+        ctx.attribute("canAdd", shown == null || (active != null && shown.getId() == active.getId()));
+        if (shown == null) {
+            ctx.attribute("upcoming", new java.util.ArrayList<>());
+            ctx.attribute("past", new java.util.ArrayList<>());
+        } else {
+            ctx.attribute("upcoming", appointmentService.getUpcoming(patientId, shown.getId()));   // requestscope -> ${upcoming}
+            ctx.attribute("past", appointmentService.getPast(patientId, shown.getId()));           // requestscope -> ${past}
+        }
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
