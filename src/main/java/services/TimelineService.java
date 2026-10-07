@@ -1,12 +1,12 @@
 package services;
 
-import dao.DatabaseConnection;
-import dao.EventDAO;
 import entities.Event;
 import entities.Round;
 import enums.EventType;
 import exceptions.NoActiveJourneyException;
 import exceptions.NoActiveRoundException;
+import persistence.ConnectionPool;
+import persistence.EventMapper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,9 +17,21 @@ import java.util.List;
 // (RoundService ved start runde, AppointmentService ved ægudtagning/oplægning/graviditetstest).
 public class TimelineService {
 
+    private EventMapper eventMapper;
+    private ConnectionPool connectionPool;
+
+    public TimelineService(ConnectionPool connectionPool){
+        this.eventMapper = new EventMapper(connectionPool);
+        this.connectionPool = connectionPool;
+    }
+
+    public TimelineService(){
+
+    }
+
     // Lægger ét trin på en runde. Kaldes af andre services, ikke af en controller. description må være null
     public void addEvent(int roundId, LocalDateTime dateTime, EventType type, String description) {
-        new EventDAO(DatabaseConnection.getConnection()).save(new Event(0, roundId, dateTime, type, description));
+        eventMapper.save(new Event(0, roundId, dateTime, type, description));
     }
 
     // Henter rundens trin til tidslinjen – tom liste, hvis der ikke er forløb/runde (ikke en fejl, bare ingenting at vise)
@@ -27,12 +39,12 @@ public class TimelineService {
         // 1. find den runde, der er i gang – trinene hænger på runden. findActiveRound kaster, hvis der ikke er forløb eller runde
         Round round;
         try {
-            round = new RoundService().findActiveRound(patientId);
+            round = new RoundService(connectionPool).findActiveRound(patientId);
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
             return new ArrayList<>(); // intet forløb eller ingen runde = ingen trin at vise
         }
 
         // 2. hent rundens trin fra databasen, ældste først
-        return new EventDAO(DatabaseConnection.getConnection()).findByRound(round.getId());
+        return eventMapper.findByRound(round.getId());
     }
 }
