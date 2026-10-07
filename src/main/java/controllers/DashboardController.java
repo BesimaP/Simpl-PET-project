@@ -79,7 +79,6 @@ public class DashboardController {
         }
 
         // små kort: dagens medicin, næste aftale, seneste hormonværdi, antal noter
-
         ctx.attribute("todayMeds", medicationService.getTodayLogs(patientId));
         ctx.attribute("names", medicationService.getMedicationNames());
         List<Appointment> upcoming = new AppointmentService().getUpcoming(patientId);
