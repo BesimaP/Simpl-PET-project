@@ -47,7 +47,11 @@ public class DocumentMapper {
 
     // henter alle patientens dokumenter, nyeste først – til listen "Mine dokumenter"
     public List<Document> findByPatient(int patientId) {
-        String sql = "SELECT d.*, dt.name AS document_type FROM document d JOIN document_type dt ON dt.id = d.document_type_id WHERE d.patient_id = ? ORDER BY d.upload_date DESC, d.title";
+        String sql = "SELECT document.*, document_type.name AS document_type "
+                   + "FROM document "
+                   + "JOIN document_type ON document_type.id = document.document_type_id "
+                   + "WHERE document.patient_id = ? "
+                   + "ORDER BY document.upload_date DESC, document.title";
         List<Document> documents = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {

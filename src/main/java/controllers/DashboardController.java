@@ -25,6 +25,7 @@ public class DashboardController {
     private DashboardService dashboardService;
     private DiaryService diaryService;
     private RoundService roundService;
+    private HormoneService hormoneService;
 
     public DashboardController(ConnectionPool connectionPool) {
         this.profileService = new ProfileService(connectionPool);
@@ -32,6 +33,7 @@ public class DashboardController {
         this.notificationService = new NotificationService(connectionPool);
         this.diaryService = new DiaryService(connectionPool);
         this.roundService = new RoundService(connectionPool);
+        this.hormoneService = new HormoneService(connectionPool);
     }
 
     public void setRoutes(JavalinConfig config) {
@@ -80,7 +82,7 @@ public class DashboardController {
         ctx.attribute("names", medicationService.getMedicationNames());
         List<Appointment> upcoming = new AppointmentService().getUpcoming(patientId);
         ctx.attribute("nextAppointment", upcoming.isEmpty() ? null : upcoming.get(0));   // første = nærmeste
-        List<HormoneLog> logs = new HormoneService().getLogs(patientId);
+        List<HormoneLog> logs = hormoneService.getLogs(patientId);
         ctx.attribute("latestHormone", logs.isEmpty() ? null : logs.get(0));             // nyeste først
         ctx.attribute("noteCount", diaryService.getEntries(patientId).size());
 

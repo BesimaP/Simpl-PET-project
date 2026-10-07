@@ -21,9 +21,11 @@ import java.util.List;
 // Svarer med ServiceResult: OK = ok, ellers hvad der gik galt (controlleren vælger side ud fra det).
 public class HormoneService {
     private HormoneLogMapper hormoneLogMapper;
+    private RoundService roundService;
 
     public HormoneService(ConnectionPool connectionPool) {
         this.hormoneLogMapper = new HormoneLogMapper(connectionPool);
+        this.roundService = new RoundService(connectionPool); // til at finde den runde, der er i gang
     }
 
     // Gemmer én måling på den runde, der er i gang. En måling SKAL ligge på en runde (round_id i databasen).
@@ -37,7 +39,7 @@ public class HormoneService {
         //      findActiveRound kaster, hvis der ikke er forløb eller runde – vi fanger og oversætter til et ServiceResult
         Round round;
         try {
-            round = new RoundService().findActiveRound(patientId);
+            round = roundService.findActiveRound(patientId);
         } catch (NoActiveJourneyException e) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         } catch (NoActiveRoundException e) {
@@ -71,7 +73,7 @@ public class HormoneService {
 // Intet forløb eller ingen runde er ikke en fejl her: så er der bare ingen målinger at vise -> tom liste
     public List<HormoneLog> getLogs(int patientId) {
         try {
-            Round round = new RoundService().findActiveRound(patientId);
+            Round round = roundService.findActiveRound(patientId);
             return hormoneLogMapper.findByRound(round.getId());
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
             return new ArrayList<>();

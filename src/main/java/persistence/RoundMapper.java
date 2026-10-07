@@ -47,11 +47,11 @@ public class RoundMapper {
         // Finder den runde, der er i gang i et forløb – returnerer null, hvis ingen runde er i gang.
         // Bruges af dashboard ("hvilken runde viser vi?") og af alle sider, der gemmer noget på runden.
         public Round findActiveByJourney(int fertilityJourneyId) {
-            String sql = "SELECT r.*, t.name AS treatment_type, res.name AS result "
-                    + "FROM round r "
-                    + "JOIN treatment_type t ON r.treatment_type_id = t.id "
-                    + "LEFT JOIN result res ON r.result_id = res.id "
-                    + "WHERE r.fertility_journey_id = ? AND r.end_date IS NULL";
+            String sql = "SELECT round.*, treatment_type.name AS treatment_type, result.name AS result "
+                    + "FROM round "
+                    + "JOIN treatment_type ON round.treatment_type_id = treatment_type.id "
+                    + "LEFT JOIN result ON round.result_id = result.id "
+                    + "WHERE round.fertility_journey_id = ? AND round.end_date IS NULL";
             try (Connection connection = connectionPool.getConnection()){
                 PreparedStatement statement = connection.prepareStatement(sql);
                 statement.setInt(1, fertilityJourneyId);
@@ -73,11 +73,11 @@ public class RoundMapper {
 
         // Henter alle runder i et forløb, ældste først – til rundehistorik og til at finde næste rundenummer
         public List<Round> findByJourney(int fertilityJourneyId) {
-            String sql = "SELECT r.*, t.name AS treatment_type, res.name AS result "
-                    + "FROM round r "
-                    + "JOIN treatment_type t ON r.treatment_type_id = t.id "
-                    + "LEFT JOIN result res ON r.result_id = res.id "
-                    + "WHERE r.fertility_journey_id = ? ORDER BY r.round_number";
+            String sql = "SELECT round.*, treatment_type.name AS treatment_type, result.name AS result "
+                    + "FROM round "
+                    + "JOIN treatment_type ON round.treatment_type_id = treatment_type.id "
+                    + "LEFT JOIN result ON round.result_id = result.id "
+                    + "WHERE round.fertility_journey_id = ? ORDER BY round.round_number";
             List<Round> rounds = new ArrayList<>(); // tom liste, som fyldes op
             try (Connection connection = connectionPool.getConnection()){
                 PreparedStatement statement = connection.prepareStatement(sql);
