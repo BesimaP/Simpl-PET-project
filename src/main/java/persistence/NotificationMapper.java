@@ -1,4 +1,4 @@
-package dao;
+package persistence;
 
 import exceptions.DatabaseException;
 
@@ -14,24 +14,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Al SQL for tabellen notification (US12). Påmindelser laves af systemet (fx dagens medicin ved login), ikke af patienten.
-public class NotificationDAO {
-    private Connection connection;
+public class NotificationMapper {
+    private ConnectionPool connectionPool; // nøgleringen (gives med udefra)
 
-    public NotificationDAO(Connection connection) {
-        this.connection = connection;
+    public NotificationMapper(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
     }
 
     // gemmer én påmindelse og returnerer det id, databasen gav den
     public int save(Notification notification) {
-        String sql = "INSERT INTO notification (patient_id, date_time, notification_type, title, message, is_read) VALUES (?, ?, ?, ?, ?, ?)";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+        String sql = "INSERT INTO notification (patient_id, date_time, notification_type_id, title, message, is_read) "
+                + "VALUES (?, ?, (SELECT id FROM notification_type WHERE name = ?), ?, ?, ?)";
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)){
+
             statement.setInt(1, notification.getPatientId());
-            statement.setString(2, notification.getDateTime().toString());          // LocalDateTime -> tekst (PostgreSQL: setTimestamp)
+            statement.setObject(2, notification.getDateTime());          // LocalDateTime -> tekst (PostgreSQL: setTimestamp)
             statement.setString(3, notification.getNotificationType().name());      // enum -> "MEDICATION_REMINDER"
             statement.setString(4, notification.getTitle());
             statement.setString(5, notification.getMessage());
-            statement.setInt(6, notification.isRead() ? 1 : 0);                     // boolean -> 0/1 (PostgreSQL: setBoolean)
+            statement.setBoolean(6, notification.isRead());                         // boolean -> TRUE/FALSE i PostgreSQL
             statement.executeUpdate();
 
             ResultSet keys = statement.getGeneratedKeys();
@@ -47,10 +49,13 @@ public class NotificationDAO {
 
     // henter alle patientens påmindelser, nyeste først – til notifikationer-siden
     public List<Notification> findByPatient(int patientId) {
-        String sql = "SELECT * FROM notification WHERE patient_id = ? ORDER BY date_time DESC";
+        String sql = "SELECT n.*, nt.name AS notification_type FROM notification n "
+                + "JOIN notification_type nt ON nt.id = n.notification_type_id "
+                + "WHERE n.patient_id = ? ORDER BY n.date_time DESC";
         List<Notification> notifications = new ArrayList<>();
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)){
+
             statement.setInt(1, patientId);
             ResultSet rs = statement.executeQuery();
 
@@ -66,9 +71,10 @@ public class NotificationDAO {
 
     // tæller ulæste påmindelser – til den lille prik på klokken i topbaren
     public int countUnread(int patientId) {
-        String sql = "SELECT COUNT(*) FROM notification WHERE patient_id = ? AND is_read = 0";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        String sql = "SELECT COUNT(*) FROM notification WHERE patient_id = ? AND is_read = FALSE";
+        try (Connection connection = connectionPool.getConnection();
+        PreparedStatement statement = connection.prepareStatement(sql)){
+
             statement.setInt(1, patientId);
             ResultSet rs = statement.executeQuery();
             rs.next();               // COUNT giver altid præcis én række
@@ -78,11 +84,12 @@ public class NotificationDAO {
         }
     }
 
-    // sætter is_read = 1 på én påmindelse (UC7: markér som læst)
+    // sætter is_read = TRUE på én påmindelse (UC7: markér som læst)
     public void markRead(int id) {
-        String sql = "UPDATE notification SET is_read = 1 WHERE id = ?";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        String sql = "UPDATE notification SET is_read = TRUE WHERE id = ?";
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)){
+
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -90,11 +97,12 @@ public class NotificationDAO {
         }
     }
 
-    // sætter is_read = 1 på ALLE patientens påmindelser ("Markér alle som læst")
+    // sætter is_read = TRUE på ALLE patientens påmindelser ("Markér alle som læst")
     public void markAllRead(int patientId) {
-        String sql = "UPDATE notification SET is_read = 1 WHERE patient_id = ?";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        String sql = "UPDATE notification SET is_read = TRUE WHERE patient_id = ?";
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)){
+
             statement.setInt(1, patientId);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -105,8 +113,9 @@ public class NotificationDAO {
     // sletter én påmindelse ud fra dens id
     public void delete(int id) {
         String sql = "DELETE FROM notification WHERE id = ?";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)){
+
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -119,11 +128,11 @@ public class NotificationDAO {
         return new Notification(
                 rs.getInt("id"),
                 rs.getInt("patient_id"),
-                LocalDateTime.parse(rs.getString("date_time")),
+                rs.getObject("date_time", LocalDateTime.class),  // TIMESTAMP -> LocalDateTime
                 NotificationType.valueOf(rs.getString("notification_type")),
                 rs.getString("title"),
                 rs.getString("message"),
-                rs.getInt("is_read") == 1   // 0/1 -> boolean
+                rs.getBoolean("is_read")    // TRUE/FALSE -> boolean
         );
     }
 }

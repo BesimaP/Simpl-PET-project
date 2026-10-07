@@ -18,7 +18,7 @@ public class RouteConfig {
         MedicationController.setRoutes(config);
         AppointmentController.setRoutes(config);
         new ProfileController(connectionPool).setRoutes(config);
-        NotificationController.setRoutes(config);
+        new NotificationController(connectionPool).setRoutes(config);
         new TimelineController(connectionPool).setRoutes(config);
         DocumentController.setRoutes(config);
 
@@ -29,7 +29,7 @@ public class RouteConfig {
         config.routes.before("/*", ctx -> {
             Integer patientId = ctx.sessionAttribute("patientId");
             if (patientId != null) {
-                ctx.attribute("unread", new NotificationService().countUnread(patientId));
+                ctx.attribute("unread", new NotificationService(connectionPool).countUnread(patientId));
             }
         });
     }

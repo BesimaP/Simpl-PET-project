@@ -1,9 +1,9 @@
-package dao;
+package persistence;
 
 import exceptions.DatabaseException;
 
 import entities.Patient;
-import persistence.ConnectionPool;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,11 +12,11 @@ import java.time.LocalDate;
 
 
 // Al SQL for tabellen patient. Arkivaren: den eneste, der taler SQL med patient-skuffen
-public class PatientDAO {
+public class PatientMapper {
 
     private ConnectionPool connectionPool; // nøgleringen (gives med udefra)
 
-    public PatientDAO(ConnectionPool connectionPool) {
+    public PatientMapper(ConnectionPool connectionPool) {
         this.connectionPool = connectionPool;
     }
 

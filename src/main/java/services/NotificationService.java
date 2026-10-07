@@ -1,7 +1,7 @@
 package services;
 
-import dao.DatabaseConnection;
-import dao.NotificationDAO;
+import persistence.ConnectionPool;
+import persistence.NotificationMapper;
 import entities.MedicationLog;
 import entities.Notification;
 import enums.NotificationType;
@@ -16,15 +16,20 @@ import java.util.Map;
 // Forretningslogik for påmindelser (US12). Kender IKKE Javalin.
 // Påmindelser hænger direkte på patienten – ingen forløb/runde at slå op.
 public class NotificationService {
+    private NotificationMapper notificationMapper; // arkivaren for påmindelser
+
+    public NotificationService(ConnectionPool connectionPool) {
+        this.notificationMapper = new NotificationMapper(connectionPool);
+    }
 
     // Henter alle patientens påmindelser, nyeste først – til notifikationer.html
     public List<Notification> getNotifications(int patientId) {
-        return new NotificationDAO(DatabaseConnection.getConnection()).findByPatient(patientId);
+        return notificationMapper.findByPatient(patientId);
     }
 
     // Tæller ulæste – til den røde prik på klokken i topbaren
     public int countUnread(int patientId) {
-        return new NotificationDAO(DatabaseConnection.getConnection()).countUnread(patientId);
+        return notificationMapper.countUnread(patientId);
     }
 
     // Opretter én MEDICATION_REMINDER per planlagt (ikke taget) dosis i dag (US12). Kaldes når dashboard åbnes.
@@ -34,7 +39,7 @@ public class NotificationService {
         MedicationService medicationService = new MedicationService();
         Map<Integer, String> names = medicationService.getMedicationNames();   // id -> "Gonal-F"
         List<Notification> existing = getNotifications(patientId);
-        NotificationDAO dao = new NotificationDAO(DatabaseConnection.getConnection());
+
         int created = 0;
 
         for (MedicationLog dose : medicationService.getTodayLogs(patientId)) {
@@ -48,8 +53,9 @@ public class NotificationService {
             if (alreadyExistsToday(existing, message)) {
                 continue;
             }
-            dao.save(new Notification(0, patientId, LocalDateTime.now(), NotificationType.MEDICATION_REMINDER,
+            notificationMapper.save(new Notification(0, patientId, LocalDateTime.now(), NotificationType.MEDICATION_REMINDER,
                     "Husk din medicin", message, false));
+
             created++;
         }
         return created;
@@ -67,13 +73,13 @@ public class NotificationService {
 
     // Markér alle patientens påmindelser som læst – knappen øverst på notifikationer-siden
     public ServiceResult markAllRead(int patientId) {
-        new NotificationDAO(DatabaseConnection.getConnection()).markAllRead(patientId);
+        notificationMapper.markAllRead(patientId);
         return ServiceResult.OK;
     }
 
     // Markér én påmindelse som læst (UC7) – bruges af POST /notifikationer/laest, når templates er på
     public ServiceResult markRead(int notificationId) {
-        new NotificationDAO(DatabaseConnection.getConnection()).markRead(notificationId);
+        notificationMapper.markRead(notificationId);
         return ServiceResult.OK;
     }
 }
