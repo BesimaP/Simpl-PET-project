@@ -1,7 +1,7 @@
 package services;
 
-import dao.DatabaseConnection;
-import dao.DiaryEntryDAO;
+import persistence.ConnectionPool;
+import persistence.DiaryEntryMapper;
 import entities.DiaryEntry;
 import enums.ServiceResult;
 
@@ -14,6 +14,11 @@ import java.util.List;
 // Noter hænger på patienten (ikke forløbet) – man kan skrive dagbog før, mellem og efter forløb.
 // Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldig dato
 public class DiaryService {
+    private DiaryEntryMapper diaryEntryMapper; // arkivaren for dagbogen
+
+    public DiaryService(ConnectionPool connectionPool) {
+        this.diaryEntryMapper = new DiaryEntryMapper(connectionPool);
+    }
 
     // Gemmer én note på patienten
     public ServiceResult saveEntry(int patientId, String date, String title, String note) {
@@ -31,16 +36,15 @@ public class DiaryService {
         }
 
         // 2. byg kortet af felterne og læg det i skuffen diary_entry
-        DiaryEntryDAO diaryDao = new DiaryEntryDAO(DatabaseConnection.getConnection());
         DiaryEntry entry = new DiaryEntry(0, patientId, dateTime, title, note);
-        diaryDao.save(entry);
+        diaryEntryMapper.save(entry);
 
         return ServiceResult.OK;
     }
 
     // Henter alle patientens noter, nyeste først – til listen på dagbog-siden (GET)
     public List<DiaryEntry> getEntries(int patientId) {
-        return new DiaryEntryDAO(DatabaseConnection.getConnection()).findByPatient(patientId);
+        return diaryEntryMapper.findByPatient(patientId);
     }
 
     // Sletter én note – men kun hvis den er patientens egen (id'et skal findes i hendes liste).
@@ -48,7 +52,7 @@ public class DiaryService {
     public ServiceResult deleteEntry(int patientId, int entryId) {
         for (DiaryEntry e : getEntries(patientId)) {
             if (e.getId() == entryId) {
-                new DiaryEntryDAO(DatabaseConnection.getConnection()).delete(entryId);
+                diaryEntryMapper.delete(entryId);
                 return ServiceResult.OK;
             }
         }

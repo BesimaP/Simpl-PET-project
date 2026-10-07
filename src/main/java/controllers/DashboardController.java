@@ -22,10 +22,12 @@ import java.util.List;
 public class DashboardController {
     private ProfileService profileService;
     private NotificationService notificationService;
+    private DiaryService diaryService;
 
     public DashboardController(ConnectionPool connectionPool) {
         this.profileService = new ProfileService(connectionPool);
         this.notificationService = new NotificationService(connectionPool);
+        this.diaryService = new DiaryService(connectionPool);
     }
 
     public void setRoutes(JavalinConfig config) {
@@ -76,7 +78,7 @@ public class DashboardController {
         ctx.attribute("nextAppointment", upcoming.isEmpty() ? null : upcoming.get(0));   // første = nærmeste
         List<HormoneLog> logs = new HormoneService().getLogs(patientId);
         ctx.attribute("latestHormone", logs.isEmpty() ? null : logs.get(0));             // nyeste først
-        ctx.attribute("noteCount", new DiaryService().getEntries(patientId).size());
+        ctx.attribute("noteCount", diaryService.getEntries(patientId).size());
 
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
