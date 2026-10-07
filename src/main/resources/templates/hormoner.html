@@ -130,7 +130,7 @@
         <line class="chart__axis" x1="20" y1="120" x2="300" y2="120"/>
         <line class="chart__grid" x1="20" y1="20" x2="300" y2="20"/>
         <!-- største værdi skrives over toplinjen, højrestillet, så den ikke rammer første punkt -->
-        <text class="chart__label" x="300" y="15" text-anchor="end" th:text="'maks ' + ${curve.max} + ' ' + ${curve.unit}">maks 450 pmol/L</text>
+        <text class="chart__label" x="300" y="15" text-anchor="end" th:text="'maks ' + ${curve.maxText} + ' ' + ${curve.unit}">maks 450 pmol/L</text>
 
         <!-- gennemsnit: stiplet linje + tekst til venstre. y kommer fra HormoneService (samme skala som punkterne) -->
         <line class="chart__avg" x1="20" x2="300" th:attr="y1=${curve.averageY}, y2=${curve.averageY}" y1="70" y2="70"/>
@@ -150,6 +150,11 @@
           <text class="chart__value" text-anchor="middle" th:attr="x=${p.x}, y=${p.y - 8}" x="20" y="112" th:text="${p.valueText}">450</text>
         </g>
       </svg>
+      <!-- kun når der er målinger i en anden enhed (fx fra et udenlandsk laboratorie): de kan ikke tegnes på samme akse -->
+      <p class="muted" th:if="${curve.skipped > 0}"
+         th:text="${curve.skipped} + (${curve.skipped == 1} ? ' måling' : ' målinger') + ' i en anden enhed end ' + ${curve.unit} + ' er ikke med på kurven – ' + (${curve.skipped == 1} ? 'den' : 'de') + ' står i listen.'">
+        1 måling i en anden enhed end pmol/L er ikke med på kurven – den står i listen.
+      </p>
       <!-- forklaring, så patienten ikke tror, den stiplede linje er en normalværdi -->
       <p class="muted" th:unless="${curve.points.isEmpty()}">
         Den stiplede linje er gennemsnittet af <strong>dine egne</strong> målinger i denne runde – ikke en normalværdi.

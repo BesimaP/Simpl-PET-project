@@ -102,6 +102,7 @@ Regnvejrsdag:
 ## UC9: LogHormoneValue (US9)
 Systemet viser en skærm med hormonværdier for den aktive runde, med den seneste måling fremhævet.
 Brugeren klikker Tilføj Værdi og udfylder hormontype (FSH, LH, østradiol, progesteron, AMH), værdi, enhed og dato. Enheden gemmes pr. måling, fordi den afhænger af laboratoriet (udenlandske laboratorier bruger andre enheder).
+Kurven over et hormon bruger enheden fra den nyeste måling. Målinger i en anden enhed kan ikke tegnes på samme akse, så de vises kun i listen, og siden skriver, hvor mange der ikke er med på kurven.
 Brugeren klikker Gem. Systemet gemmer hormonværdien i databasen, tilknyttet runden, og opdaterer listen.
 
 Regnvejrsdag:

@@ -142,3 +142,4 @@
 - [x]  Klassediagrammer opdateret: 4a (entities/enums), 4b (mappers) og nyt 4c (controllers + services) + 4c-oversigt – i sort/hvid
 - [x]  Use cases og sekvensdiagrammer opdateret: UC2 (fødselsdato, slet filer), UC3 (forudfyldt dato), UC7 (aftalepåmindelser), UC10 (kommende doser), UC12 (slet dokument), UC14 (bekræft-side) og ny UC15 EndJourney – alle i sort/hvid
 - [x]  3NF: `unit` flyttet fra `medication_log` til `medication` – enheden er fast pr. præparat (svar fra fertilitetsklinik). 17 præparater i stamdata (IU / mg / µg); dropdownen på /medicin hentes fra databasen med `th:each`. `hormone_log.unit` bliver, fordi enheden afhænger af laboratoriet
+- [x]  Hormonkurven tegner kun målinger i samme enhed som den nyeste – målinger i en anden enhed (fx fra et udenlandsk laboratorie) står i listen, og siden skriver "X målinger i en anden enhed … er ikke med på kurven" (HormoneService.getCurve, HormoneServiceTest)

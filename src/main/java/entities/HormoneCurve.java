@@ -35,6 +35,7 @@ public class HormoneCurve {
     private double max;
     private double average;    // gennemsnit af værdierne
     private double averageY;   // gennemsnittet som y-koordinat (til den stiplede linje)
+    private int skipped;       // målinger af hormonet i en ANDEN enhed – kan ikke tegnes på samme akse
     private List<Point> points = new ArrayList<>();
 
     public HormoneCurve(HormoneType type, String unit, double max) {
@@ -50,6 +51,9 @@ public class HormoneCurve {
     public HormoneType getType() { return type; }
     public String getUnit() { return unit; }
     public double getMax() { return max; }
+    public String getMaxText() { return java.math.BigDecimal.valueOf(max).stripTrailingZeros().toPlainString(); }   // 450.0 -> "450"
+    public int getSkipped() { return skipped; }
+    public void setSkipped(int skipped) { this.skipped = skipped; }
     public double getAverage() { return average; }
     public String getAverageText() { return java.math.BigDecimal.valueOf(average).stripTrailingZeros().toPlainString(); }   // 535.0 -> "535"
     public double getAverageY() { return averageY; }

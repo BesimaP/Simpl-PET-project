@@ -107,11 +107,29 @@ public class HormoneService {
             type = all.get(0).getHormoneType();
         }
 
-        // 2. kun målinger af det hormon, ældste først (vi vender listen)
+        // 2a. hvilken enhed? Den fra den NYESTE måling af hormonet (all er nyeste først).
+        //     Enheden afhænger af laboratoriet (svar fra klinikken), og to enheder kan ikke tegnes på samme akse
+        String unit = "";
+        for (HormoneLog log : all) {
+            if (log.getHormoneType() == type) {
+                unit = log.getUnit();
+                break;
+            }
+        }
+
+        // 2b. kun målinger af det hormon OG i den enhed, ældste først (vi vender listen).
+        //     Målinger i en anden enhed tælles, så siden kan sige, at de ikke er med på kurven (de står stadig i listen)
         List<HormoneLog> logs = new ArrayList<>();
+        int skipped = 0;
         for (int i = all.size() - 1; i >= 0; i--) {
-            if (all.get(i).getHormoneType() == type) {
-                logs.add(all.get(i));
+            HormoneLog log = all.get(i);
+            if (log.getHormoneType() != type) {
+                continue;
+            }
+            if (log.getUnit().equals(unit)) {
+                logs.add(log);
+            } else {
+                skipped++;
             }
         }
 
@@ -122,8 +140,8 @@ public class HormoneService {
                 max = log.getValue();
             }
         }
-        String unit = logs.isEmpty() ? "" : logs.get(0).getUnit();
         HormoneCurve curve = new HormoneCurve(type, unit, max);
+        curve.setSkipped(skipped);
 
         // 4. ét punkt per måling. Ét punkt alene sættes i midten
         int n = logs.size();
