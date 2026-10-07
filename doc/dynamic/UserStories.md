@@ -27,11 +27,11 @@ Som patient vil jeg kunne se mine kommende aftaler, så jeg ikke overser vigtige
 - Acceptkriterie 4: "Givet en logget-ind patient, når en aftale oprettes med dato, type og lokation, så gemmes den på det aktive forløb og vises i oversigten" → tester at patienten selv kan oprette aftaler
 
 ### User story 4
-Som patient vil jeg kunne tilføje dagbogsnoter til mit forløb, så jeg har et bedre overblik over mine tanker og følelser lige i momentet.
+Som patient vil jeg kunne skrive dagbogsnoter, så jeg har et bedre overblik over mine tanker og følelser lige i momentet – også før og efter et forløb.
 
 **Acceptkriterier:**
 - Acceptkriterie 1: "Givet en fritekst-note skrives og gemmes, så gemmes den med dato og titel" → tester at gem-funktionen virker med de rigtige felter
-- Acceptkriterie 2: "Givet en note gemmes, når den vises igen, så er den tilknyttet det aktive forløb" → tester korrekt tilknytning
+- Acceptkriterie 2: "Givet en note gemmes, når den vises igen, så er den tilknyttet patienten og vises, også selvom patienten ikke har et aktivt forløb" → tester korrekt tilknytning (noter ligger på patienten, ændret uge 40)
 
 ### User story 5
 Som patient vil jeg kunne logge ind, så jeg kan få adgang til mit eget, private forløb.

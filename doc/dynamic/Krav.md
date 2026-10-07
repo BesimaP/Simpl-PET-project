@@ -16,8 +16,8 @@
 8. Patienten skal kunne se og registrere kommende aftaler (Appointment) tilknyttet sit forløb (US3)
 9. Patienten skal kunne registrere medicinindtag (MedicationLog) med reference til medicin-stamdata (Medication), knyttet til en runde (US8)
 10. Patienten skal kunne registrere hormonværdier (HormoneLog) knyttet til en runde (US9)
-11. Patienten skal kunne tilføje dagbogsnoter (DiaryEntry) til sit forløb (US4)
-12. Patienten skal kunne tilføje og se dokumenter (Document) tilknyttet en runde, fx blodprøvesvar og behandlingsplan (US11)
+11. Patienten skal kunne tilføje dagbogsnoter (DiaryEntry) – noterne hører til patienten, så de kan skrives før, under og efter et forløb (US4)
+12. Patienten skal kunne tilføje, se og slette dokumenter (Document), fx henvisning, blodprøvesvar og behandlingsplan – dokumenterne hører til patienten, så de kan uploades før første runde (US11)
 13. Patienten skal kunne modtage og se notifikationer (Notification), fx medicinpåmindelser (US12)
 
 ## Non-funktionelle krav
