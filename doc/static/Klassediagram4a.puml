@@ -167,6 +167,9 @@ package "enums" {
     ICSI
     IUI
     FET
+    --
+    - String label
+    + String getLabel()
   }
 
   enum RoundStatus {

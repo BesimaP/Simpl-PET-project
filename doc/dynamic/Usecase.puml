@@ -47,12 +47,9 @@ u -- UC15
 UC2 .> UC1 : <<extend>>\n(ingen konto)
 UC3 .> UC1 : <<extend>>\n(intet aktivt forløb)
 
-' Disse use cases skriver selv hændelser på tidslinjen (start runde + aftaler om de store trin). Afslut runde gør ikke
-UC8 .> UC11 : <<include>>
-UC5 .> UC11 : <<include>>\n(ægudtagning, oplægning,\ngraviditetstest)
-
-' Et forløb kan kun afsluttes, når der ikke er en runde i gang
-UC15 .> UC14 : kræver afsluttet runde
+note "UC8 og UC5 tilføjer hændelser på tidslinjen (UC11)\n(UC5: ægudtagning, oplægning, graviditetstest).\nUC15 kræver, at runden er afsluttet (UC14)." as N1
+N1 .. UC11
+N1 .. UC15
 
 note bottom of UC14
   Efter afsluttet runde kan

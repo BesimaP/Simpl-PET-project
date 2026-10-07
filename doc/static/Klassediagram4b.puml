@@ -45,7 +45,7 @@ package "persistence" {
     + DiagnosisMapper(connectionPool : ConnectionPool)
     + save(diagnosis : Diagnosis) : int
     + findByPatient(patientId : int) : List<Diagnosis>
-    + delete(id : int) : void
+    + delete(id : int, patientId : int) : boolean
     - mapRow(rs : ResultSet) : Diagnosis
   }
 
@@ -54,7 +54,7 @@ package "persistence" {
     + DocumentMapper(connectionPool : ConnectionPool)
     + save(document : Document) : int
     + findByPatient(patientId : int) : List<Document>
-    + delete(id : int) : void
+    + delete(id : int, patientId : int) : boolean
     - mapRow(rs : ResultSet) : Document
   }
 
@@ -63,7 +63,7 @@ package "persistence" {
     + DiaryEntryMapper(connectionPool : ConnectionPool)
     + save(entry : DiaryEntry) : int
     + findByPatient(patientId : int) : List<DiaryEntry>
-    + delete(id : int) : void
+    + delete(id : int, patientId : int) : boolean
     - mapRow(rs : ResultSet) : DiaryEntry
   }
 
@@ -73,7 +73,7 @@ package "persistence" {
     + save(notification : Notification) : int
     + findByPatient(patientId : int) : List<Notification>
     + countUnread(patientId : int) : int
-    + markRead(id : int) : void
+    + markRead(id : int, patientId : int) : boolean
     + markAllRead(patientId : int) : void
     - mapRow(rs : ResultSet) : Notification
   }

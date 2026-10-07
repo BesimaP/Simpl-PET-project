@@ -5,6 +5,7 @@ import entities.FertilityJourney;
 import entities.HormoneLog;
 import entities.Round;
 import enums.Result;
+import enums.TreatmentType;
 import enums.ServiceResult;
 import exceptions.NoActiveJourneyException;
 import exceptions.NoActiveRoundException;
@@ -150,6 +151,7 @@ public class DashboardController {
             return;
         }
         ctx.attribute("today", LocalDate.now());   // startdato er udfyldt med dags dato (kan ændres)
+        ctx.attribute("treatmentTypes", TreatmentType.values());   // dropdownen bygges af enum'en (NFR5: ny type = kun ét sted i Java)
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("start-runde");

@@ -53,10 +53,8 @@
                 <label for="type">Type behandling</label>
                 <select id="type" name="type" required>
                     <option value="">Vælg…</option>
-                    <option value="IVF">IVF</option>
-                    <option value="ICSI">ICSI</option>
-                    <option value="IUI">Insemination (IUI)</option>
-                    <option value="FET">Frossen ægoplægning (FET)</option>
+                    <!-- th:each: én option pr. værdi i enum'en (sat af controlleren). Ny type = tilføj den i enum'en + typetabellen -->
+                    <option th:each="t : ${treatmentTypes}" th:value="${t.name()}" th:text="${t.label}">Type</option>
                 </select>
 
                 <!-- type date = kalender -->

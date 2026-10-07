@@ -1,5 +1,6 @@
 package controllers;
 
+import enums.AppointmentType;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
@@ -55,6 +56,7 @@ public class AppointmentController {
         }
 
         ctx.attribute("journeys", dashboardService.getJourneys(patientId));   // requestscope -> links til de andre forløb
+        ctx.attribute("appointmentTypes", AppointmentType.values());   // dropdownen bygges af enum'en
         ctx.attribute("shown", shown);                                       // det forløb, siden viser (kan være null)
         // formularen "Ny aftale" vises kun på det aktive forløb – man kan ikke tilføje aftaler til et afsluttet
         ctx.attribute("canAdd", active != null && shown != null && shown.getId() == active.getId());   // intet aktivt forløb = ingen formular

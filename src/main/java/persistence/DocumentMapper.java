@@ -69,12 +69,13 @@ public class DocumentMapper {
     }
 
     // sletter rækken i databasen. OBS: selve filen på disken skal slettes et andet sted (i service/controller)
-    public void delete(int id) {
-        String sql = "DELETE FROM document WHERE id = ?";
+    public boolean delete(int id, int patientId) {
+        String sql = "DELETE FROM document WHERE id = ? AND patient_id = ?";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
-            statement.executeUpdate();
+            statement.setInt(2, patientId);
+            return statement.executeUpdate() > 0;   // antal rækker, der blev ramt: 0 = ikke fundet / ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not delete document " + id, e);
         }

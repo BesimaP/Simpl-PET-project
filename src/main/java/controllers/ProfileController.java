@@ -35,6 +35,7 @@ public class ProfileController {
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
+        ctx.attribute("today", java.time.LocalDate.now());   // max på fødselsdato: man kan ikke vælge en dato i fremtiden
         ctx.render("min-profil");                                              // templates/min-profil.html
     }
 

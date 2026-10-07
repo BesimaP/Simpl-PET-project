@@ -69,6 +69,12 @@ public class RoundService {
             return ServiceResult.INVALID_INPUT;
         }
 
+        // 4b. regel: runden kan ikke starte før forløbet eller i fremtiden.
+        //     (Ellers kunne slutdatoen – dags dato, når runden afsluttes – ligge før startdatoen, og det afviser databasen)
+        if (start.isBefore(journey.getStartDate()) || start.isAfter(LocalDate.now())) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // 5. byg kortet og gem. end_date og result er null, til runden afsluttes
         Round round = new Round(0, journey.getId(), roundNumber, treatmentType, start, null, RoundStatus.IN_PROGRESS, null);
         roundMapper.save(round); // save sætter round.id til det id, databasen gav

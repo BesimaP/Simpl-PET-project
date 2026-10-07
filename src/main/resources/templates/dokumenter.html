@@ -72,7 +72,7 @@
       <!-- kort 2: upload et nyt dokument -->
       <aside class="card helpbox" aria-labelledby="upload-title">
         <h2 id="upload-title" class="eyebrow">Upload</h2>
-        <!-- action = siden sender bare til sig selv indtil vi får backend på -->
+        <!-- action = POST /dokumenter – controlleren gemmer og sender tilbage til siden med ?gemt= eller ?fejl= -->
         <form action="/dokumenter" method="post" enctype="multipart/form-data">
           <!-- type file = åbner fil-vælgeren på computeren -->
           <label for="file">Vælg fil</label>
@@ -89,10 +89,8 @@
           <label for="documentType">Type</label>
           <select id="documentType" name="documentType" required>
             <option value="">Vælg…</option>
-            <option value="REFERRAL">Henvisning</option>
-            <option value="BLOOD_TEST_RESULT">Blodprøvesvar</option>
-            <option value="TREATMENT_PLAN">Behandlingsplan</option>
-            <option value="OTHER">Andet</option>
+            <!-- th:each: én option pr. værdi i enum'en (sat af controlleren). Ny type = tilføj den i enum'en + typetabellen -->
+            <option th:each="t : ${documentTypes}" th:value="${t.name()}" th:text="${t.label}">Type</option>
           </select>
 
           <!-- knappen sender formularen -->

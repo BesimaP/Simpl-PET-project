@@ -5,6 +5,8 @@ import persistence.DocumentMapper;
 import entities.Document;
 import enums.DocumentType;
 import enums.ServiceResult;
+import exceptions.DatabaseException;
+import exceptions.FileStorageException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,18 +61,26 @@ public class DocumentService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 5. gem filen på disken under et unikt navn
-        String storedName = UUID.randomUUID() + "-" + originalFileName.replaceAll("[^a-zA-Z0-9._-]", "_");
-        Path target = Path.of(UPLOAD_DIR, storedName);
+        // 5. gem filen på disken under et unikt navn: UUID + endelsen (fx "3f2a….pdf").
+        //    Det oprindelige filnavn bruges ikke – det kan være for langt til file_path (VARCHAR(255)) og indeholde mærkelige tegn.
+        //    Titlen er det, patienten ser i listen
+        String extension = lower.substring(lower.lastIndexOf('.'));   // ".pdf", ".jpg", ".jpeg" eller ".png" (tjekket i trin 3)
+        Path target = Path.of(UPLOAD_DIR, UUID.randomUUID() + extension);
         try {
             Files.createDirectories(target.getParent());
             Files.copy(fileContent, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new RuntimeException("Filen kunne ikke gemmes på disken", e);   // fanges af ExceptionConfig -> fejlsiden
+            throw new FileStorageException("Filen kunne ikke gemmes på disken", e);   // fanges af ExceptionConfig -> fejlsiden
         }
 
-        // 6. gem rækken i databasen – kun stien til filen og dagens dato
-        documentMapper.save(new Document(0, patientId, LocalDate.now(), title, documentType, target.toString()));
+        // 6. gem rækken i databasen – kun stien til filen og dagens dato.
+        //    Fejler databasen, slettes filen igen, så der ikke ligger en fil på disken uden en række
+        try {
+            documentMapper.save(new Document(0, patientId, LocalDate.now(), title, documentType, target.toString()));
+        } catch (DatabaseException e) {
+            deleteFile(target.toString());
+            throw e;   // videre til ExceptionConfig -> fejlsiden
+        }
 
         return ServiceResult.OK;
     }
@@ -98,26 +108,33 @@ public class DocumentService {
         if (document == null) {
             return ServiceResult.NOT_FOUND;
         }
-        deleteFile(document);
-        documentMapper.delete(documentId);
+        // rækken først, så filen: fejler databasen, findes både række og fil stadig (ingen række, der peger på en slettet fil)
+        documentMapper.delete(documentId, patientId);   // AND patient_id = ? i SQL'en – ekstra sikring
+        deleteFile(document.getFilePath());
         return ServiceResult.OK;
     }
 
     // Sletter ALLE patientens filer på disken. Kaldes af ProfileService, når kontoen slettes:
     // ON DELETE CASCADE sletter kun rækkerne i databasen – filerne i uploads/ skal vi selv fjerne (US6b AC2)
     public void deleteAllFiles(int patientId) {
-        for (Document d : getDocuments(patientId)) {
-            deleteFile(d);
+        deleteFiles(getDocuments(patientId));
+    }
+
+    // Sletter filerne bag en liste dokumenter. ProfileService henter listen FØR kontoen slettes og kalder denne bagefter –
+    // så slettes filerne kun, hvis rækkerne i databasen faktisk er væk
+    public void deleteFiles(java.util.List<Document> documents) {
+        for (Document d : documents) {
+            deleteFile(d.getFilePath());
         }
     }
 
-    // hjælper: slet filen bag ét dokument. deleteIfExists = ingen fejl, hvis filen allerede er væk
-    private void deleteFile(Document document) {
+    // hjælper: slet én fil. deleteIfExists = ingen fejl, hvis filen allerede er væk
+    private void deleteFile(String filePath) {
         try {
-            Files.deleteIfExists(Path.of(document.getFilePath()));
+            Files.deleteIfExists(Path.of(filePath));
         } catch (IOException e) {
-            // filen kunne ikke slettes (fx låst) – rækken slettes alligevel, så patienten ikke ser den mere
-            System.err.println("Kunne ikke slette filen " + document.getFilePath() + ": " + e.getMessage());
+            // filen kunne ikke slettes (fx låst) – rækken er allerede væk, så patienten ser den ikke mere
+            System.err.println("Kunne ikke slette filen " + filePath + ": " + e.getMessage());
         }
     }
 

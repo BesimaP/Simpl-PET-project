@@ -35,14 +35,15 @@
             <form action="/login" method="post">
                 <!-- for og id skal være ens, så label og felt hører sammen -->
                 <label for="username">Brugernavn</label>
-                <input type="text" id="username" name="username"
+                <!-- th:value: efter et forkert login står brugernavnet der stadig (sat af LoginController) -->
+                <input type="text" id="username" name="username" th:value="${username}"
                        placeholder="Dit brugernavn" autocomplete="username" required>
 
                 <!-- type password = der kommer prikker når man skriver -->
                 <label for="password">Adgangskode</label>
                 <input type="password" id="password" name="password"
                        placeholder="Din adgangskode" autocomplete="current-password" required>
-                <p th:if="${error}" th:text="${error}" class="field-error"></p>
+                <p th:if="${error}" th:text="${error}" class="field-error" role="alert"></p>
 
 
                 <!-- knappen sender formularen -->

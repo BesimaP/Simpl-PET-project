@@ -11,3 +11,7 @@ target/
 .DS_Store
 # Uploadede dokumenter (US11) – brugerdata, ikke kode
 uploads/
+
+# Miljøvariabler og logfiler
+.env
+*.log

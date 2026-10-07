@@ -24,16 +24,17 @@ public class LoginController {
         config.routes.post("/login", ctx -> login(ctx));
         config.routes.get("/opretprofil", ctx -> showCreateProfile(ctx));   // siden er nu en Thymeleaf-template (fejlbesked uden JavaScript)
         config.routes.post("/opretprofil", ctx -> createProfile(ctx));
-        config.routes.get("/logout", ctx -> logout(ctx));
+        config.routes.post("/logout", ctx -> logout(ctx));   // POST, så en fremmed side ikke kan logge en ud med et link/billede
     }
 
     // GET /opretprofil – vis formularen. ?fejl= fra sidste forsøg -> request scope -> ${fejl} i opretprofil.html
     private void showCreateProfile(Context ctx) {
         ctx.attribute("fejl", ctx.queryParam("fejl"));
+        ctx.attribute("today", java.time.LocalDate.now());   // max på fødselsdato: man kan ikke vælge en dato i fremtiden
         ctx.render("opretprofil");
     }
 
-    // GET /logout – glem hvem der er logget ind og send til login. Bruges af "Log ud" i menuen
+    // POST /logout – glem hvem der er logget ind og send til login. Bruges af "Log ud"-knappen i menuen og på Min profil
     private void logout(Context ctx) {
         ctx.req().getSession().invalidate();   // sletter hele sessionen (patientId og patientName)
         ctx.redirect("/login");
@@ -59,6 +60,7 @@ public class LoginController {
         } catch (UserNotFoundException e) {
             // requestscope: gælder kun for dette ene svar. Thymeleaf viser det som ${error} på login-siden
             ctx.attribute("error", e.getMessage());
+            ctx.attribute("username", username);   // brugernavnet står der stadig, så man kun skal skrive adgangskoden igen
             ctx.render("login");
         }
     }

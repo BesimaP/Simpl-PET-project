@@ -214,4 +214,26 @@ body.dashboard {
         color: inherit;
         font-weight: 400;
     }
+
+    /* "Log ud" er en knap i en formular (POST), men skal se ud som linket ved siden af */
+    .sidenav__footer .inline-form {
+        display: inline;
+    }
+
+    .sidenav__footer button[type=submit] {
+        display: inline;
+        width: auto;
+        margin: 0;
+        padding: 0;
+        background: none;
+        border: none;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+    }
+
+    .sidenav__footer button[type=submit]:hover {
+        background: none;
+        text-decoration: underline;
+    }
 }

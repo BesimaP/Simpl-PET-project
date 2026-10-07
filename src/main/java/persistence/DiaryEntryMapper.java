@@ -64,14 +64,15 @@ public class DiaryEntryMapper {
         }
     }
 
-    // sletter én note ud fra dens id
-    public void delete(int id) {
-        String sql = "DELETE FROM diary_entry WHERE id = ?";
+    // sletter én note – men kun hvis den er patientens egen (AND patient_id = ?). true = slettet
+    public boolean delete(int id, int patientId) {
+        String sql = "DELETE FROM diary_entry WHERE id = ? AND patient_id = ?";
         // try ( … ): lån en forbindelse fra nøgleringen – den afleveres automatisk, når blokken er færdig
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
-            statement.executeUpdate();
+            statement.setInt(2, patientId);
+            return statement.executeUpdate() > 0;   // antal rækker, der blev ramt: 0 = ikke fundet / ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not delete diary entry " + id, e);
         }

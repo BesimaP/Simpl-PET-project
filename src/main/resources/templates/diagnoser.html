@@ -52,7 +52,7 @@
       <h2 id="diagnosis-title">Ny diagnose</h2>
       <p class="subtitle">Som klinikken har skrevet det.</p>
 
-      <!-- action = siden sender bare til sig selv indtil vi får backend på -->
+      <!-- action = POST /diagnoser – controlleren gemmer og sender tilbage til siden med ?gemt= eller ?fejl= -->
       <form action="/diagnoser" method="post">
         <!-- for og id skal være ens, så label og felt hører sammen -->
         <label for="diagnosis">Diagnose</label>

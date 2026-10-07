@@ -82,9 +82,9 @@ else Notifications found
   v -> j : POST /notifikationer/laest (id)
   j -> c : markRead(ctx)
   c -> s : markRead(patientId, id)
-  s -> s : is id in getNotifications(patientId)?\n(otherwise NOT_FOUND – nothing changed)
-  s -> nm : markRead(id)
-  nm -> db : UPDATE notification SET is_read = TRUE WHERE id = ?
+  s -> nm : markRead(id, patientId)
+  nm -> db : UPDATE notification SET is_read = TRUE WHERE id = ? AND patient_id = ?
+  nm --> s : true if a row was updated\n(false = not hers → NOT_FOUND, nothing changed)
   c --> j : ctx.redirect("/notifikationer")
   j --> u : List shown again, that one marked as read
   else All

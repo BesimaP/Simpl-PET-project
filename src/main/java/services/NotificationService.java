@@ -121,15 +121,9 @@ public class NotificationService {
         return ServiceResult.OK;
     }
 
-    // Markér én påmindelse som læst (UC7) – kun patientens egen (id'et skal findes i hendes liste),
+    // Markér én påmindelse som læst (UC7) – kun patientens egen: mapperen opdaterer med "WHERE id = ? AND patient_id = ?",
     // så man ikke kan ændre andres ved at rette id'et i det skjulte felt. Svar: OK · NOT_FOUND
     public ServiceResult markRead(int patientId, int notificationId) {
-        for (Notification n : getNotifications(patientId)) {
-            if (n.getId() == notificationId) {
-                notificationMapper.markRead(notificationId);
-                return ServiceResult.OK;
-            }
-        }
-        return ServiceResult.NOT_FOUND;
+        return notificationMapper.markRead(notificationId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 }

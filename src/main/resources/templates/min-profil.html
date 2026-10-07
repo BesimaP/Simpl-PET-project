@@ -60,7 +60,7 @@
 
         <!-- fødselsdato kan rettes (US6b AC1) – ProfileService.updateProfile tjekker, at datoen er gyldig og ikke i fremtiden -->
         <label for="dateOfBirth">Fødselsdato</label>
-        <input type="date" id="dateOfBirth" name="dateOfBirth" th:value="${patient.dateOfBirth}" required>
+        <input type="date" id="dateOfBirth" name="dateOfBirth" th:value="${patient.dateOfBirth}" th:attr="max=${today}" required>
 
         <!-- knappen sender formularen -->
         <button type="submit">Gem ændringer</button>
@@ -98,8 +98,10 @@
       <!-- th:text: navnet fra databasen -->
       <p class="muted">Du er logget ind som <span th:text="${patient.name}">Anna</span>.</p>
 
-      <!-- et link der ligner en knap -->
-      <a href="/logout" class="btn-primary">Log ud</a>
+      <!-- en lille formular, så log ud er en POST (ikke et link, som andre sider kan "klikke" på for en) -->
+      <form action="/logout" method="post">
+        <button type="submit">Log ud</button>
+      </form>
 
       <!-- slet konto er med vilje lille, så man ikke trykker ved en fejl -->
       <!-- link til bekræft-siden /slet-konto (virker uden JavaScript). Med JavaScript åbner js/min-profil.js dialogen i stedet -->

@@ -19,11 +19,11 @@ database "PostgreSQL" as db
 
 u -> j : Clicks "Start runde" on dashboard (GET /start-runde)
 j -> c : showStartRound(ctx)
-c -> c : ctx.attribute("gemt"/"fejl", ctx.queryParam(...))
+c -> c : ctx.attribute("gemt"/"fejl", ctx.queryParam(...)),\nctx.attribute("treatmentTypes", TreatmentType.values())
 c --> j : ctx.render("start-runde")
 j --> v : start-runde.html (Thymeleaf)
 v -> v : start-runde.js: setTodayIn(startDate)
-u -> v : Selects "Type behandling" (IVF/ICSI/IUI/FET), "Startdato", clicks "Start runde"
+u -> v : Selects "Type behandling" (dropdown built from TreatmentType.values(), shows getLabel()), "Startdato", clicks "Start runde"
 v -> j : POST /start-runde (type, startDate)
 j -> c : startRound(ctx)
 note right of c : patientId == null (not logged in)\n→ ctx.redirect("/login")
@@ -64,7 +64,7 @@ else Journey found
     rm -> rm : mapRow(rs)
     rm --> s : List<Round>
     s -> s : roundNumber = size() + 1\nTreatmentType.valueOf(type), LocalDate.parse(startDate)
-    alt valueOf/parse fails
+    alt valueOf/parse fails, or start date before the journey's start date or after today
       s --> c : INVALID_INPUT
       c --> j : ctx.redirect("/start-runde?fejl=felter")
       j --> u : start-runde.html with "Udfyld alle felter …"

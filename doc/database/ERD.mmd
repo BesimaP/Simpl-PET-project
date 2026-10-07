@@ -20,7 +20,7 @@ erDiagram
   NOTIFICATION_TYPE ||--o{ NOTIFICATION : classifies
 
   PATIENT {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar username UK
     varchar password_hash
     varchar first_name
@@ -28,71 +28,71 @@ erDiagram
     date date_of_birth
   }
   DIAGNOSIS {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int patient_id FK
     varchar name
     text description
   }
   FERTILITY_JOURNEY {
-    serial id PK
-    int patient_id FK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
+    int patient_id FK "UNIQUE WHERE journey_status_id = 1 (one_active_journey_per_patient)"
     date start_date
     int journey_status_id FK
   }
   ROUND {
-    serial id PK
-    int fertility_journey_id FK
-    int round_number
+    int id PK "GENERATED ALWAYS AS IDENTITY"
+    int fertility_journey_id FK "UNIQUE WHERE end_date IS NULL (one_active_round_per_journey)"
+    int round_number "CHECK > 0, UNIQUE (fertility_journey_id, round_number)"
     int treatment_type_id FK
     date start_date
-    date end_date
+    date end_date "NULL = i gang, CHECK end_date >= start_date"
     int result_id FK
   }
   APPOINTMENT {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int fertility_journey_id FK
     timestamp date_time
     int appointment_type_id FK
     varchar location
   }
   DIARY_ENTRY {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int patient_id FK
     timestamp date_time
     varchar title
     text content
   }
   EVENT {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int round_id FK
     timestamp date_time
     int event_type_id FK
     text description
   }
   MEDICATION {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
     varchar description
     varchar unit
   }
   MEDICATION_LOG {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int round_id FK
     int medication_id FK
     timestamp scheduled_date_time
-    numeric dose
+    numeric dose "CHECK > 0"
     boolean taken
   }
   HORMONE_LOG {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int round_id FK
     timestamp date_time
     int hormone_type_id FK
-    numeric value
+    numeric value "CHECK >= 0"
     varchar unit
   }
   DOCUMENT {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int patient_id FK
     date upload_date
     varchar title
@@ -100,7 +100,7 @@ erDiagram
     varchar file_path
   }
   NOTIFICATION {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     int patient_id FK
     timestamp date_time
     int notification_type_id FK
@@ -109,34 +109,34 @@ erDiagram
     boolean is_read
   }
   JOURNEY_STATUS {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
   TREATMENT_TYPE {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
   RESULT {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
   APPOINTMENT_TYPE {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
   EVENT_TYPE {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
   HORMONE_TYPE {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
   DOCUMENT_TYPE {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
   NOTIFICATION_TYPE {
-    serial id PK
+    int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }

@@ -11,6 +11,7 @@ Systemet slår patienten op på brugernavnet og tjekker adgangskoden mod den gem
 Patientens id og navn gemmes i sessionen, og dashboardet vises.
 Hvis patienten endnu ikke har et aktivt forløb, viser dashboardet "Start dit forløb" (UC3).
 Fra login-skærmen kan brugeren vælge "Opret profil" (UC2).
+Brugeren kan logge ud med knappen Log ud på Min profil; systemet sletter sessionen og viser login-siden.
 
 Regnvejrsdag:
 - Databasen kan ikke læses: Fejlbesked vises, brugeren kan prøve igen.

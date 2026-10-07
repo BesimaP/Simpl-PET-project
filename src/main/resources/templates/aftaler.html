@@ -73,12 +73,8 @@
           <label for="type">Type</label>
           <select id="type" name="type" required>
             <option value="">Vælg…</option>
-            <option value="CONSULTATION">Konsultation</option>
-            <option value="SCANNING">Scanning</option>
-            <option value="BLOOD_TEST">Blodprøve</option>
-            <option value="EGG_RETRIEVAL">Ægudtagning</option>
-            <option value="EMBRYO_TRANSFER">Oplægning</option>
-            <option value="PREGNANCY_TEST">Graviditetstest</option>
+            <!-- th:each: én option pr. værdi i enum'en (sat af controlleren). Ny type = tilføj den i enum'en + typetabellen -->
+            <option th:each="t : ${appointmentTypes}" th:value="${t.name()}" th:text="${t.label}">Type</option>
           </select>
 
           <!-- hedder location i databasen (appointment.location) -->

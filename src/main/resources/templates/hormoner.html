@@ -52,18 +52,15 @@
       <h2 id="measure-title">Ny måling</h2>
       <p class="subtitle">Skriv tallet fra klinikken, som det står på svaret.</p>
 
-      <!-- action = siden sender bare til sig selv indtil vi får backend på -->
+      <!-- action = POST /hormoner – controlleren gemmer og sender tilbage til siden med ?gemt= eller ?fejl= -->
       <form action="/hormoner" method="post">
         <!-- select = dropdown. den tomme option øverst er det man ser før man vælger -->
         <!-- value = præcis det navn databasen kræver (tabellen hormone_type i schema_postgres.sql), teksten er den danske -->
         <label for="hormone">Hormon</label>
         <select id="hormone" name="hormone" required>
           <option value="">Vælg…</option>
-          <option value="E2_OESTRADIOL">Østradiol</option>
-          <option value="LH">LH</option>
-          <option value="FSH">FSH</option>
-          <option value="PROGESTERONE">Progesteron</option>
-          <option value="AMH">AMH</option>
+          <!-- th:each: én option pr. værdi i enum'en (sat af controlleren). Ny type = tilføj den i enum'en + typetabellen -->
+          <option th:each="t : ${hormoneTypes}" th:value="${t.name()}" th:text="${t.label}">Type</option>
         </select>
 
         <!-- type number = kun tal. step 0.1 = man må skrive decimaler -->
@@ -114,7 +111,7 @@
       <p class="muted" th:if="${logs.isEmpty()}">Ingen målinger i denne runde endnu.</p>
       <!-- KURVE (US9): tegnet som SVG direkte af Thymeleaf – ingen JavaScript og intet bibliotek.
            HormoneService.getCurve har regnet målingerne om til x/y, så her tegnes der bare -->
-      <h2 class="eyebrow" style="margin-top: 24px">Kurve</h2>
+      <h2 class="eyebrow eyebrow--spaced">Kurve</h2>
 
       <!-- th:each over enum-værdierne: én lille knap per hormon. @{...(hormon=...)} = Thymeleaf-link med query-parameter.
            th:classappend: den valgte får is-active -->

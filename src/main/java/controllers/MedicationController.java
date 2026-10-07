@@ -16,7 +16,7 @@ public class MedicationController {
         this.medicationService = new MedicationService(connectionPool);
     }
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: MedicationController.setRoutes(config)
+    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new MedicationController(connectionPool).setRoutes(config)
     public void setRoutes(JavalinConfig config) {
         config.routes.get("/medicin", ctx -> showLogs(ctx));
         config.routes.post("/medicin", ctx -> logDose(ctx));

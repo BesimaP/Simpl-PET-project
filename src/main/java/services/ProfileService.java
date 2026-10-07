@@ -92,11 +92,14 @@ public class ProfileService {
 
     // Sletter kontoen = patienten – alt under den ryger med (ON DELETE CASCADE i schema_postgres.sql)
     public ServiceResult deleteAccount(int patientId) {
-        // 1. slet patientens uploadede filer på disken. CASCADE sletter kun RÆKKERNE i databasen – ikke selve filerne (US6b AC2)
-        documentService.deleteAllFiles(patientId);
+        // 1. husk hvilke filer patienten har, FØR rækkerne forsvinder. CASCADE sletter kun RÆKKERNE – ikke selve filerne (US6b AC2)
+        java.util.List<entities.Document> documents = documentService.getDocuments(patientId);
 
-        // 2. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?)
+        // 2. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?) – alt under patienten ryger med
         patientMapper.delete(patientId);
+
+        // 3. først nu slettes filerne på disken: fejlede trin 2, ville patienten stadig have sine dokumenter
+        documentService.deleteFiles(documents);
 
         // 3. gik godt
         return ServiceResult.OK;

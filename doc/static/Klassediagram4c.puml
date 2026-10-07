@@ -276,6 +276,7 @@ package "services" {
     + findDocument(patientId : int, documentId : int) : Document
     + deleteDocument(patientId : int, documentId : int) : ServiceResult
     + deleteAllFiles(patientId : int) : void
+    + deleteFiles(documents : List<Document>) : void
   }
 }
 

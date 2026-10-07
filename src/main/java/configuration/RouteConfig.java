@@ -26,10 +26,17 @@ public class RouteConfig {
 
         // before = kører FØR hver eneste rute. Er man logget ind, lægges antal ulæste påmindelser i request scope,
         // så klokken på ALLE sider kan vise den røde prik (${unread}) – uden at hver controller skal gentage det
+        // NotificationService laves ÉN gang her – ikke ved hver request inde i lambdaen.
+        // Statiske filer (css/js/img) springes over: de har ingen klokke, så der er ingen grund til at spørge databasen
+        NotificationService notificationService = new NotificationService(connectionPool);
         config.routes.before("/*", ctx -> {
+            String path = ctx.path();
+            if (path.startsWith("/css/") || path.startsWith("/js/") || path.startsWith("/img/")) {
+                return;
+            }
             Integer patientId = ctx.sessionAttribute("patientId");
             if (patientId != null) {
-                ctx.attribute("unread", new NotificationService(connectionPool).countUnread(patientId));
+                ctx.attribute("unread", notificationService.countUnread(patientId));
             }
         });
     }

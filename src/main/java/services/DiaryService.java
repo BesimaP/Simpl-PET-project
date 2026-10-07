@@ -51,16 +51,10 @@ public class DiaryService {
         return diaryEntryMapper.findByPatient(patientId);
     }
 
-    // Sletter én note – men kun hvis den er patientens egen (id'et skal findes i hendes liste).
-    // Svar: OK · NOT_FOUND = findes ikke / ikke hendes
+    // Sletter én note – men kun hvis den er patientens egen: mapperen sletter med "WHERE id = ? AND patient_id = ?".
+    // Svar: OK · NOT_FOUND = findes ikke / ikke hendes (så blev 0 rækker slettet)
     public ServiceResult deleteEntry(int patientId, int entryId) {
-        for (DiaryEntry e : getEntries(patientId)) {
-            if (e.getId() == entryId) {
-                diaryEntryMapper.delete(entryId);
-                return ServiceResult.OK;
-            }
-        }
-        return ServiceResult.NOT_FOUND;
+        return diaryEntryMapper.delete(entryId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
     // lille hjælper: null eller kun mellemrum tæller som tomt

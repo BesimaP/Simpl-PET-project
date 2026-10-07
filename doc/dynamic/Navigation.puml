@@ -53,4 +53,6 @@ UC14 --> UC8 : ny runde
 UC3 --> UC15 : ingen runde i gang
 UC15 --> UC3 : nyt forløb
 
+UC2 --> UC1 : Log ud (Min profil)
+
 @enduml

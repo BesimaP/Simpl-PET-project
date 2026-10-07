@@ -88,11 +88,12 @@ u -> v : Confirms "Slet konto"
 v -> j : POST /slet-konto
 j -> c : deleteAccount(ctx)
 c -> s : deleteAccount(patientId)
-s -> s : documentService.deleteAllFiles(patientId)\n(deletes her uploaded files in uploads/ –\nCASCADE only removes the rows)
+s -> s : documents = documentService.getDocuments(patientId)\n(remember her files BEFORE the rows are gone)
 s -> pm : delete(id)
 pm -> cp : getConnection()
 cp --> pm : Connection
 pm -> db : DELETE FROM patient WHERE id = ?\n(ON DELETE CASCADE removes all her data)
+s -> s : documentService.deleteFiles(documents)\n(deletes her uploaded files in uploads/ –\nCASCADE only removes the rows)
 s --> c : OK
 c -> c : ctx.req().getSession().invalidate()
 c --> j : ctx.redirect("/login")

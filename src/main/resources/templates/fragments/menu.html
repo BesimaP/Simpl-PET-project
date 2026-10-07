@@ -46,7 +46,9 @@
 
     <!-- nederst i menuen -->
     <p class="sidenav__footer desktop-only">
-        <a href="/min-profil">Min profil</a> · <a href="/logout">Log ud</a>
+        <a href="/min-profil">Min profil</a> ·
+        <!-- log ud er en POST-formular med en knap, der ligner et link -->
+        <form action="/logout" method="post" class="inline-form"><button type="submit">Log ud</button></form>
     </p>
 </nav>
 

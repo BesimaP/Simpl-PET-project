@@ -40,16 +40,10 @@ public class DiagnosisService {
         return diagnosisMapper.findByPatient(patientId);
     }
 
-    // Sletter én diagnose – men kun hvis den er patientens egen (id'et skal findes i hendes liste).
+    // Sletter én diagnose – men kun hvis den er patientens egen: mapperen sletter med "WHERE id = ? AND patient_id = ?".
     // Svar: OK · NOT_FOUND = findes ikke / ikke hendes. Samme mønster som DiaryService.deleteEntry
     public ServiceResult deleteDiagnosis(int patientId, int diagnosisId) {
-        for (Diagnosis d : getDiagnoses(patientId)) {
-            if (d.getId() == diagnosisId) {
-                diagnosisMapper.delete(diagnosisId);
-                return ServiceResult.OK;
-            }
-        }
-        return ServiceResult.NOT_FOUND;
+        return diagnosisMapper.delete(diagnosisId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
     // lille hjælper: null eller kun mellemrum tæller som tomt

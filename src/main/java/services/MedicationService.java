@@ -123,7 +123,10 @@ public class MedicationService {
     public Map<Integer, String> getMedicationNames() {
         Map<Integer, String> names = new HashMap<>();
         for (Medication med : medicationMapper.findAll()) {
-            names.put(med.getId(), med.getDescription());   // description = det pæne navn ("Gonal-F"), name = koden ("GONAL_F")
+            // description = det pæne navn ("Gonal-F"), name = koden ("GONAL_F"). description må være NULL – så bruges koden,
+            // så en påmindelse aldrig hedder "null · 150 IU"
+            String name = med.getDescription() != null ? med.getDescription() : med.getName();
+            names.put(med.getId(), name);
         }
         return names;
     }

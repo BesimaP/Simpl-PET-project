@@ -11,6 +11,11 @@
     color: var(--muted);
 }
 
+/* eyebrow--spaced = ekstra luft over overskriften (fx "Kurve" på hormoner-siden) */
+.eyebrow--spaced {
+    margin-top: 24px;
+}
+
 /* section-head = overskrift til venstre og et lille link til højre. space-between skubber dem ud i hver sin side */
 .section-head {
     display: flex;

@@ -58,7 +58,7 @@
 
                 <!-- type date = browseren viser en kalender -->
                 <label for="dateOfBirth">Fødselsdato</label>
-                <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                <input type="date" id="dateOfBirth" name="dateOfBirth" th:attr="max=${today}" required>
 
                 <label for="username">Brugernavn</label>
                 <input type="text" id="username" name="username"

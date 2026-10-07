@@ -52,7 +52,7 @@
             <h2 id="note-title">Skriv dagens note</h2>
             <p class="subtitle">Kun til dig. Du kan altid slette den igen.</p>
 
-            <!-- action = siden sender bare til sig selv indtil vi får backend på -->
+            <!-- action = POST /dagbog – controlleren gemmer og sender tilbage til siden med ?gemt= eller ?fejl= -->
             <form action="/dagbog" method="post">
                 <!-- for og id skal være ens, så label og felt hører sammen. type date = kalender -->
                 <label for="date">Dato</label>

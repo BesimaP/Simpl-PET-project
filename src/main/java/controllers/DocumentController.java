@@ -1,5 +1,6 @@
 package controllers;
 
+import enums.DocumentType;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
@@ -23,8 +24,8 @@ public class DocumentController {
     public void setRoutes(JavalinConfig config) {
         config.routes.get("/dokumenter", ctx -> showDocuments(ctx));
         config.routes.post("/dokumenter", ctx -> uploadDocument(ctx));
-        config.routes.get("/dokumenter/{id}", ctx -> openDocument(ctx));
-        config.routes.post("/dokumenter/slet", ctx -> deleteDocument(ctx));   // "Slet" på ét dokument (id i et skjult felt)   // "Åbn" på listen – {id} = path-parameter
+        config.routes.get("/dokumenter/{id}", ctx -> openDocument(ctx));   // "Åbn" på listen – {id} = path-parameter
+        config.routes.post("/dokumenter/slet", ctx -> deleteDocument(ctx));   // "Slet" på ét dokument (id i et skjult felt)
     }
 
     // POST /dokumenter/slet – slet ét dokument (rækken + filen). Service tjekker, at det er patientens eget
@@ -72,7 +73,19 @@ public class DocumentController {
         // 3. læs filen fra disken og send den. contentType fortæller browseren, om det er PDF eller billede
         try {
             Path path = Path.of(document.getFilePath());
-            ctx.contentType(Files.probeContentType(path));
+            // probeContentType kan give null (computeren kender ikke filtypen) – så bruges en standardtype ud fra endelsen
+            String contentType = Files.probeContentType(path);
+            if (contentType == null) {
+                String name = path.toString().toLowerCase();
+                if (name.endsWith(".pdf")) {
+                    contentType = "application/pdf";
+                } else if (name.endsWith(".png")) {
+                    contentType = "image/png";
+                } else {
+                    contentType = "image/jpeg";   // .jpg / .jpeg – de eneste andre typer, upload tillader
+                }
+            }
+            ctx.contentType(contentType);
             ctx.result(Files.readAllBytes(path));
         } catch (IOException e) {
             ctx.status(404);   // rækken findes i databasen, men filen er væk
@@ -87,6 +100,7 @@ public class DocumentController {
             return;
         }
         ctx.attribute("documents", documentService.getDocuments(patientId));  // requestscope -> ${documents}
+        ctx.attribute("documentTypes", DocumentType.values());   // dropdownen bygges af enum'en
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
@@ -106,7 +120,7 @@ public class DocumentController {
         UploadedFile file = ctx.uploadedFile("file");  // null, hvis der ikke blev valgt en fil
 
         if (file == null) {
-            ctx.redirect("/dokumenter?fejl=felter");
+            ctx.redirect("/dokumenter?fejl=fil");
             return;
         }
 
@@ -114,7 +128,7 @@ public class DocumentController {
 
         switch (result) {
             case OK -> ctx.redirect("/dokumenter?gemt=1");
-            case INVALID_INPUT -> ctx.redirect("/dokumenter?fejl=felter");
+            case INVALID_INPUT -> ctx.redirect("/dokumenter?fejl=fil");
             default -> ctx.redirect("/dokumenter?fejl=ukendt");
         }
     }

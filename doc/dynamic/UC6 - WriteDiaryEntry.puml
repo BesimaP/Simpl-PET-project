@@ -61,12 +61,12 @@ u -> v : Clicks "Slet" on a note
 v -> j : POST /dagbog/slet (id)
 j -> c : deleteEntry(ctx)
 c -> s : deleteEntry(patientId, entryId)
-s -> s : getEntries(patientId) (SELECT as above)
-alt Entry belongs to the patient
-  s -> dm : delete(entryId)
-  dm -> cp : getConnection()
-  cp --> dm : Connection
-  dm -> db : DELETE FROM diary_entry WHERE id = ?
+s -> dm : delete(entryId, patientId)
+dm -> cp : getConnection()
+cp --> dm : Connection
+dm -> db : DELETE FROM diary_entry WHERE id = ? AND patient_id = ?
+dm --> s : true if a row was deleted
+alt true (entry belonged to the patient)
   s --> c : OK
   c --> j : ctx.redirect("/dagbog?gemt=slettet")
 else Not found / not hers, or id not a number

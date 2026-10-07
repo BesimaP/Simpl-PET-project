@@ -46,27 +46,33 @@ v -> j : POST /dokumenter (multipart: title, documentType, file)
 j -> c : uploadDocument(ctx)
 c -> c : ctx.uploadedFile("file")
 alt No file chosen
-  c --> j : ctx.redirect("/dokumenter?fejl=felter")
+  c --> j : ctx.redirect("/dokumenter?fejl=fil")
 else File chosen
   c -> s : uploadDocument(patientId, title, type,\nfilename, content, size)
   alt Title/type blank, unknown type, not .pdf/.jpg/.jpeg/.png or > 10 MB
     s --> c : INVALID_INPUT
-    c --> j : ctx.redirect("/dokumenter?fejl=felter")
+    c --> j : ctx.redirect("/dokumenter?fejl=fil")
   else All OK
-    s -> fs : Files.copy(content, uploads/<UUID>-<filename>)
+    s -> fs : Files.copy(content, uploads/<UUID>.<extension>)
+    note right of fs : IOException → throw FileStorageException\n(ExceptionConfig shows the error page)
     fs --> s : file saved on disk
     s -> dm : save(new Document(0, patientId, LocalDate.now(), title, type, filePath))
     dm -> cp : getConnection()
     cp --> dm : Connection
     dm -> db : INSERT INTO document (patient_id, upload_date, title, document_type_id, file_path)\nVALUES (?, ?, ?, (SELECT id FROM document_type WHERE name = ?), ?)
     note right of db : Only the path is stored,\nnot the file itself
+    alt INSERT fails (DatabaseException)
+      s -> fs : Files.deleteIfExists(file) – no file without a row
+      s --> c : rethrow DatabaseException → error page
+    else Row saved
     db --> dm : generated id
     dm --> s : id
     s --> c : OK
     c --> j : ctx.redirect("/dokumenter?gemt=1")
+    end
   end
 end
-j --> u : Updated list with "Gemt ✓" or "Udfyld alle felter ..."
+j --> u : Updated list with "Gemt ✓" or "Udfyld titel og type, og vælg en fil ..."
 
 == Open document ==
 u -> v : Clicks "Åbn" on a document
@@ -84,6 +90,7 @@ else Document found
     c --> j : ctx.status(404)
   else File read
     fs --> c : byte[]
+    c -> c : Files.probeContentType(path)\n(null → type from extension: .pdf / .png / else image/jpeg)
     c --> j : ctx.contentType(...), ctx.result(bytes)
     j --> u : Browser shows the PDF / image
   end
@@ -103,11 +110,12 @@ else id OK
     s --> c : NOT_FOUND
     c --> j : ctx.redirect("/dokumenter?fejl=ukendt")
   else Found
-    s -> fs : Files.deleteIfExists(Path.of(filePath))
-    s -> dm : delete(id)
+    s -> dm : delete(id, patientId)
     dm -> cp : getConnection()
     cp --> dm : Connection
-    dm -> db : DELETE FROM document WHERE id = ?
+    dm -> db : DELETE FROM document WHERE id = ? AND patient_id = ?
+    s -> fs : Files.deleteIfExists(Path.of(filePath))
+    note right of fs : Row first, then file: if the DB fails,\nboth row and file still exist
     s --> c : OK
     c --> j : ctx.redirect("/dokumenter?gemt=slettet")
   end

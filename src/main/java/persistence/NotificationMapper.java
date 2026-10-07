@@ -86,14 +86,15 @@ public class NotificationMapper {
         }
     }
 
-    // sætter is_read = TRUE på én påmindelse (UC7: markér som læst)
-    public void markRead(int id) {
-        String sql = "UPDATE notification SET is_read = TRUE WHERE id = ?";
+    // sætter is_read = TRUE på én påmindelse – kun hvis den er patientens egen (AND patient_id = ?). true = opdateret (UC7)
+    public boolean markRead(int id, int patientId) {
+        String sql = "UPDATE notification SET is_read = TRUE WHERE id = ? AND patient_id = ?";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, id);
-            statement.executeUpdate();
+            statement.setInt(2, patientId);
+            return statement.executeUpdate() > 0;   // antal rækker, der blev ramt: 0 = ikke fundet / ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not mark notification " + id + " as read", e);
         }
