@@ -26,7 +26,7 @@ public class NotificationMapper {
         String sql = "INSERT INTO notification (patient_id, date_time, notification_type_id, title, message, is_read) "
                 + "VALUES (?, ?, (SELECT id FROM notification_type WHERE name = ?), ?, ?, ?)";
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)){
+             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             statement.setInt(1, notification.getPatientId());
             statement.setObject(2, notification.getDateTime());          // LocalDateTime -> tekst (PostgreSQL: setTimestamp)
@@ -56,7 +56,7 @@ public class NotificationMapper {
                 + "ORDER BY notification.date_time DESC";
         List<Notification> notifications = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, patientId);
             ResultSet rs = statement.executeQuery();
@@ -75,7 +75,7 @@ public class NotificationMapper {
     public int countUnread(int patientId) {
         String sql = "SELECT COUNT(*) FROM notification WHERE patient_id = ? AND is_read = FALSE";
         try (Connection connection = connectionPool.getConnection();
-        PreparedStatement statement = connection.prepareStatement(sql)){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, patientId);
             ResultSet rs = statement.executeQuery();
@@ -90,7 +90,7 @@ public class NotificationMapper {
     public void markRead(int id) {
         String sql = "UPDATE notification SET is_read = TRUE WHERE id = ?";
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, id);
             statement.executeUpdate();
@@ -103,7 +103,7 @@ public class NotificationMapper {
     public void markAllRead(int patientId) {
         String sql = "UPDATE notification SET is_read = TRUE WHERE patient_id = ?";
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, patientId);
             statement.executeUpdate();
@@ -116,7 +116,7 @@ public class NotificationMapper {
     public void delete(int id) {
         String sql = "DELETE FROM notification WHERE id = ?";
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, id);
             statement.executeUpdate();

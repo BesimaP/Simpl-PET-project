@@ -4,35 +4,81 @@
 title UC8: StartRound
 
 actor "Patient" as u
-participant "NewRoundView" as v
-participant "RoundController" as c
-participant "Round" as m
-database "SQLite" as db
+participant "start-runde.html" as v
+participant "Javalin" as j
+participant "DashboardController" as c
+participant "RoundService" as s
+participant "DashboardService" as ds
+participant "RoundMapper" as rm
+participant "TimelineService" as ts
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Clicks Start Round
-v --> u : Shows form: roundNumber, treatmentType (IVF/ICSI/IUI/FET), startDate = today
+u -> j : Clicks "Start runde" on dashboard (GET /start-runde)
+j -> c : showStartRound(ctx)
+c -> c : ctx.attribute("gemt"/"fejl", ctx.queryParam(...))
+c --> j : ctx.render("start-runde")
+j --> v : start-runde.html (Thymeleaf)
+v -> v : start-runde.js: setTodayIn(startDate)
+u -> v : Selects "Type behandling" (IVF/ICSI/IUI/FET), "Startdato", clicks "Start runde"
+v -> j : POST /start-runde (type, startDate)
+j -> c : startRound(ctx)
+note right of c : patientId == null (not logged in)\n→ ctx.redirect("/login")
+c -> c : ctx.formParam("type"), ctx.formParam("startDate")
+c -> s : startRound(patientId, type, startDate)
 
-u -> v : Fills in roundNumber, selects treatmentType
-u -> v : Clicks Start Round
-v -> c : handleStartRound(journeyId, roundNumber, treatmentType)
-
-alt Round number is empty
-  c --> v : showError()
-  v --> u : "Round number is required"
-else Round IN_PROGRESS already exists
-  c -> db : SELECT id FROM round WHERE journey_id = ? AND status = 'IN_PROGRESS'
-  db --> c : ResultSet (found)
-  c --> v : showError()
-  v --> u : "Afslut den igangværende runde først"
-else All OK
-  c -> m : new Round(journeyId, roundNumber, treatmentType, today, IN_PROGRESS)
-  c -> db : INSERT INTO round (journey_id, round_number, treatment_type, start_date, status) VALUES (?, ?, ?, ?, 'IN_PROGRESS')
-  db --> c : OK (id)
-  c -> db : INSERT INTO event (round_id, date_time, type, description) VALUES (?, now, 'STIMULATION_START', 'Runde startet')
-  db --> c : OK
-  c -> c : Session.setRound(round)
-  c --> v : showDashboard()
-  v --> u : Dashboard shows new round
+alt type or startDate empty
+  s --> c : INVALID_INPUT
+  c --> j : ctx.redirect("/start-runde?fejl=felter")
+  j --> u : start-runde.html with "Udfyld alle felter …"
+else No active journey
+  s -> ds : findActiveJourney(patientId) (FertilityJourneyMapper)
+  ds --> s : throw NoActiveJourneyException
+  s --> c : NO_ACTIVE_JOURNEY
+  c --> j : ctx.redirect("/dashboard")
+  j --> u : Dashboard shows "start dit forløb"
+else Journey found
+  s -> ds : findActiveJourney(patientId) (FertilityJourneyMapper)
+  ds --> s : FertilityJourney
+  s -> rm : findActiveByJourney(journeyId)
+  rm -> cp : getConnection()
+  cp --> rm : Connection
+  rm -> db : SELECT round.*, treatment_type.name, result.name FROM round JOIN treatment_type\nLEFT JOIN result WHERE round.fertility_journey_id = ? AND round.end_date IS NULL
+  db --> rm : ResultSet
+  rm -> rm : mapRow(rs)
+  rm --> s : Round (or null)
+  note right of rm : Connection is returned to the pool\nautomatically (try-with-resources)
+  alt Round already in progress
+    s --> c : ROUND_IN_PROGRESS
+    c --> j : ctx.redirect("/dashboard?fejl=runde-i-gang")
+    j --> u : "Der er allerede en runde i gang."
+  else No round in progress
+    s -> rm : findByJourney(journeyId)
+    rm -> cp : getConnection()
+    cp --> rm : Connection
+    rm -> db : SELECT round.*, ... WHERE round.fertility_journey_id = ? ORDER BY round.round_number
+    db --> rm : ResultSet
+    rm -> rm : mapRow(rs)
+    rm --> s : List<Round>
+    s -> s : roundNumber = size() + 1\nTreatmentType.valueOf(type), LocalDate.parse(startDate)
+    alt valueOf/parse fails
+      s --> c : INVALID_INPUT
+      c --> j : ctx.redirect("/start-runde?fejl=felter")
+      j --> u : start-runde.html with "Udfyld alle felter …"
+    else OK
+      s -> rm : save(new Round(0, journeyId, roundNumber, treatmentType, start, null, IN_PROGRESS, null))
+      rm -> cp : getConnection()
+      cp --> rm : Connection
+      rm -> db : INSERT INTO round (fertility_journey_id, round_number, treatment_type_id, start_date)\nVALUES (?, ?, (SELECT id FROM treatment_type WHERE name = ?), ?)
+      db --> rm : generated id
+      rm --> s : id (round.setId)
+      s -> ts : addEvent(roundId, start.atStartOfDay(), STIMULATION_START, treatmentType.name())
+      ts -> db : INSERT INTO event ... (via EventMapper.save)
+      s --> c : OK
+      c --> j : ctx.redirect("/dashboard?gemt=runde")
+      j --> u : Dashboard with new round and "Runden er startet ✓"
+    end
+  end
 end
 
 @enduml

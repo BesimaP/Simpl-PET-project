@@ -28,7 +28,7 @@ public class HormoneLogMapper {
         // id er ikke med – databasen laver det selv. ? = pladsholdere, der fyldes ud nedenfor
         String sql = "INSERT INTO hormone_log (round_id, date_time, hormone_type_id, value, unit) VALUES (?, ?, (SELECT id FROM hormone_type WHERE name = ?), ?, ?)";
         try (Connection connection = connectionPool.getConnection();
-                PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             // fyld de fem ? ud – nummeret er rækkefølgen i sql-strengen (1 = første ?)
             statement.setInt(1, log.getRoundId());
@@ -62,7 +62,7 @@ public class HormoneLogMapper {
                    + "ORDER BY hormone_log.date_time DESC";
         List<HormoneLog> logs = new ArrayList<>(); // tom liste, som vi fylder op
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, roundId);
 
@@ -84,7 +84,7 @@ public class HormoneLogMapper {
     public void delete(int id) {
         String sql = "DELETE FROM hormone_log WHERE id = ?";
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {

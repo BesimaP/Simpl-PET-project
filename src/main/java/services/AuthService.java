@@ -12,14 +12,14 @@ import java.time.format.DateTimeParseException;
 
 // Forretningslogik for login og opret profil. Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 public class AuthService {
-    private PatientMapper patientMapper;          // lomme 1: arkivaren (laves én gang i konstruktøren)
-    private ConnectionPool connectionPool;  // lomme 2: nøgleringen (gives videre til DashboardService)
+    private PatientMapper patientMapper;          // attribut 1: arkivaren (laves én gang i konstruktøren)
+    private DashboardService dashboardService;    // attribut 2: bruges til at oprette forløbet ved "opret profil"
 
     // Konstruktøren: den, der laver en AuthService, SKAL give nøgleringen med.
     // Kaldes fra LoginController: new AuthService(connectionPool)
     public AuthService(ConnectionPool connectionPool) {
-        this.patientMapper = new PatientMapper(connectionPool); // lav arkivaren, giv ham ringen, læg ham i lommen
-        this.connectionPool = connectionPool;             // læg også selve ringen i lommen
+        this.patientMapper = new PatientMapper(connectionPool);       // lav arkivaren, giv ham ringen, gem ham i attributten
+        this.dashboardService = new DashboardService(connectionPool); // ringen gives videre til DashboardService
     }
 
     // Login: giver patientens id tilbage (det er det, sessionen skal huske) – ellers kastes UserNotFoundException
@@ -75,7 +75,7 @@ public class AuthService {
 
         // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
         if (wantsJourney) {
-            new DashboardService(connectionPool).createJourney(patientId, journeyStart); // ringen gives videre
+            dashboardService.createJourney(patientId, journeyStart);
         }
 
         return ServiceResult.OK;

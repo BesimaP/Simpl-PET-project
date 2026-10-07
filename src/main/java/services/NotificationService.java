@@ -17,9 +17,11 @@ import java.util.Map;
 // Påmindelser hænger direkte på patienten – ingen forløb/runde at slå op.
 public class NotificationService {
     private NotificationMapper notificationMapper; // arkivaren for påmindelser
+    private MedicationService medicationService;   // til at finde dagens doser (påmindelser om medicin)
 
     public NotificationService(ConnectionPool connectionPool) {
         this.notificationMapper = new NotificationMapper(connectionPool);
+        this.medicationService = new MedicationService(connectionPool);
     }
 
     // Henter alle patientens påmindelser, nyeste først – til notifikationer.html
@@ -36,7 +38,6 @@ public class NotificationService {
     // Samme påmindelse oprettes ikke to gange: hvis der allerede findes en fra i dag med samme besked, springes den over.
     // Returnerer antal nye påmindelser – praktisk i tests
     public int createMedicationReminders(int patientId) {
-        MedicationService medicationService = new MedicationService();
         Map<Integer, String> names = medicationService.getMedicationNames();   // id -> "Gonal-F"
         List<Notification> existing = getNotifications(patientId);
 
@@ -77,9 +78,15 @@ public class NotificationService {
         return ServiceResult.OK;
     }
 
-    // Markér én påmindelse som læst (UC7) – bruges af POST /notifikationer/laest, når templates er på
-    public ServiceResult markRead(int notificationId) {
-        notificationMapper.markRead(notificationId);
-        return ServiceResult.OK;
+    // Markér én påmindelse som læst (UC7) – kun patientens egen (id'et skal findes i hendes liste),
+    // så man ikke kan ændre andres ved at rette id'et i det skjulte felt. Svar: OK · NOT_FOUND
+    public ServiceResult markRead(int patientId, int notificationId) {
+        for (Notification n : getNotifications(patientId)) {
+            if (n.getId() == notificationId) {
+                notificationMapper.markRead(notificationId);
+                return ServiceResult.OK;
+            }
+        }
+        return ServiceResult.NOT_FOUND;
     }
 }

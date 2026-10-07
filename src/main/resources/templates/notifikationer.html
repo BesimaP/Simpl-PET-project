@@ -94,8 +94,12 @@
           <strong th:text="${n.title}">Scanning i morgen</strong>
           <span th:text="${n.message} + ' · ' + ${#temporals.format(n.dateTime, 'd. MMM HH:mm')}">5. september kl. 9.30 · Vitanova</span>
         </div>
-        <!-- th:unless: "Ny"-pillen vises kun på ulæste -->
+        <!-- th:unless: "Ny"-pillen og knappen vises kun på ulæste. Lille formular -> POST /notifikationer/laest med id i et skjult felt -->
         <span class="pill" th:unless="${n.read}">Ny</span>
+        <form th:unless="${n.read}" action="/notifikationer/laest" method="post">
+          <input type="hidden" name="id" th:value="${n.id}">
+          <button type="submit" class="muted-link">Markér som læst</button>
+        </form>
       </li>
     </ul>
     <p class="muted" th:if="${notifications.isEmpty()}">Ingen notifikationer.</p>

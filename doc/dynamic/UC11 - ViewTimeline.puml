@@ -4,40 +4,50 @@
 title UC11: ViewTimeline
 
 actor "Patient" as u
-participant "TimelineView" as v
+participant "tidslinje.html" as v
+participant "Javalin" as j
 participant "TimelineController" as c
-participant "Event" as m
-database "SQLite" as db
+participant "TimelineService" as s
+participant "RoundService" as rs
+participant "ProfileService" as ps
+participant "EventMapper" as em
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens timeline screen
-v -> c : loadEvents(roundId)
-c -> db : SELECT * FROM event WHERE round_id = ? ORDER BY date_time ASC
-db --> c : ResultSet
+u -> j : GET /tidslinje (clicks "Tidslinje")
+j -> c : showTimeline(ctx)
+note right of c : patientId == null (not logged in)\n→ ctx.redirect("/login")
+c -> s : getEvents(patientId)
+s -> rs : new RoundService(connectionPool).findActiveRound(patientId)
+note right of rs : findActiveJourney(patientId) (DashboardService)\n+ findActiveByJourney(journeyId) (RoundMapper)
 
-alt No events found
-  c --> v : showEmptyMessage()
-  v --> u : "Timeline is empty"
+alt No active journey or no active round
+  rs --> s : throw NoActiveJourneyException / NoActiveRoundException
+  s --> c : empty list
+else Round in progress
+  rs --> s : Round
+  s -> em : findByRound(roundId)
+  em -> cp : getConnection()
+  cp --> em : Connection
+  em -> db : SELECT event.*, event_type.name AS event_type FROM event\nJOIN event_type ON event.event_type_id = event_type.id\nWHERE event.round_id = ? ORDER BY event.date_time
+  db --> em : ResultSet
+  em -> em : mapRow(rs)
+  em --> s : List<Event>
+  note right of em : Connection is returned to the pool\nautomatically (try-with-resources)
+  s --> c : List<Event> (oldest first)
+end
+
+c -> c : ctx.attribute("events", ...), ctx.attribute("today", LocalDate.now())
+c -> ps : getPatient(patientId) (PatientMapper)
+ps --> c : Patient (initial in avatar)
+c --> j : ctx.render("tidslinje")
+
+alt events.isEmpty()
+  j --> u : tidslinje.html with "Ingen begivenheder i denne runde endnu."
 else Events found
-  c --> v : showEvents(list)
-  v --> u : Shows events chronologically
+  j --> u : tidslinje.html with events in chronological order\n(compared with today: done or upcoming)
 end
 
-u -> v : Clicks Tilføj Hændelse, fills in dateTime, eventType, description
-u -> v : Clicks Gem
-v -> c : handleAddEvent(dateTime, eventType, description)
-
-alt Date or type missing
-  c --> v : showError()
-  v --> u : "Date and type are required"
-else All OK
-  c -> m : new Event(dateTime, eventType, description, roundId)
-  c -> db : INSERT INTO event (round_id, date_time, type, description) VALUES (?, ?, ?, ?)
-  db --> c : OK
-  c --> v : insertSorted(event)
-  v --> u : Timeline updated without reload
-end
-
-u -> v : Clicks an event
-v --> u : Shows event details
+note over u, s : Events are created by the system only: RoundService.startRound → addEvent(STIMULATION_START) (UC8)\nand AppointmentService.addAppointment → addEvent(EGG_RETRIEVAL / EMBRYO_TRANSFER / PREGNANCY_TEST) (UC5)
 
 @enduml

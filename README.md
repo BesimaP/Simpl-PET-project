@@ -28,12 +28,13 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 - **Tidslinje** — kronologisk overblik over trin i en runde
 - **Notifikationer** — påmindelser om dagens medicin
 
-## Status (september 2026)
+## Status (oktober 2026)
 
-- Frontend: alle 15 sider er bygget i HTML/CSS med lidt JavaScript (dato, enheder, tællere, fejlbeskeder)
-- Database: `schema.sql` med 12 tabeller, alle entity- og DAO-klasser er skrevet
-- Backend: Javalin kører og serverer siderne; login, opret profil (evt. med forløb), forløb/runde, hormoner, dagbog, diagnoser, medicin, aftaler og min profil gemmer i databasen via controller → service → DAO
-- Næste: dokumenter (upload), session (hvem er logget ind), Thymeleaf-templates til at vise data, skift fra SQLite til PostgreSQL
+- Frontend: alle 15 sider er bygget i HTML/CSS; sider med data er Thymeleaf-templates
+- Database: PostgreSQL med 20 tabeller (inkl. 8 typetabeller), kørt i pgAdmin
+- Backend: alle sider virker mod PostgreSQL via controller → service → mapper, med én fælles `ConnectionPool` (HikariCP), der gives videre gennem konstruktørerne
+- Kodeord gemmes som BCrypt-hash
+- Næste: integrationstests mod en testdatabase i PostgreSQL
 
 ## Tech stack
 
@@ -41,7 +42,9 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 - **Javalin 7** — webserver/backend (ruter, formularer, statiske filer)
 - **Thymeleaf** — templates, der viser data fra databasen (`src/main/resources/templates`)
 - **HTML / CSS / JavaScript** — frontend i `src/main/resources/public`
-- **SQLite** (via `sqlite-jdbc`) — lokal database *(skiftes til PostgreSQL senere på semestret)*
+- **PostgreSQL** (via `postgresql`-driveren) — database, kører i Docker og administreres i pgAdmin
+- **HikariCP** — connection pool (`ConnectionPool` i `persistence`)
+- **jBCrypt** — hashing af kodeord
 - **Maven** — byggeværktøj og afhængighedsstyring (standardlayout som i undervisningen)
 - **JUnit 5** — unit tests
 
@@ -51,18 +54,18 @@ Projektet følger **MVC** (Model-View-Controller) med *separation of concerns*: 
 
 ```
 src/main/java/
-├── Main.java              # Starter Javalin (port 7070), Thymeleaf og melder controllerne til
-├── configuration/         # ThymeleafConfig: hvor skabelonerne ligger
+├── Main.java              # Laver ConnectionPool, starter Javalin (port 7070) og giver poolen til RouteConfig
+├── configuration/         # RouteConfig (laver controllerne), ThymeleafConfig, ExceptionConfig
 ├── controllers/           # Javalin-ruter: læser formularen, kalder service, vælger side (én per side)
-├── services/              # Forretningslogik: regler og DAO-kald, uden Javalin (én per emne) – svarer med ServiceResult
-├── entities/              # Model: dataklasser, én per tabel i schema.sql
-├── dao/                   # Model: databaseadgang (én DAO per tabel) + DatabaseConnection/-Initializer
-└── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …) – matcher CHECK i schema.sql
+├── services/              # Forretningslogik: regler og mapper-kald, uden Javalin (én per emne) – svarer med ServiceResult
+├── entities/              # Model: dataklasser, én per tabel
+├── persistence/           # ConnectionPool + mappers: al SQL (én mapper per tabel)
+├── exceptions/            # DatabaseException, NoActiveJourneyException, NoActiveRoundException
+└── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …) – matcher navnene i typetabellerne
 
 src/main/resources/
 ├── public/                # View: statiske sider (login.html, opretprofil.html …), css/, js/, img/
-├── templates/             # Thymeleaf-skabeloner til sider med data fra databasen
-└── data/schema.sql        # Databasens tabeller
+└── templates/             # Thymeleaf-skabeloner til sider med data fra databasen
 
 src/test/java/             # JUnit-tests af services
 ```
@@ -73,9 +76,9 @@ Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST
 
 ## Database
 
-SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første gang applikationen køres. Strukturen er defineret i `src/main/resources/data/schema.sql` og køres af `DatabaseInitializer` ved opstart. `simpl.db` er ikke i git.
+Databasen er **PostgreSQL** (databasen hedder `Simpl`). Schema og testdata ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.). ERD: `doc/database/ERD.mmd`.
 
-**Tabeller (12):**
+**Tabeller (12 + 8 typetabeller):**
 - `patient` — login og persondata i én tabel (brugernavn, kodeord-hash, navn, fødselsdato)
 - `diagnosis` — patientens diagnoser
 - `fertility_journey` — patientens overordnede forløb (kun ét aktivt ad gangen)
@@ -89,15 +92,9 @@ SQLite-databasen (`simpl.db`) oprettes automatisk i projektets rodmappe, første
 - `document` — patientens dokumenter, fx henvisning og blodprøvesvar (kun stien og upload-datoen gemmes; hører til patienten, så de kan uploades før første runde)
 - `notification` — påmindelser til patienten
 
-Gyldige værdier (fx hormontyper, aftaletyper) er låst med `CHECK` i `schema.sql` og matcher enum-klasserne i `enums` og `value` i HTML-dropdowns.
+**Hver type har sin egen tabel** (20 tabeller i alt): de 12 ovenfor + `journey_status`, `treatment_type`, `result`, `appointment_type`, `event_type`, `hormone_type`, `document_type` og `notification_type` (hver med `id` og `name`). Andre tabeller peger på dem med fx `treatment_type_id`, i stedet for `CHECK`. `round` har ingen status-kolonne: en runde er i gang, så længe `end_date` er tom.
 
-### PostgreSQL (pgAdmin)
-
-Den nye version af databasen ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.).
-
-Her har **hver type sin egen tabel** (20 tabeller i alt): de 12 ovenfor + `journey_status`, `treatment_type`, `result`, `appointment_type`, `event_type`, `hormone_type`, `document_type` og `notification_type` (hver med `id` og `name`). Andre tabeller peger på dem med fx `treatment_type_id`, i stedet for `CHECK`. `round` har ingen status-kolonne: en runde er i gang, så længe `end_date` er tom. ERD: `doc/database/ERD.mmd`.
-
-Appen kører indtil videre på SQLite (`schema.sql`); Java-koden flyttes over til PostgreSQL og typetabellerne senere.
+Navnene i typetabellerne matcher enum-klasserne i `enums` og `value` i HTML-dropdowns. Mapperne gemmer ordet (fx `"FSH"`) og lader databasen slå id'et op med `(SELECT id FROM hormone_type WHERE name = ?)`; når der læses, hentes ordet med en `JOIN`.
 
 ## Kom i gang
 
@@ -105,25 +102,24 @@ Appen kører indtil videre på SQLite (`schema.sql`); Java-koden flyttes over ti
 
 - Java 21 (JDK)
 - Maven 3.x
+- PostgreSQL (fx i Docker) på `localhost:5432` med brugeren `postgres` / `postgres` og en database, der hedder `Simpl`
 
 ### Kør projektet
 
-1. Åbn projektet i IntelliJ og lad Maven hente afhængighederne (Javalin, slf4j, sqlite-jdbc).
-2. Kør `Main`. Konsollen skriver, at Javalin lytter på port 7070.
-3. Åbn `http://localhost:7070` i browseren – du lander på login-siden.
-
-Databasen oprettes automatisk. Der er ingen brugere fra start; opret en via "Opret profil" (når ruten er lavet) eller i terminalen:
-`sqlite3 simpl.db "INSERT INTO patient (username, password_hash, first_name, last_name, date_of_birth) VALUES ('test','1234','Test','Testesen','1990-01-01');"`
+1. Kør `doc/database/schema_postgres.sql` og derefter `data_postgres.sql` i pgAdmin på databasen `Simpl`.
+2. Åbn projektet i IntelliJ og lad Maven hente afhængighederne (Javalin, Thymeleaf, HikariCP, postgresql, jBCrypt).
+3. Kør `Main`. Konsollen skriver, at Javalin lytter på port 7070.
+4. Åbn `http://localhost:7070` i browseren – du lander på login-siden. Opret en bruger via "Opret profil".
 
 ## Dokumentation
 
 Dokumentationen findes i `doc/`-mappen:
 
 - `doc/dynamic/` — idébeskrivelse, VPC, krav, entiteter, user stories med acceptkriterier, tasks, use case-beskrivelser, use case-diagram (`Usecase.puml`), navigationsdiagram (`Navigation.puml`) og sekvensdiagrammer for UC1–UC14 (`UC1 - LogIn.puml` … `UC14 - EndRound.puml`)
-- `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` model/enums, `Klassediagram4b` DAO-laget) og gruppekontrakt
+- `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` model/enums, `Klassediagram4b` persistence-laget med ConnectionPool og mappers) og gruppekontrakt
 - `doc/database/` — ERD (`ERD.mmd`/`ERD.png`), PostgreSQL-schema (`schema_postgres.sql`) og testdata (`data_postgres.sql`)
 
-Sekvensdiagrammer og klassediagrammer er tegnet før backend og opdateres, når controllerne er færdige.
+Sekvensdiagrammerne (UC1–UC14) er opdateret i oktober 2026, så de følger koden: side → Javalin → Controller → Service → Mapper → ConnectionPool → PostgreSQL.
 
 Alle diagrammer er skrevet i PlantUML og gemt som PNG ved siden af kildefilen, så de kan ses uden at klone projektet.
 

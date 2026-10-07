@@ -4,26 +4,47 @@
 title UC13: ViewRoundHistory
 
 actor "Patient" as u
-participant "RoundHistoryView" as v
-participant "RoundHistoryController" as c
-participant "Round" as m
-database "SQLite" as db
+participant "rundehistorik.html" as v
+participant "Javalin" as j
+participant "DashboardController" as c
+participant "RoundService" as s
+participant "DashboardService" as ds
+participant "RoundMapper" as rm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens round history
-v -> c : loadRounds(journeyId)
-c -> db : SELECT * FROM round WHERE journey_id = ? ORDER BY round_number DESC
-db --> c : ResultSet
+u -> j : GET /rundehistorik (clicks "Rundehistorik")
+j -> c : showRounds(ctx)
+note right of c : patientId == null (not logged in)\n→ ctx.redirect("/login")
+c -> s : getRounds(patientId)
+s -> ds : findActiveJourney(patientId) (FertilityJourneyMapper)
 
-alt No rounds found
-  c --> v : showEmptyMessage()
-  v --> u : "No round history yet"
+alt No active journey
+  ds --> s : throw NoActiveJourneyException
+  s --> c : empty list
+else Journey found
+  ds --> s : FertilityJourney
+  s -> rm : findByJourney(journeyId)
+  rm -> cp : getConnection()
+  cp --> rm : Connection
+  rm -> db : SELECT round.*, treatment_type.name AS treatment_type, result.name AS result FROM round\nJOIN treatment_type ON round.treatment_type_id = treatment_type.id\nLEFT JOIN result ON round.result_id = result.id\nWHERE round.fertility_journey_id = ? ORDER BY round.round_number
+  db --> rm : ResultSet
+  rm -> rm : mapRow(rs)
+  note right of rm : status = end_date == null ? IN_PROGRESS : COMPLETED
+  rm --> s : List<Round> (oldest first)
+  note right of rm : Connection is returned to the pool\nautomatically (try-with-resources)
+  s --> c : List<Round>
+end
+
+c -> c : ctx.attribute("rounds", ...), "gemt", "fejl"
+c --> j : ctx.render("rundehistorik")
+
+alt rounds.isEmpty()
+  j --> u : rundehistorik.html with "Ingen runder endnu."
 else Rounds found
-  c --> v : showRounds(list)
-  v --> u : Shows all rounds, newest first
-  u -> v : Selects a round
-  v -> c : handleSelectRound(roundId)
-  c --> v : showDetails(round)
-  v --> u : Shows roundNumber, treatmentType, startDate, endDate, status, result
+  j --> u : One row per round: round number, treatment type,\nstart – end date, result, "Aktiv"/"Afsluttet"
+  u -> v : Clicks "→" on a round
+  v -> j : GET /tidslinje (UC11)
 end
 
 @enduml

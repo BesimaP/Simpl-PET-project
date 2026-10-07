@@ -4,34 +4,49 @@
 title UC3: CreateJourney
 
 actor "Patient" as u
-participant "CreateJourneyView" as v
-participant "JourneyController" as c
-participant "FertilityJourney" as m
-database "SQLite" as db
+participant "dashboard.html" as v
+participant "Javalin" as j
+participant "DashboardController" as c
+participant "DashboardService" as s
+participant "FertilityJourneyMapper" as fm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Shown after login/profile creation
-v --> u : Shows "Start nyt forløb"
-
-u -> v : Clicks Start nyt forløb
-v -> c : handleCreateJourney(patientId)
-c -> db : SELECT id FROM fertility_journey WHERE patient_id = ? AND status = 'ACTIVE'
-db --> c : ResultSet
-
-alt Active journey already exists
-  c --> v : showError()
-  v --> u : "Afslut dit aktive forløb først"
-else No active journey
-  c -> m : new FertilityJourney(patientId, today, ACTIVE)
-  c -> db : INSERT INTO fertility_journey (patient_id, start_date, status) VALUES (?, ?, 'ACTIVE')
-  db --> c : OK (id)
-  c -> c : Session.setJourney(journey)
-  c --> v : showDashboard()
-  v --> u : Shows dashboard
-end
-
-alt Database error
-  c --> v : showError()
-  v --> u : "Could not create journey"
+note over u, v : GET /dashboard finds no active journey ->\ndashboard.html shows "Du har ikke et forløb endnu"
+u -> v : Picks start date, clicks "Start dit forløb"
+v -> j : POST /opret-forloeb (startDate)
+j -> c : createJourney(ctx)
+alt No patientId in session
+  c --> j : ctx.redirect("/login")
+else Logged in
+  c -> c : ctx.formParam("startDate")
+  c -> s : createJourney(patientId, startDate)
+  alt startDate empty or not a valid date
+    s --> c : INVALID_INPUT
+    c --> j : ctx.redirect("/dashboard?fejl=dato")
+    j --> u : Dashboard with "Datoen er ikke gyldig."
+  else Valid date
+    s -> fm : findActiveByPatient(patientId)
+    fm -> cp : getConnection()
+    cp --> fm : Connection
+    fm -> db : SELECT fertility_journey.* FROM fertility_journey\nJOIN journey_status ON journey_status.id = fertility_journey.journey_status_id\nWHERE fertility_journey.patient_id = ? AND journey_status.name = 'ACTIVE'
+    db --> fm : ResultSet
+    fm --> s : FertilityJourney (or null)
+    note right of fm : Connection is returned to the pool\nautomatically (try-with-resources)
+    alt Active journey already exists
+      s --> c : ALREADY_EXISTS
+    else No active journey
+      s -> fm : save(new FertilityJourney(0, patientId, start, ACTIVE))
+      fm -> cp : getConnection()
+      cp --> fm : Connection
+      fm -> db : INSERT INTO fertility_journey (patient_id, start_date, journey_status_id)\nVALUES (?, ?, (SELECT id FROM journey_status WHERE name = ?))
+      db --> fm : generated id
+      fm --> s : journeyId
+      s --> c : OK
+    end
+    c --> j : ctx.redirect("/dashboard?gemt=forloeb")\n(both OK and ALREADY_EXISTS)
+    j --> u : Dashboard with "Dit forløb er oprettet" and the active journey
+  end
 end
 
 @enduml

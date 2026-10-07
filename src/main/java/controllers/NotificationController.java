@@ -45,14 +45,14 @@ public class NotificationController {
         ctx.redirect(from != null && from.contains("/dashboard") ? "/dashboard" : "/notifikationer");
     }
 
-    // POST /notifikationer/laest – markér én som læst (id i et skjult felt). Bruges ikke i UI'et lige nu, men ruten findes
+    // POST /notifikationer/laest – "Markér som læst" på én notifikation (id i et skjult felt)
     private void markRead(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        notificationService.markRead(Integer.parseInt(ctx.formParam("id")));
+        notificationService.markRead(patientId, Integer.parseInt(ctx.formParam("id")));   // service tjekker, at den er patientens egen
         ctx.redirect("/notifikationer");
     }
 }

@@ -4,31 +4,82 @@
 title UC9: LogHormoneValue
 
 actor "Patient" as u
-participant "HormoneLogView" as v
-participant "HormoneLogController" as c
-participant "HormoneLog" as m
-database "SQLite" as db
+participant "hormoner.html" as v
+participant "Javalin" as j
+participant "HormoneController" as c
+participant "HormoneService" as s
+participant "RoundService" as rs
+participant "HormoneLogMapper" as hm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens hormone screen
-v -> c : loadValues(roundId)
-c -> db : SELECT * FROM hormone_log WHERE round_id = ? ORDER BY date_time DESC
-db --> c : ResultSet
-c --> v : showValues(list, latest)
-v --> u : Shows values with latest highlighted
+note over j, c : Every handler first checks ctx.sessionAttribute("patientId")\nnull (not logged in) → ctx.redirect("/login")
 
-u -> v : Clicks Tilføj Værdi, fills in hormoneType, value, unit, date
-u -> v : Clicks Gem
-v -> c : handleAddValue(hormoneType, value, unit, dateTime)
+== Show measurements ==
+u -> v : Opens "Hormoner"
+v -> j : GET /hormoner
+j -> c : showLogs(ctx)
+c -> s : getLogs(patientId)
+s -> rs : findActiveRound(patientId)
+note right of rs : DashboardService.findActiveJourney\n+ RoundMapper.findActiveByJourney
+alt NoActiveJourneyException / NoActiveRoundException
+  rs --> s : throw
+  s --> c : empty list
+else Active round
+  rs --> s : Round
+  s -> hm : findByRound(roundId)
+  hm -> cp : getConnection()
+  cp --> hm : Connection
+  hm -> db : SELECT hormone_log.*, hormone_type.name ... JOIN hormone_type\nWHERE hormone_log.round_id = ? ORDER BY date_time DESC
+  db --> hm : ResultSet
+  hm -> hm : mapRow(rs) per row
+  hm --> s : List<HormoneLog>
+  note right of hm : Connection is returned to the pool\nautomatically (try-with-resources)
+  s --> c : List<HormoneLog> (newest first)
+end
+c -> s : getCurve(patientId, ?hormon)
+s --> c : HormoneCurve (built from getLogs, same lookup as above)
+c -> c : ctx.attribute(...) for logs, curve,\nhormoneTypes, gemt, fejl
+c --> j : ctx.render("hormoner")
+j --> u : hormoner.html with list and curve\n(or "Ingen målinger i denne runde endnu.")
 
-alt Value is not a number
-  c --> v : showError()
-  v --> u : "Value must be a number"
-else All OK
-  c -> m : new HormoneLog(dateTime, hormoneType, value, unit, roundId)
-  c -> db : INSERT INTO hormone_log (round_id, date_time, hormone_type, value, unit) VALUES (?, ?, ?, ?, ?)
-  db --> c : OK
-  c --> v : refreshList()
-  v --> u : Shows updated list
+== Save measurement ==
+u -> v : Fills in hormone, value, unit, date, clicks "Gem måling"
+v -> j : POST /hormoner (hormone, value, unit, date)
+j -> c : saveLog(ctx)
+c -> s : saveLog(patientId, hormone, value, unit, date)
+alt A field is blank
+  s --> c : INVALID_INPUT
+else Fields filled in
+  s -> rs : findActiveRound(patientId)
+  alt NoActiveJourneyException
+    rs --> s : throw
+    s --> c : NO_ACTIVE_JOURNEY
+  else NoActiveRoundException
+    rs --> s : throw
+    s --> c : NO_ACTIVE_ROUND
+  else Active round
+    rs --> s : Round
+    s -> s : LocalDate.parse(date), HormoneType.valueOf(hormone),\nDouble.parseDouble(value)
+    alt Parse fails (e.g. value is not a number)
+      s --> c : INVALID_INPUT
+    else All OK
+      s -> hm : save(new HormoneLog(0, roundId, dateTime, type, value, unit))
+      hm -> cp : getConnection()
+      cp --> hm : Connection
+      hm -> db : INSERT INTO hormone_log (round_id, date_time, hormone_type_id, value, unit)\nVALUES (?, ?, (SELECT id FROM hormone_type WHERE name = ?), ?, ?)
+      db --> hm : generated id
+      hm --> s : id
+      s --> c : OK
+    end
+  end
+end
+alt OK
+  c --> j : ctx.redirect("/hormoner?gemt=1")
+  j --> u : Updated list with "Gemt ✓"
+else INVALID_INPUT / NO_ACTIVE_JOURNEY / NO_ACTIVE_ROUND
+  c --> j : ctx.redirect("/hormoner?fejl=felter | intet-forloeb | ingen-runde")
+  j --> u : "Udfyld alle felter ..." / "Start et forløb først." / "Start en runde først."
 end
 
 @enduml

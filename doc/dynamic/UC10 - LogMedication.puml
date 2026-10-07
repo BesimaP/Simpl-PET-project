@@ -4,53 +4,89 @@
 title UC10: LogMedication
 
 actor "Patient" as u
-participant "MedicationLogView" as v
-participant "MedicationLogController" as c
-participant "Medication / MedicationLog" as m
-database "SQLite" as db
+participant "medicin.html" as v
+participant "Javalin" as j
+participant "MedicationController" as c
+participant "MedicationService" as s
+participant "RoundService" as rs
+participant "MedicationMapper" as mm
+participant "MedicationLogMapper" as lm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens medication screen
-v -> c : loadLogs(roundId)
-c -> db : SELECT ml.*, m.name FROM medication_log ml JOIN medication m ON ml.medication_id = m.id WHERE ml.round_id = ? ORDER BY scheduled_date_time
-db --> c : ResultSet
-c --> v : showLogs(list)
-v --> u : Shows checklist with name, dose, time, taken
+note over j, c : Every handler first checks ctx.sessionAttribute("patientId")\nnull (not logged in) → ctx.redirect("/login")
 
-u -> v : Clicks Tilføj Medicin
-v -> c : loadMedications()
-c -> db : SELECT * FROM medication
-db --> c : ResultSet
-v --> u : Shows dropdown of medications (or "create new")
+== Show checklist ==
+u -> v : Opens "Medicin"
+v -> j : GET /medicin
+j -> c : showLogs(ctx)
+c -> s : getTodayLogs(patientId), getPastLogs(patientId)
+s -> rs : findActiveRound(patientId) (RoundMapper)
+alt NoActiveJourneyException / NoActiveRoundException
+  rs --> s : throw
+  s --> c : empty lists
+else Active round
+  rs --> s : Round
+  s -> lm : findByRound(roundId)
+  lm -> cp : getConnection()
+  cp --> lm : Connection
+  lm -> db : SELECT * FROM medication_log WHERE round_id = ? ORDER BY scheduled_date_time
+  db --> lm : ResultSet
+  lm -> lm : mapRow(rs) per row
+  lm --> s : List<MedicationLog>
+  note right of lm : Every mapper call gets its own Connection via\ngetConnection(); it is returned to the pool\nautomatically (try-with-resources)
+  s --> c : today / past (split on LocalDate.now())
+end
+c -> s : getMedicationNames()
+s -> mm : findAll() : SELECT * FROM medication ORDER BY name
+mm --> s : List<Medication>
+s --> c : Map<id, description>
+c --> j : ctx.render("medicin") (today, past, names, gemt, fejl)
+j --> u : medicin.html with "I dag" / "Tidligere" checklist
 
-u -> v : Selects medication, fills in dose, unit, scheduled time
-u -> v : Clicks Gem
-v -> c : handleAddLog(medicationId, dose, unit, scheduledDateTime)
-
-alt Required fields empty
-  c --> v : showError()
-  v --> u : "Please fill in all fields"
-else New medication chosen
-  c -> m : new Medication(name, description)
-  c -> db : INSERT INTO medication (name, description) VALUES (?, ?)
-  db --> c : OK (medicationId)
-  c -> m : new MedicationLog(scheduledDateTime, dose, unit, taken=false, medicationId, roundId)
-  c -> db : INSERT INTO medication_log (round_id, medication_id, scheduled_date_time, dose, unit, taken) VALUES (?, ?, ?, ?, ?, 0)
-  db --> c : OK
-  c --> v : refreshList()
-else Existing medication
-  c -> m : new MedicationLog(scheduledDateTime, dose, unit, taken=false, medicationId, roundId)
-  c -> db : INSERT INTO medication_log (round_id, medication_id, scheduled_date_time, dose, unit, taken) VALUES (?, ?, ?, ?, ?, 0)
-  db --> c : OK
-  c --> v : refreshList()
-  v --> u : Shows updated checklist
+== Log a dose ==
+u -> v : Selects medication, fills in dose, unit, date, time\n(optional "taken"), clicks "Gem medicin"
+v -> j : POST /medicin (medication, dose, unit, date, time, taken)
+j -> c : logDose(ctx)
+c -> s : logDose(patientId, medication, dose, unit, date, time, taken)
+alt Blank field, dose not a number / <= 0, invalid date/time
+  s --> c : INVALID_INPUT
+else Input OK
+  s -> mm : findByName(medication)
+  mm -> db : SELECT * FROM medication WHERE name = ?
+  mm --> s : Medication (or null → INVALID_INPUT)
+  s -> rs : findActiveRound(patientId) (RoundMapper)
+  alt NoActiveJourneyException
+    s --> c : NO_ACTIVE_JOURNEY
+  else NoActiveRoundException
+    s --> c : NO_ACTIVE_ROUND
+  else Active round
+    rs --> s : Round
+    s -> lm : save(new MedicationLog(0, roundId, medicationId, scheduled, dose, unit, taken))
+    lm -> db : INSERT INTO medication_log (round_id, medication_id, scheduled_date_time,\ndose, unit, taken) VALUES (?, ?, ?, ?, ?, ?)
+    lm --> s : id
+    s --> c : OK
+  end
+end
+alt OK
+  c --> j : ctx.redirect("/medicin?gemt=1")
+  j --> u : Updated checklist with "Gemt ✓"
+else INVALID_INPUT / NO_ACTIVE_JOURNEY / NO_ACTIVE_ROUND
+  c --> j : ctx.redirect("/medicin?fejl=felter | intet-forloeb | ingen-runde")
+  j --> u : "Udfyld alle felter ..." / "Start et forløb først." / "Start en runde først."
 end
 
 == Mark as taken ==
-u -> v : Ticks a dose
-v -> c : handleMarkTaken(logId)
-c -> db : UPDATE medication_log SET taken = 1 WHERE id = ?
-db --> c : OK
-c --> v : refreshList()
-v --> u : Dose shown as taken
+u -> v : Clicks the check button on a dose
+v -> j : POST /medicin/taget (id)
+j -> c : markTaken(ctx)
+c -> s : markTaken(patientId, logId)
+s -> s : isOwnDose(patientId, logId)\n(is the id in the patient's own round? otherwise NOT_FOUND)
+s -> lm : markTaken(logId)
+lm -> db : UPDATE medication_log SET taken = TRUE WHERE id = ?
+s --> c : OK
+c --> j : ctx.redirect("/medicin")
+j --> u : Dose shown as taken
+note over c, lm : POST /medicin/ikke-taget → markNotTaken(patientId, logId)\nworks the same way (incl. the ownership check) with SET taken = FALSE (undo)
 
 @enduml

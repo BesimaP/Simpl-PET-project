@@ -31,10 +31,6 @@ public class RoundService {
         this.timelineService = new TimelineService(connectionPool);
     }
 
-    public RoundService() {
-
-    }
-
     // Starter en ny runde i patientens aktive forløb.
     // Svar: OK · INVALID_INPUT = tomme felter · NO_ACTIVE_JOURNEY = intet aktivt forløb · ROUND_IN_PROGRESS = der er allerede en runde
     public ServiceResult startRound(int patientId, String type, String startDate) {

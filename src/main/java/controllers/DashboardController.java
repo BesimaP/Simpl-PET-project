@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-// Koordinatoren for dashboard, start-runde.html og rundehistorik.
+// Koordinatoren for dashboard, start-runde og rundehistorik.
 // Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen mappers her.
 public class DashboardController {
     private ProfileService profileService;
@@ -44,6 +44,7 @@ public class DashboardController {
         config.routes.get("/dashboard", ctx -> showDashboard(ctx));        // forsiden efter login (Thymeleaf)
         config.routes.get("/rundehistorik", ctx -> showRounds(ctx));       // alle runder (Thymeleaf)
         config.routes.post("/opret-forloeb", ctx -> createJourney(ctx));   // "Start dit forløb" på dashboard (US1)
+        config.routes.get("/start-runde", ctx -> showStartRound(ctx));     // siden med formularen (Thymeleaf)
         config.routes.post("/start-runde", ctx -> startRound(ctx));        // "Start runde" på start-runde.html (US10a)
         config.routes.post("/afslut-runde", ctx -> endRound(ctx));         // bekræft i dialogen på dashboard (US10b)
     }
@@ -79,7 +80,6 @@ public class DashboardController {
             // dag-nummer i runden: dage siden start + 1
             ctx.attribute("dayNumber", ChronoUnit.DAYS.between(round.getStartDate(), LocalDate.now()) + 1);
         }
-
 
         // små kort: dagens medicin, næste aftale, seneste hormonværdi, antal noter
         ctx.attribute("todayMeds", medicationService.getTodayLogs(patientId));
@@ -132,6 +132,18 @@ public class DashboardController {
         }
     }
 
+    // GET /start-runde – vis formularen. ?fejl= fra sidste POST vises med fragmentet besked.html
+    private void showStartRound(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
+        ctx.render("start-runde");
+    }
+
     // POST /start-runde
     private void startRound(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
@@ -151,7 +163,7 @@ public class DashboardController {
             case OK -> ctx.redirect("/dashboard?gemt=runde");
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dashboard");                    // dashboard viser "start dit forløb"
             case ROUND_IN_PROGRESS -> ctx.redirect("/dashboard?fejl=runde-i-gang");
-            case INVALID_INPUT -> ctx.redirect("/start-runde.html?fejl=felter");    // start-runde ligger stadig i public
+            case INVALID_INPUT -> ctx.redirect("/start-runde?fejl=felter");         // tilbage til formularen med en fejlbesked
             default -> ctx.redirect("/dashboard?fejl=ukendt");
         }
     }

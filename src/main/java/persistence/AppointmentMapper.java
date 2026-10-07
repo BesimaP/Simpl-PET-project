@@ -28,8 +28,8 @@ public class AppointmentMapper {
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             statement.setInt(1, appointment.getFertilityJourneyId());
-            statement.setObject(2, appointment.getDateTime());          // LocalDateTime -> tekst (PostgreSQL: setTimestamp)
-            statement.setString(3, appointment.getAppointmentType().name());       // enum -> "SCANNING" (matcher CHECK og option value i aftaler.html)
+            statement.setObject(2, appointment.getDateTime());          // LocalDateTime direkte
+            statement.setString(3, appointment.getAppointmentType().name());       // ordet, fx "SCANNING" (matcher option value i aftaler.html) -> databasen finder selv id'et
             statement.setString(4, appointment.getLocation());                     // fx "Vitanova"
             statement.executeUpdate();
 
@@ -53,7 +53,7 @@ public class AppointmentMapper {
                    + "ORDER BY appointment.date_time";
         List<Appointment> appointments = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql);){
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, fertilityJourneyId);
             ResultSet rs = statement.executeQuery();

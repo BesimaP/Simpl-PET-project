@@ -4,31 +4,70 @@
 title UC6: WriteDiaryEntry
 
 actor "Patient" as u
-participant "DiaryView" as v
+participant "dagbog.html" as v
+participant "Javalin" as j
 participant "DiaryController" as c
-participant "DiaryEntry" as m
-database "SQLite" as db
+participant "DiaryService" as s
+participant "DiaryEntryMapper" as dm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens diary screen
-v -> c : loadEntries(patientId)
-c -> db : SELECT * FROM diary_entry WHERE patient_id = ? ORDER BY date_time DESC
-db --> c : ResultSet
-c --> v : showEntries(list)
-v --> u : Shows previous entries
+note over u, c : All routes: no patientId in session -> ctx.redirect("/login")
 
-u -> v : Clicks Ny note, fills in date, title, content
-u -> v : Clicks Gem
-v -> c : handleSaveEntry(dateTime, title, content)
+== Show entries ==
+u -> j : GET /dagbog (menu "Dagbog")
+j -> c : showEntries(ctx)
+c -> s : getEntries(patientId)
+s -> dm : findByPatient(patientId)
+dm -> cp : getConnection()
+cp --> dm : Connection
+dm -> db : SELECT * FROM diary_entry WHERE patient_id = ? ORDER BY date_time DESC
+db --> dm : ResultSet
+loop for each row
+  dm -> dm : mapRow(rs)
+end
+dm --> s : List<DiaryEntry>
+note right of dm : Connection is returned to the pool\nautomatically (try-with-resources)
+s --> c : List<DiaryEntry>
+c -> c : ctx.attribute("entries", list)\nctx.attribute("gemt"/"fejl", ctx.queryParam(...))
+c --> j : ctx.render("dagbog")
+j --> u : dagbog.html with "Tidligere noter"
 
-alt Title, content or date missing
-  c --> v : showError()
-  v --> u : "Please fill in date, title and content"
+== Save entry ==
+u -> v : Fills in date, title and note under "Skriv dagens note",\nclicks "Gem note"
+v -> j : POST /dagbog (date, title, note)
+j -> c : saveEntry(ctx)
+c -> s : saveEntry(patientId, date, title, note)
+alt Date, title or note empty, or invalid date
+  s --> c : INVALID_INPUT
+  c --> j : ctx.redirect("/dagbog?fejl=felter")
 else All OK
-  c -> m : new DiaryEntry(dateTime, title, content, patientId)
-  c -> db : INSERT INTO diary_entry (patient_id, date_time, title, content) VALUES (?, ?, ?, ?)
-  db --> c : OK
-  c --> v : refreshList()
-  v --> u : Shows updated list
+  s -> s : LocalDate.parse(date).atStartOfDay()
+  s -> dm : save(new DiaryEntry(0, patientId, dateTime, title, note))
+  dm -> cp : getConnection()
+  cp --> dm : Connection
+  dm -> db : INSERT INTO diary_entry (patient_id, date_time, title, content) VALUES (?, ?, ?, ?)
+  dm --> s : id (generated key)
+  s --> c : OK
+  c --> j : ctx.redirect("/dagbog?gemt=1")
+end
+j --> u : GET /dagbog again: list + "Gemt" or "Udfyld alle felter ..."
+
+== Delete entry ==
+u -> v : Clicks "Slet" on a note
+v -> j : POST /dagbog/slet (id)
+j -> c : deleteEntry(ctx)
+c -> s : deleteEntry(patientId, entryId)
+s -> s : getEntries(patientId) (SELECT as above)
+alt Entry belongs to the patient
+  s -> dm : delete(entryId)
+  dm -> cp : getConnection()
+  cp --> dm : Connection
+  dm -> db : DELETE FROM diary_entry WHERE id = ?
+  s --> c : OK
+  c --> j : ctx.redirect("/dagbog?gemt=slettet")
+else Not found / not hers, or id not a number
+  c --> j : ctx.redirect("/dagbog?fejl=ukendt")
 end
 
 @enduml

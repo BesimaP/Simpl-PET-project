@@ -12,17 +12,11 @@ import java.time.format.DateTimeParseException;
 
 // Forretningslogik for forløb (FertilityJourney, US1). Kender IKKE Javalin.
 public class DashboardService {
-    private ConnectionPool connectionPool; // nøgleringen (bruges, når forløb laves om til PostgreSQL)
     private FertilityJourneyMapper journeyMapper;
 
     // ny konstruktør: med nøgleringen
     public DashboardService(ConnectionPool connectionPool) {
-        this.connectionPool = connectionPool;
         this.journeyMapper = new FertilityJourneyMapper(connectionPool);
-    }
-
-    // MIDLERTIDIG: tom konstruktør, så de andre filer stadig virker, indtil de også får nøgleringen
-    public DashboardService() {
     }
 
     // Opretter et forløb til patienten. Regel: kun ét aktivt forløb ad gangen.

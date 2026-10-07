@@ -4,29 +4,57 @@
 title UC14: EndRound
 
 actor "Patient" as u
-participant "EndRoundView" as v
-participant "RoundController" as c
-participant "Round" as m
-database "SQLite" as db
+participant "dashboard.html" as v
+participant "Javalin" as j
+participant "DashboardController" as c
+participant "RoundService" as s
+participant "DashboardService" as ds
+participant "RoundMapper" as rm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Clicks End Round
-v --> u : Shows result options: POSITIVE, NEGATIVE
+u -> v : Clicks "Afslut runde"
+v --> u : dashboard.js opens dialog "Afslut runde N?" with "Resultat":\n"Ikke afgjort endnu" / "Positiv" / "Negativ"
+u -> v : Selects result (optional), clicks "Afslut runde"
+v -> j : POST /afslut-runde (result)
+j -> c : endRound(ctx)
+note right of c : patientId == null (not logged in)\n→ ctx.redirect("/login")
+c -> c : ctx.formParam("result")\nblank → null, else Result.valueOf(result)
+c -> s : endRound(patientId, result)
+s -> s : findActiveRound(patientId)
+s -> ds : findActiveJourney(patientId) (FertilityJourneyMapper)
 
-u -> v : Selects result
-u -> v : Clicks End Round
-v -> c : handleEndRound(roundId, result)
-
-alt No result selected
-  c --> v : showError()
-  v --> u : "Please select a result"
-else All OK
-  c -> db : UPDATE round SET status = 'COMPLETED', result = ?, end_date = today WHERE id = ?
-  db --> c : OK
-  c -> db : INSERT INTO event (round_id, date_time, type, description) VALUES (?, now, 'PREGNANCY_TEST', 'Runde afsluttet: ' + result)
-  db --> c : OK
-  c -> c : Session.clearRound()
-  c --> v : showDashboard()
-  v --> u : Dashboard updated - "Start ny runde" available (UC8)
+alt No active journey
+  ds --> s : throw NoActiveJourneyException
+  s --> c : NO_ACTIVE_ROUND
+  c --> j : ctx.redirect("/dashboard?fejl=ingen-runde")
+  j --> u : "Start en runde først."
+else Journey found
+  ds --> s : FertilityJourney
+  s -> rm : findActiveByJourney(journeyId)
+  rm -> cp : getConnection()
+  cp --> rm : Connection
+  rm -> db : SELECT round.*, treatment_type.name, result.name FROM round JOIN treatment_type\nLEFT JOIN result WHERE round.fertility_journey_id = ? AND round.end_date IS NULL
+  db --> rm : ResultSet
+  rm -> rm : mapRow(rs)
+  rm --> s : Round (or null)
+  note right of rm : Connection is returned to the pool\nautomatically (try-with-resources)
+  alt No round in progress (null)
+    s -> s : throw NoActiveRoundException (caught)
+    s --> c : NO_ACTIVE_ROUND
+    c --> j : ctx.redirect("/dashboard?fejl=ingen-runde")
+    j --> u : "Start en runde først."
+  else Round in progress
+    s -> rm : endRound(roundId, LocalDate.now(), result)
+    rm -> cp : getConnection()
+    cp --> rm : Connection
+    rm -> db : UPDATE round SET end_date = ?, result_id = (SELECT id FROM result WHERE name = ?) WHERE id = ?
+    db --> rm : OK
+    rm --> s : void
+    s --> c : OK
+    c --> j : ctx.redirect("/rundehistorik?gemt=afsluttet")
+    j --> u : rundehistorik.html with "Runden er afsluttet ✓"\n(dashboard can now offer "Start runde", UC8)
+  end
 end
 
 @enduml

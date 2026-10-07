@@ -4,49 +4,86 @@
 title UC12: ManageDocuments
 
 actor "Patient" as u
-participant "DocumentView" as v
+participant "dokumenter.html" as v
+participant "Javalin" as j
 participant "DocumentController" as c
-participant "Document" as m
-database "SQLite" as db
+participant "DocumentService" as s
+participant "Disk (uploads/)" as fs
+participant "DocumentMapper" as dm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens documents screen
-v -> c : loadDocuments(patientId)
-c -> db : SELECT * FROM document WHERE patient_id = ? ORDER BY upload_date DESC
-db --> c : ResultSet
+note over j, c : Every handler first checks ctx.sessionAttribute("patientId")\nnull (not logged in) → ctx.redirect("/login")
 
-alt No documents found
-  c --> v : showEmptyMessage()
-  v --> u : "No documents"
+== Show documents ==
+u -> v : Opens "Dokumenter"
+v -> j : GET /dokumenter
+j -> c : showDocuments(ctx)
+c -> s : getDocuments(patientId)
+s -> dm : findByPatient(patientId)
+dm -> cp : getConnection()
+cp --> dm : Connection
+dm -> db : SELECT document.*, document_type.name ... JOIN document_type\nWHERE document.patient_id = ? ORDER BY upload_date DESC, title
+db --> dm : ResultSet
+dm -> dm : mapRow(rs) per row
+dm --> s : List<Document>
+note right of dm : Connection is returned to the pool\nautomatically (try-with-resources)
+s --> c : List<Document>
+c --> j : ctx.render("dokumenter") (documents, gemt, fejl)
+alt No documents
+  j --> u : "Ingen dokumenter uploadet endnu."
 else Documents found
-  c --> v : showDocuments(list)
-  v --> u : Shows title and type for each document
+  j --> u : List with title, type and upload date
 end
 
-u -> v : Clicks Tilføj Dokument, fills in title, selects documentType and file
-u -> v : Clicks Gem
-v -> c : handleAddDocument(title, documentType, filePath)
-
-alt Title or file missing
-  c --> v : showError()
-  v --> u : "Title and file are required"
-else All OK
-  c -> m : new Document(patientId, uploadDate, title, documentType, filePath)
-  c -> db : INSERT INTO document (patient_id, upload_date, title, document_type, file_path) VALUES (?, ?, ?, ?, ?)
-  db --> c : OK
-  c --> v : refreshList()
-  v --> u : Shows updated list
+== Upload document ==
+u -> v : Fills in title, selects type and file, clicks "Upload"
+note right of v : dokumenter.js checks PDF/JPG/PNG\nand max 10 MB in the browser first
+v -> j : POST /dokumenter (multipart: title, documentType, file)
+j -> c : uploadDocument(ctx)
+c -> c : ctx.uploadedFile("file")
+alt No file chosen
+  c --> j : ctx.redirect("/dokumenter?fejl=felter")
+else File chosen
+  c -> s : uploadDocument(patientId, title, type,\nfilename, content, size)
+  alt Title/type blank, unknown type, not .pdf/.jpg/.jpeg/.png or > 10 MB
+    s --> c : INVALID_INPUT
+    c --> j : ctx.redirect("/dokumenter?fejl=felter")
+  else All OK
+    s -> fs : Files.copy(content, uploads/<UUID>-<filename>)
+    fs --> s : file saved on disk
+    s -> dm : save(new Document(0, patientId, LocalDate.now(), title, type, filePath))
+    dm -> cp : getConnection()
+    cp --> dm : Connection
+    dm -> db : INSERT INTO document (patient_id, upload_date, title, document_type_id, file_path)\nVALUES (?, ?, ?, (SELECT id FROM document_type WHERE name = ?), ?)
+    note right of db : Only the path is stored,\nnot the file itself
+    db --> dm : generated id
+    dm --> s : id
+    s --> c : OK
+    c --> j : ctx.redirect("/dokumenter?gemt=1")
+  end
 end
+j --> u : Updated list with "Gemt ✓" or "Udfyld alle felter ..."
 
-u -> v : Clicks a document
-v -> c : handleOpen(documentId)
-c -> db : SELECT file_path FROM document WHERE id = ?
-db --> c : filePath
-alt File cannot be opened
-  c --> v : showError()
-  v --> u : "File not found"
-else File opened
-  c --> v : openFile(filePath)
-  v --> u : Shows document
+== Open document ==
+u -> v : Clicks "Åbn" on a document
+v -> j : GET /dokumenter/{id}
+j -> c : openDocument(ctx)
+c -> s : findDocument(patientId, documentId)
+s -> dm : findByPatient(patientId) (same SELECT as above)
+dm --> s : List<Document>
+s --> c : Document (or null if not the patient's own)
+alt id not a number / document null
+  c --> j : ctx.status(404)
+else Document found
+  c -> fs : Files.readAllBytes(Path.of(filePath))
+  alt IOException (file missing on disk)
+    c --> j : ctx.status(404)
+  else File read
+    fs --> c : byte[]
+    c --> j : ctx.contentType(...), ctx.result(bytes)
+    j --> u : Browser shows the PDF / image
+  end
 end
 
 @enduml

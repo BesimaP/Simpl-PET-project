@@ -4,38 +4,90 @@
 title UC7: ViewNotifications
 
 actor "Patient" as u
-participant "NotificationView" as v
-participant "NotificationController" as c
-participant "Notification" as m
-database "SQLite" as db
+participant "dashboard.html /\nnotifikationer.html" as v
+participant "Javalin" as j
+participant "DashboardController /\nNotificationController" as c
+participant "NotificationService" as s
+participant "MedicationService" as ms
+participant "RoundService" as rs
+participant "NotificationMapper" as nm
+participant "MedicationLogMapper" as mlm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-== Automatic generation (on app start / timer) ==
-c -> db : SELECT * FROM medication_log WHERE taken = 0 AND scheduled_date_time BETWEEN now AND now + 1h
-db --> c : ResultSet
-loop for each upcoming dose without a notification
-  c -> m : new Notification(now, MEDICATION_REMINDER, title, message, isRead=false)
-  c -> db : INSERT INTO notification (patient_id, date_time, type, title, message, is_read) VALUES (?, ?, ?, ?, ?, 0)
-  db --> c : OK
+note over u, c : All routes: no patientId in session -> ctx.redirect("/login")
+
+== Automatic generation (when the dashboard is opened) ==
+u -> j : GET /dashboard
+j -> c : showDashboard(ctx)
+c -> s : createMedicationReminders(patientId)
+s -> ms : getMedicationNames()  (id -> "Gonal-F")
+s -> s : existing = getNotifications(patientId)
+s -> ms : getTodayLogs(patientId)
+ms -> rs : findActiveRound(patientId)
+rs --> ms : Round (no journey/round -> empty list)
+ms -> mlm : findByRound(roundId)
+mlm -> cp : getConnection()
+cp --> mlm : Connection
+mlm -> db : SELECT * FROM medication_log WHERE round_id = ? ORDER BY scheduled_date_time
+mlm --> ms : List<MedicationLog>
+note right of mlm : Connection is returned to the pool\nautomatically (try-with-resources)
+ms --> s : doses scheduled today
+loop for each dose today that is not taken and has no reminder from today with the same message
+  s -> nm : save(new Notification(0, patientId, now,\nMEDICATION_REMINDER, "Husk din medicin", message, false))
+  nm -> cp : getConnection()
+  cp --> nm : Connection
+  nm -> db : INSERT INTO notification (patient_id, date_time, notification_type_id, title, message, is_read)\nVALUES (?, ?, (SELECT id FROM notification_type WHERE name = ?), ?, ?, ?)
 end
+c -> s : countUnread(patientId), getNotifications(patientId)
+c --> j : ctx.render("dashboard")
+j --> u : Dashboard: red dot on the bell + pop-up list
 
-== Patient opens list ==
-u -> v : Opens notifications screen
-v -> c : loadNotifications(patientId)
-c -> db : SELECT * FROM notification WHERE patient_id = ? ORDER BY date_time DESC
-db --> c : ResultSet
-
-alt No notifications
-  c --> v : showEmptyMessage()
-  v --> u : "No notifications"
+== Patient opens the list ==
+u -> j : GET /notifikationer (clicks the bell)
+j -> c : showNotifications(ctx)
+c -> s : getNotifications(patientId)
+s -> nm : findByPatient(patientId)
+nm -> cp : getConnection()
+cp --> nm : Connection
+nm -> db : SELECT notification.*, notification_type.name AS notification_type\nFROM notification JOIN notification_type ON ...\nWHERE notification.patient_id = ? ORDER BY notification.date_time DESC
+loop for each row
+  nm -> nm : mapRow(rs)
+end
+nm --> s : List<Notification>
+c -> s : countUnread(patientId)
+s -> nm : countUnread(patientId)
+nm -> cp : getConnection()
+cp --> nm : Connection
+nm -> db : SELECT COUNT(*) FROM notification WHERE patient_id = ? AND is_read = FALSE
+nm --> s : int
+c --> j : ctx.render("notifikationer")
+alt List is empty
+  j --> u : notifikationer.html with "Ingen notifikationer."
 else Notifications found
-  c --> v : showNotifications(list)
-  v --> u : Shows title, message, read status
-  u -> v : Clicks a notification
-  v -> c : handleOpen(notificationId)
-  c -> db : UPDATE notification SET is_read = 1 WHERE id = ?
-  db --> c : OK
-  c --> v : showDetails()
-  v --> u : Shows notification, marked as read
+  j --> u : Title, message, time; "Ny" + "Markér som læst" on unread;\n"Markér alle som læst" if unread > 0
+  alt One notification
+  u -> v : Clicks "Markér som læst" on one notification
+  v -> j : POST /notifikationer/laest (id)
+  j -> c : markRead(ctx)
+  c -> s : markRead(patientId, id)
+  s -> s : is id in getNotifications(patientId)?\n(otherwise NOT_FOUND – nothing changed)
+  s -> nm : markRead(id)
+  nm -> db : UPDATE notification SET is_read = TRUE WHERE id = ?
+  c --> j : ctx.redirect("/notifikationer")
+  j --> u : List shown again, that one marked as read
+  else All
+  u -> v : Clicks "Markér alle som læst"
+  v -> j : POST /notifikationer/laest-alle
+  j -> c : markAllRead(ctx)
+  c -> s : markAllRead(patientId)
+  s -> nm : markAllRead(patientId)
+  nm -> cp : getConnection()
+  cp --> nm : Connection
+  nm -> db : UPDATE notification SET is_read = TRUE WHERE patient_id = ?
+  c --> j : ctx.redirect(Referer has "/dashboard" ? "/dashboard" : "/notifikationer")
+  j --> u : List shown again, all marked as read
+  end
 end
 
 @enduml

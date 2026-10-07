@@ -23,10 +23,8 @@ public class DocumentService {
     private static final String UPLOAD_DIR = "uploads";
     private static final long MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
     private DocumentMapper documentMapper;
-    private ConnectionPool connectionPool;
 
     public DocumentService(ConnectionPool connectionPool) {
-        this.connectionPool = connectionPool;
         this.documentMapper = new DocumentMapper(connectionPool);
     }
 

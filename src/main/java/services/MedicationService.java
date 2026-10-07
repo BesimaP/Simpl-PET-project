@@ -32,10 +32,6 @@ public class MedicationService {
         this.roundService = new RoundService(connectionPool);
     }
 
-    public MedicationService(){
-
-    }
-
     // Logger én dosis i patientens aktive runde (en dosis SKAL ligge på en runde – round_id i databasen)
     public ServiceResult logDose(int patientId, String medicationName, String dose, String unit, String date, String time, boolean taken) {
 
@@ -114,16 +110,32 @@ public class MedicationService {
         return names;
     }
 
-    // Markér én dosis som taget (US8 AC3)
-    public ServiceResult markTaken(int logId) {
+    // Markér én dosis som taget (US8 AC3) – kun patientens egen dosis. Svar: OK · NOT_FOUND
+    public ServiceResult markTaken(int patientId, int logId) {
+        if (!isOwnDose(patientId, logId)) {
+            return ServiceResult.NOT_FOUND;
+        }
         medicationLogMapper.markTaken(logId);
         return ServiceResult.OK;
     }
 
-    // Fortryd "markér som taget" (sæt dosen tilbage til planlagt)
-    public ServiceResult markNotTaken(int logId) {
+    // Fortryd "markér som taget" (sæt dosen tilbage til planlagt) – kun patientens egen dosis. Svar: OK · NOT_FOUND
+    public ServiceResult markNotTaken(int patientId, int logId) {
+        if (!isOwnDose(patientId, logId)) {
+            return ServiceResult.NOT_FOUND;
+        }
         medicationLogMapper.markNotTaken(logId);
         return ServiceResult.OK;
+    }
+
+    // hjælper: findes dosen i patientens egen runde? Så man ikke kan ændre andres ved at rette id'et i det skjulte felt
+    private boolean isOwnDose(int patientId, int logId) {
+        for (MedicationLog log : getAll(patientId)) {
+            if (log.getId() == logId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // hjælper: alle doser i den runde, der er i gang. Intet forløb eller ingen runde er ikke en fejl her -> tom liste

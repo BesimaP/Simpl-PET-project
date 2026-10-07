@@ -1,5 +1,7 @@
 # Tasks per user story
 
+*Opdateret 7. okt 2026: hele appen kører nu på PostgreSQL. DAO-klasserne er omdøbt til mappers i `persistence`, og alle får en fælles `ConnectionPool` gennem konstruktøren (Main → RouteConfig → Controller → Service → Mapper). Henvisninger til `…DAO` nedenfor svarer nu til `…Mapper`.*
+
 *Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
@@ -110,9 +112,11 @@
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
 - [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
+- [ ]  Integrationstests mod en testdatabase i PostgreSQL – testene skal have en test-`ConnectionPool` i stedet for `DatabaseConnection` *(uge 41, torsdag)*
+- [x]  Skift fra SQLite til PostgreSQL: `ConnectionPool` (HikariCP), mappers i `persistence`, try-with-resources, typetabeller med `SELECT id … WHERE name = ?` og `JOIN` *(7. okt)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
-- [ ]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk)
+- [x]  Tjek `DatabaseConnection.getConnection()`: åbnes der en ny forbindelse ved hvert DAO-kald uden at lukke den? (risiko for forbindelseslæk) *(løst 7. okt: `DatabaseConnection` er slettet; mappers låner en forbindelse fra `ConnectionPool` i try-with-resources, så den altid afleveres igen)*
 - [x]  `AuthService.createProfile`: tilføj blank-tjek på name/username/password → INVALID_INPUT (som i DiagnosisService) *(lavet 22. sep)*
 - [x]  `LocalDate.parse(dateOfBirth)` kaster exception ved tom/ugyldig dato → skal give INVALID_INPUT i stedet for 500-fejl *(try/catch i createProfile, 22. sep – forløbs-startdato tages, når "forløb ved oprettelse" laves)*
 - [x]  Kodeord gemmes i klartekst → BCrypt-hash inden aflevering (AuthService.login/createProfile, ProfileService.changePassword) *(jbcrypt 0.4 i pom; hashpw ved opret profil og skift kodeord, checkpw ved login og skift kodeord; ProfileServiceTest tjekker, at kodeordet ikke står i klartekst – 5. okt)*

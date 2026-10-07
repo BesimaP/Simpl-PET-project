@@ -1,30 +1,151 @@
 @startuml
 !pragma layout smetana
 
-title Klassediagram 4b — DAO-laget (Simpl v2)
+title Klassediagram 4b — persistence-laget (Simpl, PostgreSQL)
 
-package "dao" {
+package "persistence" {
 
-  class DatabaseConnection {
-    - {static} Connection connection
-    + {static} Connection getConnection()
+  class ConnectionPool <<singleton>> {
+    - {static} instance : ConnectionPool
+    - {static} ds : HikariDataSource
+    - ConnectionPool()
+    + {static} getInstance(user : String, password : String, url : String, db : String) : ConnectionPool
+    + {static} getConnection() : Connection
+    + {static} close() : void
   }
 
-  class DatabaseInitializer {
-    + {static} void initialize()
+  class PatientMapper {
+    - connectionPool : ConnectionPool
+    + PatientMapper(connectionPool : ConnectionPool)
+    + save(patient : Patient) : int
+    + findByUsername(username : String) : Patient
+    + findById(id : int) : Patient
+    + updateName(id : int, firstName : String, lastName : String) : void
+    + updatePassword(id : int, passwordHash : String) : void
+    + delete(id : int) : void
   }
 
-  class RoundDAO {
-    - Connection connection
-    + RoundDAO(Connection connection)
-    + int save(Round round)
-    + List<Round> findByJourney(int journeyId)
-    + Round findInProgressByJourney(int journeyId)
-    + void update(Round round)
+  class DiagnosisMapper {
+    - connectionPool : ConnectionPool
+    + DiagnosisMapper(connectionPool : ConnectionPool)
+    + save(diagnosis : Diagnosis) : int
+    + findByPatient(patientId : int) : List<Diagnosis>
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : Diagnosis
   }
 
+  class DocumentMapper {
+    - connectionPool : ConnectionPool
+    + DocumentMapper(connectionPool : ConnectionPool)
+    + save(document : Document) : int
+    + findByPatient(patientId : int) : List<Document>
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : Document
+  }
+
+  class DiaryEntryMapper {
+    - connectionPool : ConnectionPool
+    + DiaryEntryMapper(connectionPool : ConnectionPool)
+    + save(entry : DiaryEntry) : int
+    + findByPatient(patientId : int) : List<DiaryEntry>
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : DiaryEntry
+  }
+
+  class NotificationMapper {
+    - connectionPool : ConnectionPool
+    + NotificationMapper(connectionPool : ConnectionPool)
+    + save(notification : Notification) : int
+    + findByPatient(patientId : int) : List<Notification>
+    + countUnread(patientId : int) : int
+    + markRead(id : int) : void
+    + markAllRead(patientId : int) : void
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : Notification
+  }
+
+  class FertilityJourneyMapper {
+    - connectionPool : ConnectionPool
+    + FertilityJourneyMapper(connectionPool : ConnectionPool)
+    + save(journey : FertilityJourney) : int
+    + findActiveByPatient(patientId : int) : FertilityJourney
+  }
+
+  class AppointmentMapper {
+    - connectionPool : ConnectionPool
+    + AppointmentMapper(connectionPool : ConnectionPool)
+    + save(appointment : Appointment) : int
+    + findByJourney(fertilityJourneyId : int) : List<Appointment>
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : Appointment
+  }
+
+  class RoundMapper {
+    - connectionPool : ConnectionPool
+    + RoundMapper(connectionPool : ConnectionPool)
+    + save(round : Round) : int
+    + findActiveByJourney(fertilityJourneyId : int) : Round
+    + findByJourney(fertilityJourneyId : int) : List<Round>
+    + endRound(id : int, endDate : LocalDate, result : Result) : void
+    - mapRow(rs : ResultSet) : Round
+  }
+
+  class EventMapper {
+    - connectionPool : ConnectionPool
+    + EventMapper(connectionPool : ConnectionPool)
+    + save(event : Event) : int
+    + findByRound(roundId : int) : List<Event>
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : Event
+  }
+
+  class HormoneLogMapper {
+    - connectionPool : ConnectionPool
+    + HormoneLogMapper(connectionPool : ConnectionPool)
+    + save(log : HormoneLog) : int
+    + findByRound(roundId : int) : List<HormoneLog>
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : HormoneLog
+  }
+
+  class MedicationMapper {
+    - connectionPool : ConnectionPool
+    + MedicationMapper(connectionPool : ConnectionPool)
+    + save(medication : Medication) : int
+    + findAll() : List<Medication>
+    + findByName(name : String) : Medication
+    - mapRow(rs : ResultSet) : Medication
+  }
+
+  class MedicationLogMapper {
+    - connectionPool : ConnectionPool
+    + MedicationLogMapper(connectionPool : ConnectionPool)
+    + save(log : MedicationLog) : int
+    + findByRound(roundId : int) : List<MedicationLog>
+    + markTaken(id : int) : void
+    + markNotTaken(id : int) : void
+    + delete(id : int) : void
+    - mapRow(rs : ResultSet) : MedicationLog
+  }
 }
 
-RoundDAO ..> Round : bruger
+' Hver mapper får nøgleringen (ConnectionPool) i konstruktøren og låner en Connection pr. SQL-kald
+PatientMapper --> ConnectionPool
+DiagnosisMapper --> ConnectionPool
+DocumentMapper --> ConnectionPool
+DiaryEntryMapper --> ConnectionPool
+NotificationMapper -up-> ConnectionPool
+FertilityJourneyMapper -up-> ConnectionPool
+AppointmentMapper -up-> ConnectionPool
+RoundMapper -up-> ConnectionPool
+EventMapper -up-> ConnectionPool
+HormoneLogMapper -up-> ConnectionPool
+MedicationMapper --> ConnectionPool
+MedicationLogMapper --> ConnectionPool
+
+note right of ConnectionPool
+  Laves én gang i Main og gives videre:
+  Main → RouteConfig → Controller → Service → Mapper
+end note
 
 @enduml

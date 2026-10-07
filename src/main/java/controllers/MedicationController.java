@@ -50,7 +50,7 @@ public class MedicationController {
             return;
         }
         int logId = Integer.parseInt(ctx.formParam("id"));   // "17" -> 17
-        medicationService.markTaken(logId);
+        medicationService.markTaken(patientId, logId);   // service tjekker, at dosen er patientens egen
         ctx.redirect("/medicin");
     }
 
@@ -62,7 +62,7 @@ public class MedicationController {
             return;
         }
         int logId = Integer.parseInt(ctx.formParam("id"));
-        medicationService.markNotTaken(logId);
+        medicationService.markNotTaken(patientId, logId);
         ctx.redirect("/medicin");
     }
 
@@ -89,7 +89,7 @@ public class MedicationController {
         switch (result) {
             case OK -> ctx.redirect("/medicin?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/medicin?fejl=felter");            // tomt felt, ugyldigt tal/dato eller ukendt medicin
-            case NO_ACTIVE_JOURNEY -> ctx.redirect("/medicin?fejl=ingen-forloeb");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/medicin?fejl=intet-forloeb");
             case NO_ACTIVE_ROUND -> ctx.redirect("/medicin?fejl=ingen-runde");
             default -> ctx.redirect("/medicin?fejl=ukendt");
         }

@@ -18,15 +18,11 @@ import java.util.List;
 public class TimelineService {
 
     private EventMapper eventMapper;
-    private ConnectionPool connectionPool;
+    private ConnectionPool connectionPool; // gemmes, fordi RoundService laves først, når den skal bruges (RoundService laver selv en TimelineService – ellers ville de lave hinanden i ring)
 
     public TimelineService(ConnectionPool connectionPool){
         this.eventMapper = new EventMapper(connectionPool);
         this.connectionPool = connectionPool;
-    }
-
-    public TimelineService(){
-
     }
 
     // Lægger ét trin på en runde. Kaldes af andre services, ikke af en controller. description må være null

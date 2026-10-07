@@ -4,31 +4,57 @@
 title UC4: RegisterDiagnosis
 
 actor "Patient" as u
-participant "DiagnosisView" as v
+participant "diagnoser.html" as v
+participant "Javalin" as j
 participant "DiagnosisController" as c
-participant "Diagnosis" as m
-database "SQLite" as db
+participant "DiagnosisService" as s
+participant "DiagnosisMapper" as dm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens diagnosis screen
-v -> c : loadDiagnoses(patientId)
-c -> db : SELECT * FROM diagnosis WHERE patient_id = ?
-db --> c : ResultSet
-c --> v : showDiagnoses(list)
-v --> u : Shows registered diagnoses
+note over u, c : Both routes: no patientId in session -> ctx.redirect("/login")
 
-u -> v : Clicks Tilføj Diagnose, fills in name and description
-u -> v : Clicks Gem
-v -> c : handleAddDiagnosis(name, description)
+== Show diagnoses ==
+u -> j : GET /diagnoser (menu "Diagnoser")
+j -> c : showDiagnoses(ctx)
+c -> s : getDiagnoses(patientId)
+s -> dm : findByPatient(patientId)
+dm -> cp : getConnection()
+cp --> dm : Connection
+dm -> db : SELECT * FROM diagnosis WHERE patient_id = ? ORDER BY name
+db --> dm : ResultSet
+loop for each row
+  dm -> dm : mapRow(rs)
+end
+dm --> s : List<Diagnosis>
+note right of dm : Connection is returned to the pool\nautomatically (try-with-resources)
+s --> c : List<Diagnosis>
+c -> c : ctx.attribute("diagnoses", list)\nctx.attribute("gemt"/"fejl", ctx.queryParam(...))
+c --> j : ctx.render("diagnoser")
+j --> v : diagnoser.html
+v --> u : Shows "Dine diagnoser"
 
+== Add diagnosis ==
+u -> v : Fills in name and description (optional) under "Ny diagnose",\nclicks "Gem diagnose"
+v -> j : POST /diagnoser (diagnosis, description)
+j -> c : addDiagnosis(ctx)
+c -> c : ctx.formParam("diagnosis"), ctx.formParam("description")
+c -> s : addDiagnosis(patientId, name, description)
 alt Name is empty
-  c --> v : showError()
-  v --> u : "Name is required"
-else All OK
-  c -> m : new Diagnosis(name, description, patientId)
-  c -> db : INSERT INTO diagnosis (patient_id, name, description) VALUES (?, ?, ?)
-  db --> c : OK
-  c --> v : refreshList()
-  v --> u : Shows updated list
+  s --> c : INVALID_INPUT
+  c --> j : ctx.redirect("/diagnoser?fejl=felter")
+  j --> u : diagnoser.html with "Udfyld alle felter ..."
+else Name filled
+  s -> s : empty description -> null
+  s -> dm : save(new Diagnosis(0, patientId, name, desc))
+  dm -> cp : getConnection()
+  cp --> dm : Connection
+  dm -> db : INSERT INTO diagnosis (patient_id, name, description) VALUES (?, ?, ?)
+  db --> dm : generated id
+  dm --> s : id
+  s --> c : OK
+  c --> j : ctx.redirect("/diagnoser?gemt=1")
+  j --> u : GET /diagnoser again: updated list with "Gemt"
 end
 
 @enduml

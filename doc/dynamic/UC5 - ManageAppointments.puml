@@ -4,40 +4,79 @@
 title UC5: ManageAppointments
 
 actor "Patient" as u
-participant "AppointmentView" as v
+participant "aftaler.html" as v
+participant "Javalin" as j
 participant "AppointmentController" as c
-participant "Appointment" as m
-database "SQLite" as db
+participant "AppointmentService" as s
+participant "DashboardService" as ds
+participant "AppointmentMapper" as am
+participant "RoundService" as rs
+participant "TimelineService" as ts
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
 
-u -> v : Opens appointments screen
-v -> c : loadAppointments(journeyId)
-c -> db : SELECT * FROM appointment WHERE journey_id = ? AND date_time >= now ORDER BY date_time ASC
-db --> c : ResultSet
-c --> v : showAppointments(list)
-v --> u : Shows upcoming appointments, nearest first
+note over j, c : Both routes start with ctx.sessionAttribute("patientId")\nnull (not logged in) → ctx.redirect("/login")
 
-u -> v : Clicks Tilføj Aftale, fills in dateTime, type, location
-u -> v : Clicks Gem
-v -> c : handleAddAppointment(dateTime, type, location)
+== Show appointments ==
+u -> j : GET /aftaler
+j -> c : showAppointments(ctx)
+c -> s : getUpcoming(patientId), getPast(patientId)
+s -> ds : findActiveJourney(patientId) (FertilityJourneyMapper)
+alt No active journey
+  ds --> s : throw NoActiveJourneyException
+  s --> c : empty lists
+else Journey found
+  ds --> s : FertilityJourney
+  s -> am : findByJourney(journeyId)
+  am -> cp : getConnection()
+  cp --> am : Connection
+  am -> db : SELECT appointment.*, appointment_type.name ... JOIN appointment_type\nWHERE appointment.fertility_journey_id = ? ORDER BY appointment.date_time
+  db --> am : ResultSet
+  am -> am : mapRow(rs)
+  am --> s : List<Appointment>
+  note right of am : Connection is returned to the pool\nautomatically (try-with-resources)
+  s -> s : split on dateTime.isAfter(now())
+  s --> c : upcoming, past
+end
+c -> c : ctx.attribute("upcoming"/"past"/"gemt"/"fejl")
+c --> j : ctx.render("aftaler")
+j --> u : aftaler.html ("Ingen kommende aftaler." if list is empty)
 
-alt Required fields empty
-  c --> v : showError()
-  v --> u : "Please fill in all fields"
-else Date is in the past
-  c --> v : showConfirm()
-  v --> u : "Date is in the past - save anyway?"
-  u -> v : Confirms
-  v -> c : confirmAdd()
-  c -> m : new Appointment(dateTime, type, location, journeyId)
-  c -> db : INSERT INTO appointment (journey_id, date_time, type, location) VALUES (?, ?, ?, ?)
-  db --> c : OK
-  c --> v : refreshList()
-else All OK
-  c -> m : new Appointment(dateTime, type, location, journeyId)
-  c -> db : INSERT INTO appointment (journey_id, date_time, type, location) VALUES (?, ?, ?, ?)
-  db --> c : OK
-  c --> v : refreshList()
-  v --> u : Shows updated list
+== Add appointment ==
+u -> v : Fills in type, "Klinik", "Dato", "Klokkeslæt", clicks "Gem aftale"
+v -> j : POST /aftaler (type, location, date, time)
+j -> c : addAppointment(ctx)
+c -> s : addAppointment(patientId, type, location, date, time)
+
+alt Field empty, or valueOf/parse fails
+  s --> c : INVALID_INPUT
+  c --> j : ctx.redirect("/aftaler?fejl=felter")
+  j --> u : "Udfyld alle felter – og tjek at dato og tal er gyldige."
+else No active journey
+  s -> ds : findActiveJourney(patientId)
+  ds --> s : throw NoActiveJourneyException
+  s --> c : NO_ACTIVE_JOURNEY
+  c --> j : ctx.redirect("/aftaler?fejl=intet-forloeb")
+  j --> u : "Start et forløb først."
+else OK
+  s -> ds : findActiveJourney(patientId)
+  ds --> s : FertilityJourney
+  s -> am : save(new Appointment(0, journeyId, dateTime, type, location))
+  am -> cp : getConnection()
+  cp --> am : Connection
+  am -> db : INSERT INTO appointment (fertility_journey_id, date_time, appointment_type_id, location)\nVALUES (?, ?, (SELECT id FROM appointment_type WHERE name = ?), ?)
+  db --> am : generated id
+  am --> s : id
+  opt type is EGG_RETRIEVAL, EMBRYO_TRANSFER or PREGNANCY_TEST
+    s -> rs : findActiveRound(patientId) (RoundMapper)
+    note right of rs : NoActiveRoundException\n→ caught: no event, still OK
+    rs --> s : Round
+    s -> ts : addEvent(roundId, dateTime, eventType, location)
+    ts -> db : INSERT INTO event ... (via EventMapper.save)
+  end
+  s --> c : OK
+  c --> j : ctx.redirect("/aftaler?gemt=1")
+  j --> u : aftaler.html with "Gemt ✓" and updated list
 end
 
 @enduml

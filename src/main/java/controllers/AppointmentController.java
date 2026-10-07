@@ -59,7 +59,7 @@ public class AppointmentController {
         switch (result) {
             case OK -> ctx.redirect("/aftaler?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/aftaler?fejl=felter");            // et felt var tomt eller ugyldigt
-            case NO_ACTIVE_JOURNEY -> ctx.redirect("/aftaler?fejl=ingen-forloeb");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/aftaler?fejl=intet-forloeb");
             default -> ctx.redirect("/aftaler?fejl=ukendt");
         }
     }
