@@ -12,7 +12,6 @@ import java.time.LocalDate;
 
 public class FertilityJourneyMapper {
 
-
     private final ConnectionPool connectionPool;
 
         public FertilityJourneyMapper(ConnectionPool connectionPool) {
