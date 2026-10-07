@@ -21,14 +21,14 @@ public class DiagnosisMapper {
     // gemmer én diagnose og returnerer det id, databasen gav den
     public int save(Diagnosis diagnosis) {
         String sql = "INSERT INTO diagnosis (patient_id, name, description) VALUES (?, ?, ?)";
-        try (Connection connection = connectionPool.getConnection();                                   // ← lån en forbindelse
-             PreparedStatement statement = connection.prepareStatement(sql)) {// ← lån en forbindelse
+        try (Connection connection = connectionPool.getConnection();   // ← lån en forbindelse
+             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) { // ← bed om det nye id
             statement.setInt(1, diagnosis.getPatientId());
             statement.setString(2, diagnosis.getName());
             statement.setString(3, diagnosis.getDescription()); // må være null – kolonnen er ikke NOT NULL
             statement.executeUpdate();
 
-            try (ResultSet keys = statement.getGeneratedKeys()) {                                      // ← også i try (...)
+            try (ResultSet keys = statement.getGeneratedKeys()) {        // ← hent det nye id
                 if (keys.next()) {
                     diagnosis.setId(keys.getInt(1));
                 }
@@ -45,7 +45,7 @@ public class DiagnosisMapper {
         String sql = "SELECT * FROM diagnosis WHERE patient_id = ? ORDER BY name";
         List<Diagnosis> diagnoses = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();                                   // ← lån en forbindelse
-             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, patientId);
             try (ResultSet rs = statement.executeQuery()) {
                 while (rs.next()) {

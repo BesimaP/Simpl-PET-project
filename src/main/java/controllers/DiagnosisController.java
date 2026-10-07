@@ -4,20 +4,22 @@ import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import org.jetbrains.annotations.NotNull;
+import persistence.ConnectionPool;
 import services.DiagnosisService;
 
 // Koordinatoren for /diagnoser (US7). Læser formularen, kalder DiagnosisService og sender brugeren videre.
 public class DiagnosisController {
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: DiagnosisController.setRoutes(config)
-    public static void setRoutes(JavalinConfig config) {
+    public static void setRoutes(JavalinConfig config, ConnectionPool connectionPool) {
+        DiagnosisService diagnosisService = new DiagnosisService(connectionPool);
         // "når der kommer POST til /diagnoser (formularen på diagnoser.html), så kald addDiagnosis med den ctx, Javalin rækker os"
-        config.routes.post("/diagnoser", ctx -> addDiagnosis(ctx));
-        config.routes.get("/diagnoser", ctx -> showDiagnoses(ctx));
+        config.routes.post("/diagnoser", ctx -> addDiagnosis(ctx, diagnosisService));
+        config.routes.get("/diagnoser", ctx -> showDiagnoses(ctx, diagnosisService));
     }
 
     // GET /diagnoser – hent listen og fyld skabelonen
-    private static void showDiagnoses(Context ctx) {
+    private static void showDiagnoses(Context ctx, DiagnosisService diagnosisService) {
         // 1. hvem er logget ind? (sat i sessionen ved login). Integer, fordi den er null, hvis ingen er logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -26,7 +28,7 @@ public class DiagnosisController {
         }
 
         // 2. bed service om listen, og læg den i requestscope – Thymeleaf læser den som ${diagnoses}
-        ctx.attribute("diagnoses", new DiagnosisService().getDiagnoses(patientId));
+        ctx.attribute("diagnoses", diagnosisService.getDiagnoses(patientId));
 
         // 3. vis skabelonen templates/diagnoser.html
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
@@ -36,7 +38,7 @@ public class DiagnosisController {
     }
 
     // POST /diagnoser – når brugeren trykker "Gem diagnose". ctx = kuverten fra Javalin
-    private static void addDiagnosis(Context ctx) {
+    private static void addDiagnosis(Context ctx, DiagnosisService diagnosisService) {
         // 1. hvem er logget ind? (sat i sessionen ved login)
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -49,7 +51,7 @@ public class DiagnosisController {
         String description = ctx.formParam("description"); // må være tom
 
         // 3. bed service gemme diagnosen – den hænger direkte på patienten, så ingen forløb/runde at finde
-        ServiceResult result = new DiagnosisService().addDiagnosis(patientId, name, description);
+        ServiceResult result = diagnosisService.addDiagnosis(patientId, name, description);
 
         // 4. vælg side ud fra svaret – redirect til RUTEN /diagnoser (ikke .html – filen ligger i templates nu)
         switch (result) {

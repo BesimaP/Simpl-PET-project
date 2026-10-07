@@ -14,7 +14,7 @@ public class RouteConfig {
         DashboardController.setRoutes(config);
         HormoneController.setRoutes(config);
         DiaryController.setRoutes(config);
-        DiagnosisController.setRoutes(config);
+        DiagnosisController.setRoutes(config, connectionPool);
         MedicationController.setRoutes(config);
         AppointmentController.setRoutes(config);
         ProfileController.setRoutes(config);
