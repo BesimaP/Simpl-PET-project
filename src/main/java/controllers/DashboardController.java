@@ -80,6 +80,7 @@ public class DashboardController {
             ctx.attribute("dayNumber", ChronoUnit.DAYS.between(round.getStartDate(), LocalDate.now()) + 1);
         }
 
+
         // små kort: dagens medicin, næste aftale, seneste hormonværdi, antal noter
         ctx.attribute("todayMeds", medicationService.getTodayLogs(patientId));
         ctx.attribute("names", medicationService.getMedicationNames());
