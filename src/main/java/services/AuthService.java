@@ -12,6 +12,8 @@ import java.time.format.DateTimeParseException;
 
 // Forretningslogik for login og opret profil. Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 public class AuthService {
+    public static final int MIN_PASSWORD_LENGTH = 8;  // bruges også af ProfileService ved "skift kodeord"
+
     private PatientMapper patientMapper;          // attribut 1: arkivaren (laves én gang i konstruktøren)
     private DashboardService dashboardService;    // attribut 2: bruges til at oprette forløbet ved "opret profil"
 
@@ -24,9 +26,14 @@ public class AuthService {
 
     // Login: giver patientens id tilbage (det er det, sessionen skal huske) – ellers kastes UserNotFoundException
     public Patient login(String username, String password) throws UserNotFoundException {
+        // regel: begge felter skal være udfyldt (BCrypt kan ikke tjekke et kodeord, der er null)
+        if (isBlank(username) || isBlank(password)) {
+            throw new UserNotFoundException("Forkert brugernavn eller kodeord");
+        }
+
         Patient patient = patientMapper.findByUsername(username);
 
-        if (patient == null || !BCrypt.checkpw(password, patient.getPasswordHash())) {
+        if (patient == null || !passwordMatches(password, patient.getPasswordHash())) {
             throw new UserNotFoundException("Forkert brugernavn eller kodeord");
         }
 
@@ -48,6 +55,15 @@ public class AuthService {
         try {
             dob = LocalDate.parse(dateOfBirth);
         } catch (DateTimeParseException e) {
+            return ServiceResult.INVALID_INPUT;
+        }
+        // man kan ikke være født i fremtiden
+        if (dob.isAfter(LocalDate.now())) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
+        // regel: kodeordet skal være mindst 8 tegn (samme som minlength="8" i HTML – serveren stoler ikke på HTML)
+        if (password.length() < MIN_PASSWORD_LENGTH) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -79,6 +95,17 @@ public class AuthService {
         }
 
         return ServiceResult.OK;
+    }
+
+    // hjælper: passer kodeordet med hashet fra databasen?
+    // BCrypt.checkpw KASTER en IllegalArgumentException eller StringIndexOutOfBoundsException, hvis hashet i databasen
+    // ikke er et rigtigt BCrypt-hash (fx en pladsholder i testdata). Det skal give "forkert kodeord" – ikke en 500-fejl
+    public static boolean passwordMatches(String password, String hash) {
+        try {
+            return BCrypt.checkpw(password, hash);
+        } catch (IllegalArgumentException | StringIndexOutOfBoundsException e) {
+            return false;
+        }
     }
 
     // hjælper: null eller kun mellemrum tæller som tomt (samme som i de andre services)

@@ -46,7 +46,10 @@ public class DashboardController {
         config.routes.post("/opret-forloeb", ctx -> createJourney(ctx));   // "Start dit forløb" på dashboard (US1)
         config.routes.get("/start-runde", ctx -> showStartRound(ctx));     // siden med formularen (Thymeleaf)
         config.routes.post("/start-runde", ctx -> startRound(ctx));        // "Start runde" på start-runde.html (US10a)
-        config.routes.post("/afslut-runde", ctx -> endRound(ctx));         // bekræft i dialogen på dashboard (US10b)
+        config.routes.get("/afslut-runde", ctx -> showEndRound(ctx));      // bekræft-side – bruges, når JavaScript er slået fra
+        config.routes.post("/afslut-runde", ctx -> endRound(ctx));         // bekræft i dialogen på dashboard eller på bekræft-siden (US10a)
+        config.routes.get("/afslut-forloeb", ctx -> showEndJourney(ctx));  // bekræft-side for "Afslut forløb"
+        config.routes.post("/afslut-forloeb", ctx -> endJourney(ctx));     // afslut forløbet (US1: flere forløb over tid)
     }
 
     // GET /dashboard – samler data fra alle emner og fylder skabelonen. Tre tilstande: intet forløb, forløb uden runde, runde i gang
@@ -62,6 +65,7 @@ public class DashboardController {
 
         // påmindelser om dagens medicin oprettes, når forsiden åbnes (US12). Tallet bruges til prikken på klokken
         notificationService.createMedicationReminders(patientId);
+        notificationService.createAppointmentReminders(patientId);   // aftaler i dag og i morgen
         ctx.attribute("unread", notificationService.countUnread(patientId));
         ctx.attribute("notifications", notificationService.getNotifications(patientId));   // til pop-op'en ved klokken
 
@@ -78,7 +82,11 @@ public class DashboardController {
         ctx.attribute("round", round);
         if (round != null) {
             // dag-nummer i runden: dage siden start + 1
-            ctx.attribute("dayNumber", ChronoUnit.DAYS.between(round.getStartDate(), LocalDate.now()) + 1);
+            long dayNumber = ChronoUnit.DAYS.between(round.getStartDate(), LocalDate.now()) + 1;
+            ctx.attribute("dayNumber", dayNumber);
+            // ringen om dag-tælleren: hvor mange procent af ca. 28 dage er gået? Mellem 0 og 100
+            // (0 hvis runden starter i fremtiden, højst 100 så ringen ikke "løber over")
+            ctx.attribute("progressPercent", Math.max(0, Math.min(100, dayNumber * 100 / 28)));
         }
 
         // små kort: dagens medicin, næste aftale, seneste hormonværdi, antal noter
@@ -139,6 +147,7 @@ public class DashboardController {
             ctx.redirect("/login");
             return;
         }
+        ctx.attribute("today", LocalDate.now());   // startdato er udfyldt med dags dato (kan ændres)
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("start-runde");
@@ -168,6 +177,65 @@ public class DashboardController {
         }
     }
 
+    // GET /afslut-runde – bekræft-side uden JavaScript. Med JavaScript åbner dashboard.js i stedet dialogen på dashboard.
+    // Skabelonen bekraeft.html deles med "Afslut forløb" og "Slet konto" – teksterne lægges i request scope her
+    private void showEndRound(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        Round round;
+        try {
+            round = roundService.findActiveRound(patientId);
+        } catch (NoActiveJourneyException | NoActiveRoundException e) {
+            ctx.redirect("/dashboard?fejl=ingen-runde");   // der er ingen runde at afslutte
+            return;
+        }
+        ctx.attribute("title", "Afslut runde " + round.getRoundNumber() + "?");
+        ctx.attribute("text", "Runden markeres som afsluttet, og du kan starte en ny. Dine logs og noter gemmes.");
+        ctx.attribute("action", "/afslut-runde");
+        ctx.attribute("button", "Afslut runde");
+        ctx.attribute("cancel", "/dashboard");
+        ctx.attribute("showResult", true);   // kun her: vælg resultat (Positiv/Negativ/Ikke afgjort)
+        ctx.render("bekraeft");
+    }
+
+    // GET /afslut-forloeb – bekræft-side for "Afslut forløb"
+    private void showEndJourney(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        ctx.attribute("title", "Afslut dit forløb?");
+        ctx.attribute("text", "Forløbet markeres som afsluttet. Dine runder, logs og noter gemmes, og du kan starte et nyt forløb bagefter.");
+        ctx.attribute("action", "/afslut-forloeb");
+        ctx.attribute("button", "Afslut forløb");
+        ctx.attribute("cancel", "/dashboard");
+        ctx.attribute("showResult", false);
+        ctx.render("bekraeft");
+    }
+
+    // POST /afslut-forloeb
+    private void endJourney(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+
+        // bed service afslutte forløbet – den kender reglen "afslut runden først"
+        ServiceResult result = dashboardService.endJourney(patientId);
+
+        switch (result) {
+            case OK -> ctx.redirect("/dashboard?gemt=forloeb-afsluttet");       // dashboard viser nu "Start dit forløb"
+            case ROUND_IN_PROGRESS -> ctx.redirect("/dashboard?fejl=runde-i-gang-forloeb");
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/dashboard");
+            default -> ctx.redirect("/dashboard?fejl=ukendt");
+        }
+    }
+
     // POST /afslut-runde
     private void endRound(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
@@ -177,8 +245,15 @@ public class DashboardController {
         }
 
         // resultatet er valgfrit: "POSITIVE", "NEGATIVE" eller tomt (kan udfyldes senere)
+        // try/catch: en ukendt værdi (fx rettet i browseren) giver en fejlbesked i stedet for en 500-fejl
         String resultParam = ctx.formParam("result");
-        Result result = (resultParam == null || resultParam.isBlank()) ? null : Result.valueOf(resultParam);
+        Result result;
+        try {
+            result = (resultParam == null || resultParam.isBlank()) ? null : Result.valueOf(resultParam);
+        } catch (IllegalArgumentException e) {
+            ctx.redirect("/dashboard?fejl=ukendt");
+            return;
+        }
 
         ServiceResult outcome = roundService.endRound(patientId, result);
 

@@ -379,6 +379,16 @@ button.med__check:hover {
     color: var(--on-brand-muted);
 }
 
+/* "Afslut forløb" under "Start runde" på det mørke kort: lille, lys og understreget, så den kan ses, men ikke trykkes ved et uheld */
+.empty p:last-child {
+    margin: 16px 0 0;
+}
+
+.empty .muted-link {
+    color: var(--on-brand-muted);
+    text-decoration: underline;
+}
+
 
 /* HORMONKURVE (hormoner.html). SVG'en skalerer med bredden – viewBox i HTML'en bestemmer forholdet */
 .chart {

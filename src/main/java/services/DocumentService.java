@@ -62,7 +62,7 @@ public class DocumentService {
             Files.createDirectories(target.getParent());
             Files.copy(fileContent, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new RuntimeException("Could not save uploaded file", e);
+            throw new RuntimeException("Filen kunne ikke gemmes på disken", e);   // fanges af ExceptionConfig -> fejlsiden
         }
 
         // 6. gem rækken i databasen – kun stien til filen og dagens dato
@@ -85,6 +85,36 @@ public class DocumentService {
             }
         }
         return null;
+    }
+
+    // Sletter ét dokument (US11): både rækken i databasen og selve filen på disken.
+    // Kun patientens eget dokument – ellers NOT_FOUND (så man ikke kan slette andres ved at rette id'et)
+    public ServiceResult deleteDocument(int patientId, int documentId) {
+        Document document = findDocument(patientId, documentId);
+        if (document == null) {
+            return ServiceResult.NOT_FOUND;
+        }
+        deleteFile(document);
+        documentMapper.delete(documentId);
+        return ServiceResult.OK;
+    }
+
+    // Sletter ALLE patientens filer på disken. Kaldes af ProfileService, når kontoen slettes:
+    // ON DELETE CASCADE sletter kun rækkerne i databasen – filerne i uploads/ skal vi selv fjerne (US6b AC2)
+    public void deleteAllFiles(int patientId) {
+        for (Document d : getDocuments(patientId)) {
+            deleteFile(d);
+        }
+    }
+
+    // hjælper: slet filen bag ét dokument. deleteIfExists = ingen fejl, hvis filen allerede er væk
+    private void deleteFile(Document document) {
+        try {
+            Files.deleteIfExists(Path.of(document.getFilePath()));
+        } catch (IOException e) {
+            // filen kunne ikke slettes (fx låst) – rækken slettes alligevel, så patienten ikke ser den mere
+            System.err.println("Kunne ikke slette filen " + document.getFilePath() + ": " + e.getMessage());
+        }
     }
 
     private boolean isBlank(String s) {

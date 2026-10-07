@@ -101,6 +101,17 @@ public class MedicationService {
         return past;
     }
 
+    // Doser planlagt EFTER i dag (fra i morgen og frem) – til listen "Kommende" (GET)
+    public List<MedicationLog> getUpcomingLogs(int patientId) {
+        List<MedicationLog> upcoming = new ArrayList<>();
+        for (MedicationLog m : getAll(patientId)) {
+            if (m.getScheduledDateTime().toLocalDate().isAfter(LocalDate.now())) {
+                upcoming.add(m);
+            }
+        }
+        return upcoming;
+    }
+
     // Opslag id -> navn (fx 1 -> "Gonal-F"), så skabelonen kan vise navnet. Loggen har kun medicationId
     public Map<Integer, String> getMedicationNames() {
         Map<Integer, String> names = new HashMap<>();

@@ -17,9 +17,10 @@ public class ProfileController {
 
     public void setRoutes(JavalinConfig config) {
         config.routes.get("/min-profil", ctx -> showProfile(ctx));         // vis siden med navnet forudfyldt (Thymeleaf)
-        config.routes.post("/min-profil", ctx -> updateName(ctx));         // formular "Ret navn"
+        config.routes.post("/min-profil", ctx -> updateProfile(ctx));      // formular "Profil" (navn + fødselsdato)
         config.routes.post("/skift-kodeord", ctx -> changePassword(ctx));  // formular "Skift kodeord"
-        config.routes.post("/slet-konto", ctx -> deleteAccount(ctx));      // bekræft-knappen i slet-dialogen
+        config.routes.get("/slet-konto", ctx -> showDeleteAccount(ctx));   // bekræft-side – bruges, når JavaScript er slået fra
+        config.routes.post("/slet-konto", ctx -> deleteAccount(ctx));      // bekræft-knappen (i dialogen eller på bekræft-siden)
     }
 
     // GET /min-profil – hent patientens kort og fyld skabelonen
@@ -37,22 +38,45 @@ public class ProfileController {
         ctx.render("min-profil");                                              // templates/min-profil.html
     }
 
-    // POST /min-profil – ret navn
-    private void updateName(Context ctx) {
+    // GET /slet-konto – bekræft-side uden JavaScript. Med JavaScript åbner min-profil.js i stedet dialogen på min-profil.
+    // Siden er skabelonen bekraeft.html, som også bruges til "Afslut runde" og "Afslut forløb"
+    private void showDeleteAccount(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        ctx.attribute("title", "Slet din konto?");
+        ctx.attribute("text", "Alle dine data – forløb, runder, noter og dokumenter – slettes og kan ikke gendannes.");
+        ctx.attribute("action", "/slet-konto");      // hvor "Slet konto"-knappen sender hen
+        ctx.attribute("button", "Slet konto");
+        ctx.attribute("cancel", "/min-profil");      // "Annullér" går tilbage hertil
+        ctx.attribute("showResult", false);          // kun "Afslut runde" spørger om resultat
+        ctx.render("bekraeft");
+    }
+
+    // POST /min-profil – ret navn og fødselsdato
+    private void updateProfile(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
 
-        // åbn kuverten: det nye for- og efternavn
+        // åbn kuverten: det nye for- og efternavn og fødselsdatoen
         String firstName = ctx.formParam("firstName");
         String lastName = ctx.formParam("lastName");
+        String dateOfBirth = ctx.formParam("dateOfBirth");
 
-        // bed service rette navnet – den tjekker, at feltet ikke er tomt
-        ServiceResult result = profileService.updateName(patientId, firstName, lastName);
+        // bed service rette profilen – den tjekker tomme felter og at datoen er gyldig
+        ServiceResult result = profileService.updateProfile(patientId, firstName, lastName, dateOfBirth);
 
         // vælg side ud fra svaret
+        // navnet i sessionen bruges til forbogstavet i avataren – opdatér det også
+        if (result == ServiceResult.OK) {
+            ctx.sessionAttribute("patientName", firstName.trim() + " " + lastName.trim());
+        }
+
         switch (result) {
             case OK -> ctx.redirect("/min-profil?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/min-profil?fejl=felter");

@@ -50,6 +50,12 @@ public class MedicationLog {
         return dose;
     }
 
+    // dosis som pæn tekst: 150.0 -> "150", 0.25 -> "0.25" (Thymeleaf: ${m.doseText}).
+    // stripTrailingZeros fjerner nullerne efter kommaet, toPlainString undgår "1.5E+2"
+    public String getDoseText() {
+        return java.math.BigDecimal.valueOf(dose).stripTrailingZeros().toPlainString();
+    }
+
     public String getUnit() {
         return unit;
     }

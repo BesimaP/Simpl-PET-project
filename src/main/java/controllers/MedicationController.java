@@ -34,6 +34,7 @@ public class MedicationController {
         }
 
         ctx.attribute("today", medicationService.getTodayLogs(patientId));   // requestscope -> ${today}
+        ctx.attribute("upcoming", medicationService.getUpcomingLogs(patientId)); // requestscope -> ${upcoming} (fra i morgen og frem)
         ctx.attribute("past", medicationService.getPastLogs(patientId));     // requestscope -> ${past}
         ctx.attribute("names", medicationService.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
@@ -49,7 +50,14 @@ public class MedicationController {
             ctx.redirect("/login");
             return;
         }
-        int logId = Integer.parseInt(ctx.formParam("id"));   // "17" -> 17
+        // "17" -> 17. try/catch: et ugyldigt id (fx rettet i det skjulte felt) giver en fejlbesked i stedet for en 500-fejl
+        int logId;
+        try {
+            logId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/medicin?fejl=ukendt");
+            return;
+        }
         medicationService.markTaken(patientId, logId);   // service tjekker, at dosen er patientens egen
         ctx.redirect("/medicin");
     }
@@ -61,7 +69,13 @@ public class MedicationController {
             ctx.redirect("/login");
             return;
         }
-        int logId = Integer.parseInt(ctx.formParam("id"));
+        int logId;
+        try {
+            logId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/medicin?fejl=ukendt");
+            return;
+        }
         medicationService.markNotTaken(patientId, logId);
         ctx.redirect("/medicin");
     }

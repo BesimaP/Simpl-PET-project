@@ -3,38 +3,39 @@
 -- Kør EFTER schema_postgres.sql, i pgAdmin Query Tool (F5).
 -- 25 patienter · forløb, runder, aftaler, hormonmålinger, medicin, noter, diagnoser, dokumenter, notifikationer.
 -- OVERRIDING SYSTEM VALUE: vi sætter id'erne selv, så fremmednøglerne passer – og nulstiller tællerne til sidst.
--- Kodeord er pladsholder-hashes (ikke rigtige BCrypt) – data er kun til udvikling.
+-- Alle testbrugere har kodeordet  test1234  (rigtigt BCrypt-hash, samme for alle) – fx brugernavn mette1990 / test1234.
+-- Data er kun til udvikling.
 -- Typer gemmes som id (fx treatment_type_id 1 = IVF) – se kommentarerne ved typetabellerne i schema_postgres.sql.
 -- =========================================================
 
 
 -- Patient — login og persondata i én tabel (UserAccount og Patient er samlet)
 INSERT INTO patient (id, username, password_hash, first_name, last_name, date_of_birth) OVERRIDING SYSTEM VALUE VALUES
-    (1, 'mette1990', '$2a$10$demo_hash_mette1990', 'Mette', 'Jensen', '1986-01-01'),
-    (2, 'anna1991', '$2a$10$demo_hash_anna1991', 'Anna', 'Sørensen', '1987-06-12'),
-    (3, 'sofie1992', '$2a$10$demo_hash_sofie1992', 'Sofie', 'Thomsen', '1988-11-23'),
-    (4, 'camilla1993', '$2a$10$demo_hash_camilla1993', 'Camilla', 'Frederiksen', '1989-04-07'),
-    (5, 'louise1994', '$2a$10$demo_hash_louise1994', 'Louise', 'Pedersen', '1990-09-18'),
-    (6, 'ida1995', '$2a$10$demo_hash_ida1995', 'Ida', 'Petersen', '1991-02-02'),
-    (7, 'maria1996', '$2a$10$demo_hash_maria1996', 'Maria', 'Knudsen', '1992-07-13'),
-    (8, 'line1997', '$2a$10$demo_hash_line1997', 'Line', 'Schmidt', '1993-12-24'),
-    (9, 'emma1998', '$2a$10$demo_hash_emma1998', 'Emma', 'Larsen', '1994-05-08'),
-    (10, 'freja1999', '$2a$10$demo_hash_freja1999', 'Freja', 'Olsen', '1995-10-19'),
-    (11, 'signe2000', '$2a$10$demo_hash_signe2000', 'Signe', 'Jakobsen', '1996-03-03'),
-    (12, 'nanna2001', '$2a$10$demo_hash_nanna2001', 'Nanna', 'Hansen', '1997-08-14'),
-    (13, 'katrine1990', '$2a$10$demo_hash_katrine1990', 'Katrine', 'Jørgensen', '1998-01-25'),
-    (14, 'julie1991', '$2a$10$demo_hash_julie1991', 'Julie', 'Johansen', '1999-06-09'),
-    (15, 'cecilie1992', '$2a$10$demo_hash_cecilie1992', 'Cecilie', 'Holm', '1986-11-20'),
-    (16, 'amalie1993', '$2a$10$demo_hash_amalie1993', 'Amalie', 'Christensen', '1987-04-04'),
-    (17, 'laura1994', '$2a$10$demo_hash_laura1994', 'Laura', 'Kristensen', '1988-09-15'),
-    (18, 'mathilde1995', '$2a$10$demo_hash_mathilde1995', 'Mathilde', 'Møller', '1989-02-26'),
-    (19, 'sara1996', '$2a$10$demo_hash_sara1996', 'Sara', 'Nielsen', '1990-07-10'),
-    (20, 'rikke1997', '$2a$10$demo_hash_rikke1997', 'Rikke', 'Rasmussen', '1991-12-21'),
-    (21, 'pernille1998', '$2a$10$demo_hash_pernille1998', 'Pernille', 'Poulsen', '1992-05-05'),
-    (22, 'trine1999', '$2a$10$demo_hash_trine1999', 'Trine', 'Lund', '1993-10-16'),
-    (23, 'nadia2000', '$2a$10$demo_hash_nadia2000', 'Nadia', 'Andersen', '1994-03-27'),
-    (24, 'helene2001', '$2a$10$demo_hash_helene2001', 'Helene', 'Madsen', '1995-08-11'),
-    (25, 'josefine1990', '$2a$10$demo_hash_josefine1990', 'Josefine', 'Mortensen', '1996-01-22');
+    (1, 'mette1990', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Mette', 'Jensen', '1986-01-01'),
+    (2, 'anna1991', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Anna', 'Sørensen', '1987-06-12'),
+    (3, 'sofie1992', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Sofie', 'Thomsen', '1988-11-23'),
+    (4, 'camilla1993', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Camilla', 'Frederiksen', '1989-04-07'),
+    (5, 'louise1994', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Louise', 'Pedersen', '1990-09-18'),
+    (6, 'ida1995', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Ida', 'Petersen', '1991-02-02'),
+    (7, 'maria1996', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Maria', 'Knudsen', '1992-07-13'),
+    (8, 'line1997', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Line', 'Schmidt', '1993-12-24'),
+    (9, 'emma1998', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Emma', 'Larsen', '1994-05-08'),
+    (10, 'freja1999', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Freja', 'Olsen', '1995-10-19'),
+    (11, 'signe2000', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Signe', 'Jakobsen', '1996-03-03'),
+    (12, 'nanna2001', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Nanna', 'Hansen', '1997-08-14'),
+    (13, 'katrine1990', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Katrine', 'Jørgensen', '1998-01-25'),
+    (14, 'julie1991', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Julie', 'Johansen', '1999-06-09'),
+    (15, 'cecilie1992', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Cecilie', 'Holm', '1986-11-20'),
+    (16, 'amalie1993', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Amalie', 'Christensen', '1987-04-04'),
+    (17, 'laura1994', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Laura', 'Kristensen', '1988-09-15'),
+    (18, 'mathilde1995', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Mathilde', 'Møller', '1989-02-26'),
+    (19, 'sara1996', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Sara', 'Nielsen', '1990-07-10'),
+    (20, 'rikke1997', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Rikke', 'Rasmussen', '1991-12-21'),
+    (21, 'pernille1998', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Pernille', 'Poulsen', '1992-05-05'),
+    (22, 'trine1999', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Trine', 'Lund', '1993-10-16'),
+    (23, 'nadia2000', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Nadia', 'Andersen', '1994-03-27'),
+    (24, 'helene2001', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Helene', 'Madsen', '1995-08-11'),
+    (25, 'josefine1990', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Josefine', 'Mortensen', '1996-01-22');
 
 INSERT INTO diagnosis (id, patient_id, name, description) OVERRIDING SYSTEM VALUE VALUES
     (1, 2, 'Tubafaktor', 'Aflukkede æggeledere'),

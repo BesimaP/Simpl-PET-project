@@ -48,6 +48,11 @@ public class HormoneLog {
         return value;
     }
 
+    // værdien som pæn tekst: 2162.0 -> "2162", 3.5 -> "3.5" (Thymeleaf: ${h.valueText}) – samme som doseText på MedicationLog
+    public String getValueText() {
+        return java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
+    }
+
     public String getUnit() {
         return unit;
     }

@@ -22,8 +22,15 @@ public class LoginController {
         // ctx -> login(ctx) = "kald metoden login med den ctx, Javalin rækker os";
         config.routes.get("/login", ctx -> ctx.render("login"));
         config.routes.post("/login", ctx -> login(ctx));
+        config.routes.get("/opretprofil", ctx -> showCreateProfile(ctx));   // siden er nu en Thymeleaf-template (fejlbesked uden JavaScript)
         config.routes.post("/opretprofil", ctx -> createProfile(ctx));
         config.routes.get("/logout", ctx -> logout(ctx));
+    }
+
+    // GET /opretprofil – vis formularen. ?fejl= fra sidste forsøg -> request scope -> ${fejl} i opretprofil.html
+    private void showCreateProfile(Context ctx) {
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
+        ctx.render("opretprofil");
     }
 
     // GET /logout – glem hvem der er logget ind og send til login. Bruges af "Log ud" i menuen
@@ -84,9 +91,9 @@ public class LoginController {
                     ctx.redirect("/login"); // burde ikke ske – men så må hun logge ind manuelt
                 }
             }
-            case ALREADY_EXISTS -> ctx.redirect("/opretprofil.html?fejl=brugernavn"); // brugernavnet er optaget
-            case INVALID_INPUT -> ctx.redirect("/opretprofil.html?fejl=felter");      // tomt felt eller ugyldig dato
-            default -> ctx.redirect("/opretprofil.html?fejl=ukendt");
+            case ALREADY_EXISTS -> ctx.redirect("/opretprofil?fejl=brugernavn"); // brugernavnet er optaget
+            case INVALID_INPUT -> ctx.redirect("/opretprofil?fejl=felter");      // tomt felt eller ugyldig dato
+            default -> ctx.redirect("/opretprofil?fejl=ukendt");
         }
     }
 }

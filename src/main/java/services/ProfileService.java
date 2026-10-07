@@ -6,13 +6,18 @@ import enums.ServiceResult;
 import org.mindrot.jbcrypt.BCrypt;
 import persistence.ConnectionPool;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
 // Forretningslogik for min-profil (US6b). Kender IKKE Javalin – ProfileController læser formularen og kalder én metode her.
 // Alle tre metoder gemmer/ændrer noget, så de svarer med ServiceResult. Controlleren vælger side ud fra svaret.
 public class ProfileService {
     private PatientMapper patientMapper;
+    private DocumentService documentService;   // til at slette patientens filer på disken, når kontoen slettes
 
     public ProfileService(ConnectionPool connectionPool) {
         this.patientMapper = new PatientMapper(connectionPool);
+        this.documentService = new DocumentService(connectionPool);
     }
 
     // Henter patientens kort – til at forudfylde felterne på min-profil (GET)
@@ -20,17 +25,28 @@ public class ProfileService {
         return patientMapper.findById(patientId);
     }
 
-    // Retter patientens navn
-    public ServiceResult updateName(int patientId, String firstName, String lastName) {
-        // 1. regel: hverken for- eller efternavn må være tomt
-        if (isBlank(firstName) || isBlank(lastName)) {
+    // Retter patientens navn og fødselsdato (US6b AC1)
+    public ServiceResult updateProfile(int patientId, String firstName, String lastName, String dateOfBirth) {
+        // 1. regel: ingen tomme felter
+        if (isBlank(firstName) || isBlank(lastName) || isBlank(dateOfBirth)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. bed arkivaren rette navnet på patientens kort (UPDATE patient SET first_name = ?, last_name = ? WHERE id = ?)
-        patientMapper.updateName(patientId, firstName.trim(), lastName.trim());
+        // 2. fødselsdatoen skal være en rigtig dato – og ikke i fremtiden
+        LocalDate dob;
+        try {
+            dob = LocalDate.parse(dateOfBirth);
+        } catch (DateTimeParseException e) {
+            return ServiceResult.INVALID_INPUT;
+        }
+        if (dob.isAfter(LocalDate.now())) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
-        // 3. gik godt
+        // 3. bed arkivaren rette kortet (UPDATE patient SET first_name = ?, last_name = ?, date_of_birth = ? WHERE id = ?)
+        patientMapper.updateProfile(patientId, firstName.trim(), lastName.trim(), dob);
+
+        // 4. gik godt
         return ServiceResult.OK;
     }
 
@@ -46,6 +62,11 @@ public class ProfileService {
             return ServiceResult.INVALID_INPUT;
         }
 
+        // 2b. regel: mindst 8 tegn (samme regel som ved opret profil)
+        if (newPassword.length() < AuthService.MIN_PASSWORD_LENGTH) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // 3. hent patientens kort fra databasen – null = findes ikke
         Patient patient = patientMapper.findById(patientId);
         if (patient == null) {
@@ -53,7 +74,8 @@ public class ProfileService {
         }
 
         // 4. regel: det gamle kodeord skal passe med det, der ligger i databasen
-        if (!BCrypt.checkpw(currentPassword, patient.getPasswordHash())) {
+        //    samme tjek som ved login (AuthService.passwordMatches) – et ødelagt hash i databasen tæller som "passer ikke"
+        if (!AuthService.passwordMatches(currentPassword, patient.getPasswordHash())) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -66,10 +88,13 @@ public class ProfileService {
 
     // Sletter kontoen = patienten – alt under den ryger med (ON DELETE CASCADE i schema_postgres.sql)
     public ServiceResult deleteAccount(int patientId) {
-        // 1. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?)
+        // 1. slet patientens uploadede filer på disken. CASCADE sletter kun RÆKKERNE i databasen – ikke selve filerne (US6b AC2)
+        documentService.deleteAllFiles(patientId);
+
+        // 2. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?)
         patientMapper.delete(patientId);
 
-        // 2. gik godt
+        // 3. gik godt
         return ServiceResult.OK;
     }
 

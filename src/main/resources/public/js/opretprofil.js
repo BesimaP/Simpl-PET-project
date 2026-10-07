@@ -28,22 +28,10 @@ journeyRadios.forEach(function (radio) {
 });
 
 
-// --- 2. Fejlbesked fra serveren ---
-// Serveren sender tilbage til fx /opretprofil.html?fejl=brugernavn, når noget gik galt.
-// URLSearchParams læser det, der står efter ? i adressen
+// --- 2. Skjul datofeltet, når siden åbner ---
+// I HTML'en er feltet synligt, så siden også virker uden JavaScript.
+// Her (med JavaScript) skjuler vi det fra start, hvis "Nej" er valgt – og viser det igen ved "Ja" (punkt 1 ovenfor)
+const yesChecked = document.querySelector('input[name="hasJourney"][value="yes"]').checked;
+journeyFields.hidden = !yesChecked;
 
-const params = new URLSearchParams(window.location.search);
-const fejl = params.get("fejl");                       // "brugernavn", "felter" … eller null
-const formError = document.getElementById("form-error");
-
-// ordbog: fejlkode -> den tekst, brugeren skal se
-const fejlTekster = {
-    "brugernavn": "Brugernavnet er optaget – vælg et andet.",
-    "felter": "Udfyld alle felter, og tjek at datoerne er gyldige.",
-    "ukendt": "Noget gik galt. Prøv igen."
-};
-
-// hvis der ER en fejl, og vi kender den: skriv teksten i <p id="form-error">
-if (fejl !== null && fejlTekster[fejl] !== undefined) {
-    formError.textContent = fejlTekster[fejl];
-}
+// (Fejlbeskeden fra serveren, fx "Brugernavnet er optaget", skrives nu af Thymeleaf i opretprofil.html – ingen JavaScript nødvendig)

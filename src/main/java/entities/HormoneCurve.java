@@ -26,6 +26,7 @@ public class HormoneCurve {
         public double getX() { return x; }
         public double getY() { return y; }
         public double getValue() { return value; }
+        public String getValueText() { return java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString(); }   // 450.0 -> "450"
         public String getDateLabel() { return dateLabel; }
     }
 
@@ -50,6 +51,7 @@ public class HormoneCurve {
     public String getUnit() { return unit; }
     public double getMax() { return max; }
     public double getAverage() { return average; }
+    public String getAverageText() { return java.math.BigDecimal.valueOf(average).stripTrailingZeros().toPlainString(); }   // 535.0 -> "535"
     public double getAverageY() { return averageY; }
 
     public void setAverage(double average, double averageY) {

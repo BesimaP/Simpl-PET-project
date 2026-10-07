@@ -23,7 +23,26 @@ public class DocumentController {
     public void setRoutes(JavalinConfig config) {
         config.routes.get("/dokumenter", ctx -> showDocuments(ctx));
         config.routes.post("/dokumenter", ctx -> uploadDocument(ctx));
-        config.routes.get("/dokumenter/{id}", ctx -> openDocument(ctx));   // "Åbn" på listen – {id} = path-parameter
+        config.routes.get("/dokumenter/{id}", ctx -> openDocument(ctx));
+        config.routes.post("/dokumenter/slet", ctx -> deleteDocument(ctx));   // "Slet" på ét dokument (id i et skjult felt)   // "Åbn" på listen – {id} = path-parameter
+    }
+
+    // POST /dokumenter/slet – slet ét dokument (rækken + filen). Service tjekker, at det er patientens eget
+    private void deleteDocument(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        int documentId;
+        try {
+            documentId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/dokumenter?fejl=ukendt");
+            return;
+        }
+        ServiceResult result = documentService.deleteDocument(patientId, documentId);
+        ctx.redirect(result == ServiceResult.OK ? "/dokumenter?gemt=slettet" : "/dokumenter?fejl=ukendt");
     }
 
     // GET /dokumenter/{id} – send selve filen tilbage til browseren (PDF vises, billeder vises)

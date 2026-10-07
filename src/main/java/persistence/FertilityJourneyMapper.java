@@ -75,8 +75,17 @@ public class FertilityJourneyMapper {
         }
     }
 
+    // Afslutter et forløb: status sættes til COMPLETED (UPDATE). Bagefter kan patienten oprette et nyt forløb (US1)
+    public void endJourney(int id) {
+        // statussen slås op i typetabellen journey_status ud fra ordet – samme mønster som i save
+        String sql = "UPDATE fertility_journey SET journey_status_id = (SELECT id FROM journey_status WHERE name = ?) WHERE id = ?";
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, JourneyStatus.COMPLETED.name());   // "COMPLETED"
+            statement.setInt(2, id);
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            throw new DatabaseException("Could not end fertility journey " + id, e);
+        }
+    }
 }
-
-
-
-

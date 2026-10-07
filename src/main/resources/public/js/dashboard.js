@@ -10,7 +10,10 @@ const endRoundDialog = document.getElementById("confirm-end");
 if (endRoundButton && endRoundDialog) {
 
     // NÅR man klikker på knappen:
-    endRoundButton.addEventListener("click", function () {
+    endRoundButton.addEventListener("click", function (event) {
+
+        // knappen er et link til /afslut-runde (til dem uden JavaScript) – stop linket, vi viser dialogen i stedet
+        event.preventDefault();
 
         // åbn dialogen (modal = resten af siden låses imens)
         endRoundDialog.showModal();
@@ -31,7 +34,8 @@ const notifDialog = document.getElementById("notif-dialog");
 if (notifButton && notifDialog) {
 
     // NÅR man klikker på klokken: åbn dialogen (modal = resten af siden låses imens)
-    notifButton.addEventListener("click", function () {
+    notifButton.addEventListener("click", function (event) {
+        event.preventDefault();   // klokken er et link til /notifikationer (til dem uden JavaScript) – stop linket
         notifDialog.showModal();
     });
 }

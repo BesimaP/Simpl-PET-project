@@ -73,21 +73,22 @@ public class PatientMapper {
         }
     }
 
-    // Retter patientens navn (min-profil). UPDATE ændrer en række, der findes
-    public void updateName(int id, String firstName, String lastName) {
+    // Retter patientens navn og fødselsdato (min-profil). UPDATE ændrer en række, der findes
+    public void updateProfile(int id, String firstName, String lastName, LocalDate dateOfBirth) {
         // SET = hvad der ændres, WHERE = hvilken række. Uden WHERE ville ALLE patienter få det nye navn!
-        String sql = "UPDATE patient SET first_name = ?, last_name = ? WHERE id = ?";
+        String sql = "UPDATE patient SET first_name = ?, last_name = ?, date_of_birth = ? WHERE id = ?";
 
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, firstName); // første ? = nyt fornavn
-            statement.setString(2, lastName);  // andet ? = nyt efternavn
-            statement.setInt(3, id);           // tredje ? = patientens id
-            statement.executeUpdate();         // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
+            statement.setString(1, firstName);      // første ? = nyt fornavn
+            statement.setString(2, lastName);       // andet ? = nyt efternavn
+            statement.setObject(3, dateOfBirth);    // tredje ? = ny fødselsdato (LocalDate -> DATE)
+            statement.setInt(4, id);                // fjerde ? = patientens id
+            statement.executeUpdate();              // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
 
         } catch (SQLException e) {
-            throw new DatabaseException("Could not update name for patient " + id, e);
+            throw new DatabaseException("Could not update patient " + id, e);
         }
     }
 

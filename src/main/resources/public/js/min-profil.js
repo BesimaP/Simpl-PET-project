@@ -34,7 +34,7 @@ const deleteDialog = document.getElementById("confirm-delete");
 // NÅR man klikker på linket:
 deleteLink.addEventListener("click", function (event) {
 
-    // linket skal ikke gå nogen steder af sig selv
+    // linket går til bekræft-siden /slet-konto (til dem uden JavaScript) – med JavaScript viser vi dialogen i stedet
     event.preventDefault();
 
     // åbn dialogen (modal = resten af siden låses imens)

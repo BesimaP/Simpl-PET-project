@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="da" xmlns:th="http://www.thymeleaf.org">
+<!--
+  Fejlside: vises af ExceptionConfig, når der sker en fejl, ingen controller fangede (status 500).
+  ${message} = en venlig tekst fra ExceptionConfig. Den tekniske fejl står i konsollen i IntelliJ – ikke her.
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simpl – Noget gik galt</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tokens.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/customStyle.css">
+</head>
+<body>
+
+<div class="split">
+
+    <section class="brand">
+        <img src="/img/spire-ring.svg" alt="" width="104" height="104">
+        <h1 class="wordmark">SIMPL</h1>
+        <p class="tagline">Dit forløb, din vej</p>
+    </section>
+
+    <main class="form-area">
+        <div class="card login-card">
+            <h2>Noget gik galt</h2>
+            <!-- rolig, neutral tekst (Nielsen #9: hjælp brugeren videre) -->
+            <p class="subtitle" th:text="${message}">Noget gik galt. Prøv igen.</p>
+            <p class="link-line"><a href="/dashboard">Tilbage til forsiden</a></p>
+        </div>
+    </main>
+
+</div>
+
+</body>
+</html>

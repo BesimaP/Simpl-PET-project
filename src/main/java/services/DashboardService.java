@@ -6,6 +6,7 @@ import enums.ServiceResult;
 import exceptions.NoActiveJourneyException;
 import persistence.ConnectionPool;
 import persistence.FertilityJourneyMapper;
+import persistence.RoundMapper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -13,10 +14,12 @@ import java.time.format.DateTimeParseException;
 // Forretningslogik for forløb (FertilityJourney, US1). Kender IKKE Javalin.
 public class DashboardService {
     private FertilityJourneyMapper journeyMapper;
+    private RoundMapper roundMapper;   // til reglen "et forløb kan ikke afsluttes, mens en runde er i gang"
 
     // ny konstruktør: med nøgleringen
     public DashboardService(ConnectionPool connectionPool) {
         this.journeyMapper = new FertilityJourneyMapper(connectionPool);
+        this.roundMapper = new RoundMapper(connectionPool);
     }
 
     // Opretter et forløb til patienten. Regel: kun ét aktivt forløb ad gangen.
@@ -41,6 +44,26 @@ public class DashboardService {
 
         // 3. byg kortet (id 0 = databasen finder på et) og læg det i skuffen. Status er ACTIVE fra start
         journeyMapper.save(new FertilityJourney(0, patientId, start, JourneyStatus.ACTIVE));
+        return ServiceResult.OK;
+    }
+
+    // Afslutter patientens aktive forløb (status COMPLETED). Bagefter viser dashboard "Start dit forløb" igen,
+    // så patienten kan oprette et nyt forløb (US1: "en patient kan godt have flere forløb over tid").
+    // Svar: OK · NO_ACTIVE_JOURNEY = der er intet forløb at afslutte · ROUND_IN_PROGRESS = afslut runden først
+    public ServiceResult endJourney(int patientId) {
+        // 1. find det aktive forløb
+        FertilityJourney journey = journeyMapper.findActiveByPatient(patientId);
+        if (journey == null) {
+            return ServiceResult.NO_ACTIVE_JOURNEY;
+        }
+
+        // 2. regel: en runde i gang skal afsluttes først (ellers ville den hænge "i gang" i et afsluttet forløb)
+        if (roundMapper.findActiveByJourney(journey.getId()) != null) {
+            return ServiceResult.ROUND_IN_PROGRESS;
+        }
+
+        // 3. sæt status til COMPLETED
+        journeyMapper.endJourney(journey.getId());
         return ServiceResult.OK;
     }
 

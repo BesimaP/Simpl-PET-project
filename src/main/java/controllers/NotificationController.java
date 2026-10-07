@@ -52,7 +52,15 @@ public class NotificationController {
             ctx.redirect("/login");
             return;
         }
-        notificationService.markRead(patientId, Integer.parseInt(ctx.formParam("id")));   // service tjekker, at den er patientens egen
+        // try/catch: et ugyldigt id giver bare listen igen i stedet for en 500-fejl
+        int notificationId;
+        try {
+            notificationId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/notifikationer");
+            return;
+        }
+        notificationService.markRead(patientId, notificationId);   // service tjekker, at den er patientens egen
         ctx.redirect("/notifikationer");
     }
 }

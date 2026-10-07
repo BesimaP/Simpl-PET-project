@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="da" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Simpl – Start runde</title>
+
+    <!-- skrifttyper og vores css filer -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tokens.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
+    <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
+    <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+
+    <!-- javascript: defer = vent med at køre til hele siden er læst. common.js først, så sidens egen fil -->
+    <script src="/js/common.js" defer></script>
+    <script src="/js/start-runde.js" defer></script>
+</head>
+<body class="dashboard">
+
+<!-- menuen hentes fra fragments/menu.html – 'dashboard' = det menupunkt, der lyser op -->
+<nav th:replace="~{fragments/menu :: menu('dashboard')}"></nav>
+
+<!-- selve siden -->
+<main class="content">
+
+    <!-- overskrift + avatar øverst -->
+    <header class="topbar">
+        <div>
+            <h1>Start runde</h1>
+        </div>
+        <div class="topbar__actions">
+            <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil"
+               th:text="${#strings.toUpperCase(#strings.substring(session.patientName, 0, 1))}">A</a>
+        </div>
+    </header>
+
+    <!-- besked fra controlleren: fx en fejl, hvis et felt mangler. Fragmentet ligger i templates/fragments/besked.html -->
+    <div th:replace="~{fragments/besked :: besked}"></div>
+
+    <!-- form-layout gør at kortene står i 2 kolonner -->
+    <div class="form-layout">
+
+        <!-- VENSTRE: formular til at starte runden -->
+        <section class="card form-card" aria-labelledby="start-title">
+            <h2 id="start-title">Start en ny runde</h2>
+            <p class="subtitle">Du kan altid rette det senere.</p>
+
+            <!-- action = efter tryk sendes man til dashboardet -->
+            <form action="/start-runde" method="post">
+                <!-- select = dropdown med de fire behandlingstyper fra user story 10a -->
+                <label for="type">Type behandling</label>
+                <select id="type" name="type" required>
+                    <option value="">Vælg…</option>
+                    <option value="IVF">IVF</option>
+                    <option value="ICSI">ICSI</option>
+                    <option value="IUI">Insemination (IUI)</option>
+                    <option value="FET">Frossen ægoplægning (FET)</option>
+                </select>
+
+                <!-- type date = kalender -->
+                <label for="startDate">Startdato</label>
+                <!-- th:value: dags dato er udfyldt på forhånd – kan ændres -->
+                <input type="date" id="startDate" name="startDate" th:value="${today}" required>
+
+                <!-- knappen sender formularen -->
+                <button type="submit">Start runde</button>
+            </form>
+
+            <p class="link-line"><a href="/dashboard">Annullér</a></p>
+        </section>
+
+        <!-- HØJRE: hjælpetekst der forklarer hvad der sker -->
+        <aside class="card helpbox" aria-labelledby="help-title">
+            <h2 id="help-title" class="eyebrow">Hvad sker der nu?</h2>
+            <!-- ol = nummereret liste (1, 2, 3) -->
+            <ol class="steps">
+                <li>
+                    <strong>Dag-tæller</strong>
+                    <span>Simpl tæller dagene fra din startdato, så du altid ved, hvor i runden du er.</span>
+                </li>
+                <li>
+                    <strong>Medicin og aftaler</strong>
+                    <span>Du tilføjer din medicinplan og dine aftaler — Simpl minder dig om dem.</span>
+                </li>
+                <li>
+                    <strong>Noter og værdier</strong>
+                    <span>Dagbog og hormonværdier samles på rundens tidslinje.</span>
+                </li>
+            </ol>
+            <p class="muted">Kun én runde kan være aktiv ad gangen.</p>
+        </aside>
+
+    </div>
+
+</main>
+
+</body>
+</html>

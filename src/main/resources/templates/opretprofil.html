@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,13 +7,13 @@
 
     <!-- skrifttyper og vores css filer -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/tokens.css">
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/customStyle.css">
+    <link rel="stylesheet" href="/css/tokens.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/customStyle.css">
 
     <!-- javascript: defer = vent med at køre til hele siden er læst. common.js først, så sidens egen fil -->
-    <script src="js/common.js" defer></script>
-    <script src="js/opretprofil.js" defer></script>
+    <script src="/js/common.js" defer></script>
+    <script src="/js/opretprofil.js" defer></script>
 </head>
 <body>
 
@@ -22,7 +22,7 @@
 
     <!-- venstre side: logo og slogan (samme som på login) -->
     <section class="brand">
-        <img src="img/spire-ring.svg" alt="" width="104" height="104">
+        <img src="/img/spire-ring.svg" alt="" width="104" height="104">
         <h1 class="wordmark">SIMPL</h1>
         <p class="tagline">Dit forløb, din vej</p>
         <p class="privacy">Dine data er kun dine</p>
@@ -34,9 +34,17 @@
             <h2>Opret profil</h2>
             <p class="subtitle">Det tager under et minut</p>
 
-            <!-- action = hvor formularen sendes hen, method=get = data ses i adressen -->
-            <!-- fejlbesked fra serveren (?fejl=brugernavn / felter i adressen). Tom fra start; js/opretprofil.js skriver teksten -->
-            <p id="form-error" class="field-error" role="alert"></p>
+            <!-- fejlbesked fra serveren: LoginController lægger ?fejl= fra adressen i request scope som ${fejl}.
+                 th:if = kun når der ER en fejl. Virker uden JavaScript (før skrev js/opretprofil.js teksten) -->
+            <p class="field-error" role="alert" th:if="${fejl != null}">
+                <span th:switch="${fejl}">
+                    <span th:case="'brugernavn'">Brugernavnet er optaget – vælg et andet.</span>
+                    <span th:case="'felter'">Udfyld alle felter, og tjek at datoerne er gyldige og adgangskoden er mindst 8 tegn.</span>
+                    <span th:case="*">Noget gik galt. Prøv igen.</span>
+                </span>
+            </p>
+
+            <!-- action = hvor formularen sendes hen, method=post = data sendes skjult -->
 
             <form action="/opretprofil" method="post">
                 <!-- for og id skal være ens, så label og felt hører sammen -->
@@ -68,9 +76,10 @@
                     <label><input type="radio" name="hasJourney" value="yes"> Ja</label>
                 </fieldset>
 
-                <!-- div'en skjules/vises af js/opretprofil.js alt efter Ja/Nej. hidden = skjult fra start (Nej er valgt) -->
-                <div id="journey-fields" hidden>
-                    <label for="journeyStart">Forløbet startede</label>
+                <!-- div'en er SYNLIG i HTML'en, så man kan svare "Ja" + dato, selvom JavaScript er slået fra.
+                     Med JavaScript skjuler js/opretprofil.js den, når siden åbner, og viser den igen ved "Ja" -->
+                <div id="journey-fields">
+                    <label for="journeyStart">Forløbet startede (kun hvis du svarede Ja)</label>
                     <!-- ikke required her: js/opretprofil.js sætter required, når "Ja" er valgt – og AuthService tjekker igen -->
                     <input type="date" id="journeyStart" name="journeyStart">
                 </div>
