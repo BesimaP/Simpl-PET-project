@@ -10,16 +10,16 @@ public class RouteConfig {
     public static void register(JavalinConfig config, ConnectionPool connectionPool) {
         // hver controller skriver sine ruter (config.routes.post("/…")) på Javalins liste –
         // står en controller ikke her, virker dens formularer ikke
-        LoginController.setRoutes(config);
-        DashboardController.setRoutes(config);
+        new LoginController(connectionPool).setRoutes(config);
+        new DashboardController(connectionPool).setRoutes(config);
         HormoneController.setRoutes(config);
         DiaryController.setRoutes(config);
         DiagnosisController.setRoutes(config);
         MedicationController.setRoutes(config);
         AppointmentController.setRoutes(config);
-        ProfileController.setRoutes(config);
+        new ProfileController(connectionPool).setRoutes(config);
         NotificationController.setRoutes(config);
-        TimelineController.setRoutes(config);
+        new TimelineController(connectionPool).setRoutes(config);
         DocumentController.setRoutes(config);
 
         config.routes.get("/", ctx -> ctx.redirect("/login"));

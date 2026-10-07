@@ -13,7 +13,7 @@ public class Main {
     private static final String URL = "jdbc:postgresql://localhost:5432/%s?currentSchema=public";
     private static final String DB = "Simpl";
 
-    // nøgleknippet: laves ÉN gang her og gives videre til controllerne
+    // nøgleringen: laves ÉN gang her og gives videre til controllerne
     private static final ConnectionPool connectionPool = ConnectionPool.getInstance(USER, PASSWORD, URL, DB);
     public static void main(String[] args) {
 
@@ -25,7 +25,7 @@ public class Main {
             // templates: ctx.render("side", model) sendes til Thymeleaf (opsætningen ligger i ThymeleafConfig)
             config.fileRenderer(new JavalinThymeleaf(ThymeleafConfig.templateEngine()));
 
-            // alle ruter (controllerne meldes til i RouteConfig) – nøgleknippet gives med
+            // alle ruter (controllerne meldes til i RouteConfig) – nøgleringen gives med
             RouteConfig.register(config, connectionPool);
 
             // fejl, der ikke fanges i controllerne (opsætningen ligger i ExceptionConfig)

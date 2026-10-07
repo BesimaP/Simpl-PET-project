@@ -10,6 +10,7 @@ import exceptions.NoActiveJourneyException;
 import exceptions.NoActiveRoundException;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
+import persistence.ConnectionPool;
 import services.*;
 
 import java.time.LocalDate;
@@ -19,8 +20,13 @@ import java.util.List;
 // Koordinatoren for dashboard, start-runde.html og rundehistorik.
 // Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen DAO'er her.
 public class DashboardController {
+    private ProfileService profileService;
 
-    public static void setRoutes(JavalinConfig config) {
+    public DashboardController(ConnectionPool connectionPool) {
+        this.profileService = new ProfileService(connectionPool);
+    }
+
+    public void setRoutes(JavalinConfig config) {
         config.routes.get("/dashboard", ctx -> showDashboard(ctx));        // forsiden efter login (Thymeleaf)
         config.routes.get("/rundehistorik", ctx -> showRounds(ctx));       // alle runder (Thymeleaf)
         config.routes.post("/opret-forloeb", ctx -> createJourney(ctx));   // "Start dit forløb" på dashboard (US1)
@@ -29,14 +35,14 @@ public class DashboardController {
     }
 
     // GET /dashboard – samler data fra alle emner og fylder skabelonen. Tre tilstande: intet forløb, forløb uden runde, runde i gang
-    private static void showDashboard(Context ctx) {
+    private void showDashboard(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
 
-        ctx.attribute("patient", new ProfileService().getPatient(patientId));
+        ctx.attribute("patient", profileService.getPatient(patientId));
         ctx.attribute("today", LocalDate.now());
 
         // påmindelser om dagens medicin oprettes, når forsiden åbnes (US12). Tallet bruges til prikken på klokken
@@ -78,7 +84,7 @@ public class DashboardController {
     }
 
     // GET /rundehistorik – hent alle runder og fyld skabelonen
-    private static void showRounds(Context ctx) {
+    private void showRounds(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -92,7 +98,7 @@ public class DashboardController {
     }
 
     // POST /opret-forloeb
-    private static void createJourney(Context ctx) {
+    private void createJourney(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -114,7 +120,7 @@ public class DashboardController {
     }
 
     // POST /start-runde
-    private static void startRound(Context ctx) {
+    private void startRound(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -138,7 +144,7 @@ public class DashboardController {
     }
 
     // POST /afslut-runde
-    private static void endRound(Context ctx) {
+    private void endRound(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
