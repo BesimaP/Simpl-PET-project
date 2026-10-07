@@ -6,12 +6,14 @@ public class Medication {
     private int id;
     private String name;          // UNIQUE i databasen
     private String description;   // må være null
+    private String unit;          // fast pr. præparat: "IU", "mg" eller "µg" (svar fra klinikken)
 
     // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
-    public Medication(int id, String name, String description) {
+    public Medication(int id, String name, String description, String unit) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.unit = unit;
     }
 
     // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
@@ -29,5 +31,9 @@ public class Medication {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getUnit() {
+        return unit;
     }
 }

@@ -10,7 +10,7 @@ public class MedicationLog {
     private int medicationId;          // FK til medication.id
     private LocalDateTime scheduledDateTime;
     private double dose;
-    private String unit;
+    private String unit;               // hentes fra medication-tabellen (JOIN) – gemmes ikke på loggen
     private boolean taken;
 
     // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)

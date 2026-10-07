@@ -88,9 +88,9 @@ Databasen er **PostgreSQL** (databasen hedder `Simpl`). Schema og testdata ligge
 - `appointment` — aftaler på forløbet
 - `diary_entry` — patientens dagbogsnoter (hører til patienten, ikke forløbet, så man kan skrive før og efter et forløb)
 - `event` — trin i en runde (vises på tidslinjen)
-- `medication` — stamdata for lægemidler
+- `medication` — stamdata for lægemidler (navn og enhed: IU, mg eller µg – enheden er fast pr. præparat, bekræftet af en fertilitetsklinik)
 - `medication_log` — planlagte doser i en runde, og om de er taget
-- `hormone_log` — hormonmålinger i en runde
+- `hormone_log` — hormonmålinger i en runde (enheden gemmes pr. måling, fordi den afhænger af laboratoriet)
 - `document` — patientens dokumenter, fx henvisning og blodprøvesvar (kun stien og upload-datoen gemmes; hører til patienten, så de kan uploades før første runde)
 - `notification` — påmindelser til patienten
 

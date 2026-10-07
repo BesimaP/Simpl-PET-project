@@ -204,10 +204,11 @@ package "services" {
     - medicationLogMapper : MedicationLogMapper
     - roundService : RoundService
     + MedicationService(connectionPool : ConnectionPool)
-    + logDose(patientId : int, medicationName : String, dose : String, unit : String, date : String, time : String, taken : boolean) : ServiceResult
+    + logDose(patientId : int, medicationName : String, dose : String, date : String, time : String, taken : boolean) : ServiceResult
     + getTodayLogs(patientId : int) : List<MedicationLog>
     + getUpcomingLogs(patientId : int) : List<MedicationLog>
     + getPastLogs(patientId : int) : List<MedicationLog>
+    + getMedications() : List<Medication>
     + getMedicationNames() : Map<Integer, String>
     + markTaken(patientId : int, logId : int) : ServiceResult
     + markNotTaken(patientId : int, logId : int) : ServiceResult

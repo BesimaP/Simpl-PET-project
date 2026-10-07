@@ -33,25 +33,25 @@ else Active round
   s -> lm : findByRound(roundId)
   lm -> cp : getConnection()
   cp --> lm : Connection
-  lm -> db : SELECT * FROM medication_log WHERE round_id = ? ORDER BY scheduled_date_time
+  lm -> db : SELECT medication_log.*, medication.unit FROM medication_log\nJOIN medication ON medication.id = medication_log.medication_id\nWHERE medication_log.round_id = ? ORDER BY medication_log.scheduled_date_time
   db --> lm : ResultSet
   lm -> lm : mapRow(rs) per row
   lm --> s : List<MedicationLog>
   note right of lm : Every mapper call gets its own Connection via\ngetConnection(); it is returned to the pool\nautomatically (try-with-resources)
-  s --> c : today / past (split on LocalDate.now())
+  s --> c : today / upcoming / past (split on LocalDate.now())
 end
-c -> s : getMedicationNames()
-s -> mm : findAll() : SELECT * FROM medication ORDER BY name
-mm --> s : List<Medication>
-s --> c : Map<id, description>
-c --> j : ctx.render("medicin") (today, past, names, gemt, fejl)
-j --> u : medicin.html with "I dag" / "Tidligere" checklist
+c -> s : getMedicationNames(), getMedications()
+s -> mm : findAll() : SELECT * FROM medication ORDER BY description
+mm --> s : List<Medication> (name, description, unit)
+s --> c : Map<id, description> + List<Medication>
+c --> j : ctx.render("medicin") (today, upcoming, past, names, medications, gemt, fejl)
+j --> u : medicin.html: dropdown "Gonal-F (IU)" … (th:each over medications)\n+ "I dag" / "Kommende" / "Tidligere"
 
 == Log a dose ==
-u -> v : Selects medication, fills in dose, unit, date, time\n(optional "taken"), clicks "Gem medicin"
-v -> j : POST /medicin (medication, dose, unit, date, time, taken)
+u -> v : Selects medication (list shows its unit, e.g. "Gonal-F (IU)"),\nfills in dose, date, time (optional "taken"), clicks "Gem medicin"
+v -> j : POST /medicin (medication, dose, date, time, taken)
 j -> c : logDose(ctx)
-c -> s : logDose(patientId, medication, dose, unit, date, time, taken)
+c -> s : logDose(patientId, medication, dose, date, time, taken)
 alt Blank field, dose not a number / <= 0, invalid date/time
   s --> c : INVALID_INPUT
 else Input OK
@@ -65,8 +65,8 @@ else Input OK
     s --> c : NO_ACTIVE_ROUND
   else Active round
     rs --> s : Round
-    s -> lm : save(new MedicationLog(0, roundId, medicationId, scheduled, dose, unit, taken))
-    lm -> db : INSERT INTO medication_log (round_id, medication_id, scheduled_date_time,\ndose, unit, taken) VALUES (?, ?, ?, ?, ?, ?)
+    s -> lm : save(new MedicationLog(0, roundId, medicationId, scheduled, dose, medication.getUnit(), taken))
+    lm -> db : INSERT INTO medication_log (round_id, medication_id, scheduled_date_time,\ndose, taken) VALUES (?, ?, ?, ?, ?)\n(unit is NOT stored here – it lives on medication)
     lm --> s : id
     s --> c : OK
   end

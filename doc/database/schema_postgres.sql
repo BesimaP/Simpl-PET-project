@@ -183,18 +183,37 @@ CREATE TABLE hormone_log (
 
 -- ---------- Medicin ----------
 
--- Medication — stamdata (3NF: navnet står ét sted, ikke i hver log-række). Tilhører ingen patient.
+-- Medication — stamdata (3NF: navnet og enheden står ét sted, ikke i hver log-række). Tilhører ingen patient.
+-- unit ligger her og ikke på medication_log: enheden er fast pr. præparat (svar fra fertilitetsklinik, okt 2026) –
+-- det er kun dosis, der varierer fra patient til patient. Enheder: IU (internationale enheder), mg og µg (mikrogram).
 CREATE TABLE medication (
     id          INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name        VARCHAR(50)  NOT NULL UNIQUE,
-    description VARCHAR(100)
+    description VARCHAR(100),
+    unit        VARCHAR(10)  NOT NULL
 );
 
-INSERT INTO medication (name, description) VALUES
-    ('GONAL_F',    'Gonal-F'),
-    ('ORGALUTRAN', 'Orgalutran'),
-    ('MENOPUR',    'Menopur'),
-    ('OVITRELLE',  'Ovitrelle');
+-- De fire første beholder id 1–4, så testdata (medication_id) stadig passer.
+-- Grupperet efter brug: stimulering, forhindrer ægløsning, ægløsningssprøjte, progesteron, tabletter
+INSERT INTO medication (name, description, unit) VALUES
+    ('GONAL_F',    'Gonal-F',    'IU'),   -- 1  stimulering
+    ('ORGALUTRAN', 'Orgalutran', 'mg'),   -- 2  forhindrer ægløsning (0,25 mg)
+    ('MENOPUR',    'Menopur',    'IU'),   -- 3  stimulering
+    ('OVITRELLE',  'Ovitrelle',  'µg'),   -- 4  ægløsningssprøjte (250 µg)
+    ('PUREGON',    'Puregon',    'IU'),   -- 5  stimulering
+    ('PERGOVERIS', 'Pergoveris', 'IU'),   -- 6  stimulering
+    ('REKOVELLE',  'Rekovelle',  'µg'),   -- 7  stimulering
+    ('ELONVA',     'Elonva',     'µg'),   -- 8  stimulering (langtidsvirkende)
+    ('FYREMADEL',  'Fyremadel',  'mg'),   -- 9  forhindrer ægløsning (0,25 mg)
+    ('CETROTIDE',  'Cetrotide',  'mg'),   -- 10 forhindrer ægløsning (0,25 mg)
+    ('PREGNYL',    'Pregnyl',    'IU'),   -- 11 ægløsningssprøjte (5000 IE)
+    ('LUTINUS',    'Lutinus',    'mg'),   -- 12 progesteron (100 mg)
+    ('CRINONE',    'Crinone',    'mg'),   -- 13 progesteron (gel, 90 mg)
+    ('CYCLOGEST',  'Cyclogest',  'mg'),   -- 14 progesteron (400 mg)
+    ('LETROZOL',   'Letrozol',   'mg'),   -- 15 tablet (2,5 mg)
+    ('PERGOTIME',  'Pergotime',  'mg'),   -- 16 tablet, clomifen (50 mg)
+    ('ESTRADIOL',  'Estradiol',  'mg');   -- 17 tablet (2 mg)
+
 
 -- MedicationLog — én planlagt dosis i en runde.
 -- medication ON DELETE RESTRICT: stamdata kan ikke slettes, mens de bruges (association, ikke komposition).
@@ -204,6 +223,5 @@ CREATE TABLE medication_log (
     medication_id       INT NOT NULL REFERENCES medication(id) ON DELETE RESTRICT,
     scheduled_date_time TIMESTAMP NOT NULL,
     dose                NUMERIC(10,2) NOT NULL,
-    unit                VARCHAR(10) NOT NULL,
     taken               BOOLEAN NOT NULL DEFAULT FALSE
 );

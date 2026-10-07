@@ -55,12 +55,12 @@ object "<b>Event</b>" as Event #FFF3B0 {
 object "<b>Medication</b>" as Medication #FFF3B0 {
   name
   description
+  unit
 }
 
 object "<b>MedicationLog</b>" as MedicationLog #FFF3B0 {
   scheduledDateTime
   dose
-  unit
   taken
 }
 

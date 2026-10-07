@@ -33,10 +33,11 @@ public class MedicationService {
     }
 
     // Logger én dosis i patientens aktive runde (en dosis SKAL ligge på en runde – round_id i databasen)
-    public ServiceResult logDose(int patientId, String medicationName, String dose, String unit, String date, String time, boolean taken) {
+    // Enheden vælges ikke af patienten – den følger lægemidlet (medication.unit)
+    public ServiceResult logDose(int patientId, String medicationName, String dose, String date, String time, boolean taken) {
 
         // 1. regel: alle felter skal være udfyldt
-        if (isBlank(medicationName) || isBlank(dose) || isBlank(unit) || isBlank(date) || isBlank(time)) {
+        if (isBlank(medicationName) || isBlank(dose) || isBlank(date) || isBlank(time)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -74,7 +75,7 @@ public class MedicationService {
 
         // 6. gem – taken = true betyder "allerede taget", false betyder "planlagt"
         medicationLogMapper.
-                save(new MedicationLog(0, round.getId(), medication.getId(), scheduled, doseValue, unit, taken));
+                save(new MedicationLog(0, round.getId(), medication.getId(), scheduled, doseValue, medication.getUnit(), taken));
 
         return ServiceResult.OK;
     }
@@ -110,6 +111,11 @@ public class MedicationService {
             }
         }
         return upcoming;
+    }
+
+    // Alle lægemidler (navn + enhed) – til dropdownen på medicin-siden, så listen kommer fra databasen
+    public List<Medication> getMedications() {
+        return medicationMapper.findAll();
     }
 
     // Opslag id -> navn (fx 1 -> "Gonal-F"), så skabelonen kan vise navnet. Loggen har kun medicationId

@@ -20,11 +20,12 @@ public class MedicationMapper {
 
     // gemmer et nyt lægemiddel og returnerer det id, databasen gav det
     public int save(Medication medication) {
-        String sql = "INSERT INTO medication (name, description) VALUES (?, ?)";
+        String sql = "INSERT INTO medication (name, description, unit) VALUES (?, ?, ?)";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, medication.getName());        // UNIQUE i databasen – samme navn to gange giver fejl
             statement.setString(2, medication.getDescription()); // må være null
+            statement.setString(3, medication.getUnit());        // fx "IU"
             statement.executeUpdate();
 
             ResultSet keys = statement.getGeneratedKeys();
@@ -38,9 +39,9 @@ public class MedicationMapper {
         }
     }
 
-    // henter alle lægemidler, alfabetisk – til dropdownen "Medicin" på medicin-siden
+    // henter alle lægemidler, alfabetisk efter det pæne navn – til dropdownen "Medicin" på medicin-siden
     public List<Medication> findAll() {
-        String sql = "SELECT * FROM medication ORDER BY name";
+        String sql = "SELECT * FROM medication ORDER BY description";
         List<Medication> medications = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -80,7 +81,8 @@ public class MedicationMapper {
         return new Medication(
                 rs.getInt("id"),
                 rs.getString("name"),
-                rs.getString("description")
+                rs.getString("description"),
+                rs.getString("unit")
         );
     }
 }

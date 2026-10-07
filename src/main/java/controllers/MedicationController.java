@@ -37,6 +37,7 @@ public class MedicationController {
         ctx.attribute("upcoming", medicationService.getUpcomingLogs(patientId)); // requestscope -> ${upcoming} (fra i morgen og frem)
         ctx.attribute("past", medicationService.getPastLogs(patientId));     // requestscope -> ${past}
         ctx.attribute("names", medicationService.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
+        ctx.attribute("medications", medicationService.getMedications());    // requestscope -> dropdownen (th:each)
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
@@ -82,10 +83,10 @@ public class MedicationController {
 
     // POST /medicin – når brugeren trykker "Gem". ctx = kuverten fra Javalin
     private void logDose(Context ctx) {
-        // 1. åbn kuverten: læs felterne (name="medication", "dose", "unit", "date", "time", "taken" i medicin.html)
+        // 1. åbn kuverten: læs felterne (name="medication", "dose", "date", "time", "taken" i medicin.html).
+        //    Ingen enhed: den følger lægemidlet (medication.unit)
         String medication = ctx.formParam("medication"); // fx "GONAL_F" – value i dropdownen, matcher medication.name i databasen
         String dose = ctx.formParam("dose");             // fx "150" – tekst endnu, service laver den om til tal
-        String unit = ctx.formParam("unit");             // fx "IU"
         String date = ctx.formParam("date");             // fx "2026-09-22"
         String time = ctx.formParam("time");             // fx "08:00"
         boolean taken = ctx.formParam("taken") != null;  // en afkrydset checkbox sendes med, en tom sendes slet ikke (null)
@@ -97,7 +98,7 @@ public class MedicationController {
         }
 
         // 2. bed service gemme dosen – den finder selv forløb, runde og lægemiddel. Svar: OK = ok, ellers hvad der gik galt
-        ServiceResult result = medicationService.logDose(patientId, medication, dose, unit, date, time, taken);
+        ServiceResult result = medicationService.logDose(patientId, medication, dose, date, time, taken);
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {

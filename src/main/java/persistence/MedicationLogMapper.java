@@ -19,17 +19,16 @@ public class MedicationLogMapper {
         this.connectionPool = connectionPool;
     }
 
-    // gemmer én dosis og returnerer det id, databasen gav den
+    // gemmer én dosis og returnerer det id, databasen gav den. Enheden gemmes IKKE her – den står på medication (3NF)
     public int save(MedicationLog log) {
-        String sql = "INSERT INTO medication_log (round_id, medication_id, scheduled_date_time, dose, unit, taken) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO medication_log (round_id, medication_id, scheduled_date_time, dose, taken) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, log.getRoundId());
             statement.setInt(2, log.getMedicationId());                      // id fra medication-tabellen, ikke navnet
             statement.setObject(3, log.getScheduledDateTime());
             statement.setDouble(4, log.getDose());                           // tal, fx 150.0
-            statement.setString(5, log.getUnit());                           // fx "IU"
-            statement.setBoolean(6, log.isTaken());                    // boolean -> BOOLEAN i PostgreSQL
+            statement.setBoolean(5, log.isTaken());                          // boolean -> BOOLEAN i PostgreSQL
             statement.executeUpdate();
 
             ResultSet keys = statement.getGeneratedKeys();
@@ -43,9 +42,13 @@ public class MedicationLogMapper {
         }
     }
 
-    // henter alle doser i én runde, ældste først – til listen på medicin-siden og "dagens medicin" på dashboardet
+    // henter alle doser i én runde, ældste først – til listen på medicin-siden og "dagens medicin" på dashboardet.
+    // JOIN: enheden hentes fra medication-tabellen (den står kun ét sted)
     public List<MedicationLog> findByRound(int roundId) {
-        String sql = "SELECT * FROM medication_log WHERE round_id = ? ORDER BY scheduled_date_time";
+        String sql = "SELECT medication_log.*, medication.unit "
+                + "FROM medication_log "
+                + "JOIN medication ON medication.id = medication_log.medication_id "
+                + "WHERE medication_log.round_id = ? ORDER BY medication_log.scheduled_date_time";
         List<MedicationLog> logs = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -106,7 +109,7 @@ public class MedicationLogMapper {
                 rs.getInt("medication_id"),
                 rs.getObject("scheduled_date_time", LocalDateTime.class),
                 rs.getDouble("dose"),
-                rs.getString("unit"),
+                rs.getString("unit"),       // fra medication (JOIN)
                 rs.getBoolean("taken")
         );
     }

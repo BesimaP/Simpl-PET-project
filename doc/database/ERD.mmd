@@ -73,6 +73,7 @@ erDiagram
     serial id PK
     varchar name UK
     varchar description
+    varchar unit
   }
   MEDICATION_LOG {
     serial id PK
@@ -80,7 +81,6 @@ erDiagram
     int medication_id FK
     timestamp scheduled_date_time
     numeric dose
-    varchar unit
     boolean taken
   }
   HORMONE_LOG {

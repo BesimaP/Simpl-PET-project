@@ -87,6 +87,7 @@ package "entities" {
     - int id
     - String name
     - String description
+    - String unit
   }
 
   class MedicationLog {
