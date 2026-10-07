@@ -151,6 +151,11 @@ CREATE TABLE round (
     UNIQUE (fertility_journey_id, round_number)
 );
 
+-- Højst én runde i gang pr. forløb – samme idé som one_active_journey_per_patient ovenfor
+CREATE UNIQUE INDEX one_active_round_per_journey
+    ON round(fertility_journey_id)
+    WHERE end_date IS NULL;   -- NULL = runden er i gang
+
 -- Appointment — ligger på forløbet (første konsultation sker før nogen runde).
 CREATE TABLE appointment (
     id                   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

@@ -72,7 +72,7 @@ body.dashboard {
 }
 
 .topbar .avatar {
-    display: none;                     /* kun på desktop */
+    display: inline-flex;              /* vises også på mobil: eneste vej til Min profil, Diagnoser og Log ud dér */
     align-items: center;
     justify-content: center;
     width: 40px;
@@ -151,10 +151,6 @@ body.dashboard {
 
     .topbar h1 {
         font-size: 30px;
-    }
-
-    .topbar .avatar {
-        display: inline-flex;
     }
 
     .sidenav {

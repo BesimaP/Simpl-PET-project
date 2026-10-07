@@ -1,12 +1,13 @@
 @startuml
 !pragma layout smetana
+skinparam monochrome true
 
 title Domain Model - Simpl (Fertilitetsforløb)
 
 ' ---------- Patient (US5, US6, US7) ----------
 
 ' UserAccount er samlet ind i Patient (uge 41): de var 1-1 og oprettes altid sammen
-object "<b>Patient</b>" as Patient #FFDAB9 {
+object "<b>Patient</b>" as Patient {
   username
   password
   firstName
@@ -14,18 +15,18 @@ object "<b>Patient</b>" as Patient #FFDAB9 {
   dateOfBirth
 }
 
-object "<b>Diagnosis</b>" as Diagnosis #FFDAB9 {
+object "<b>Diagnosis</b>" as Diagnosis {
   name
   description
 }
 
 ' ---------- Forløb og runde (US1, US10) ----------
 
-object "<b>FertilityJourney</b>" as Journey #D6EAD8 {
+object "<b>FertilityJourney</b>" as Journey {
   startDate
 }
 
-object "<b>Round</b>" as Round #C1E8C1 {
+object "<b>Round</b>" as Round {
   roundNumber
   startDate
   endDate
@@ -33,13 +34,13 @@ object "<b>Round</b>" as Round #C1E8C1 {
 
 ' ---------- Ting på forløbet (US3) ----------
 
-object "<b>Appointment</b>" as Appointment #FFF3B0 {
+object "<b>Appointment</b>" as Appointment {
   dateTime
   location
 }
 
 ' DiaryEntry ligger på patienten (ændret uge 40): dagbog skal kunne bruges før, mellem og efter forløb
-object "<b>DiaryEntry</b>" as DiaryEntry #FFDAB9 {
+object "<b>DiaryEntry</b>" as DiaryEntry {
   dateTime
   title
   content
@@ -47,31 +48,31 @@ object "<b>DiaryEntry</b>" as DiaryEntry #FFDAB9 {
 
 ' ---------- Ting på runden (US2, US8, US9) + Document på patienten (US11) ----------
 
-object "<b>Event</b>" as Event #FFF3B0 {
+object "<b>Event</b>" as Event {
   dateTime
   description
 }
 
-object "<b>Medication</b>" as Medication #FFF3B0 {
+object "<b>Medication</b>" as Medication {
   name
   description
   unit
 }
 
-object "<b>MedicationLog</b>" as MedicationLog #FFF3B0 {
+object "<b>MedicationLog</b>" as MedicationLog {
   scheduledDateTime
   dose
   taken
 }
 
-object "<b>HormoneLog</b>" as HormoneLog #FFF3B0 {
+object "<b>HormoneLog</b>" as HormoneLog {
   dateTime
   value
   unit
 }
 
 ' Document ligger på patienten (ændret uge 41): fx henvisning og blodprøvesvar kommer før første runde
-object "<b>Document</b>" as Document #FFDAB9 {
+object "<b>Document</b>" as Document {
   uploadDate
   title
   filePath
@@ -80,7 +81,7 @@ object "<b>Document</b>" as Document #FFDAB9 {
 ' ---------- Notifikationer (US12) ----------
 ' isRead står ikke her (vejledning aug.): læst/ulæst er et acceptkriterie på US12; kolonnen is_read findes kun i databasen
 
-object "<b>Notification</b>" as Notification #FFF3B0 {
+object "<b>Notification</b>" as Notification {
   dateTime
   title
   message
@@ -89,35 +90,35 @@ object "<b>Notification</b>" as Notification #FFF3B0 {
 ' ---------- Typer (uge 41): hver type har sin egen tabel, ligesom Medication ----------
 ' Round har ingen status mere: en runde er i gang, så længe endDate er tom
 
-object "<b>JourneyStatus</b>" as JourneyStatus #E8E8E8 {
+object "<b>JourneyStatus</b>" as JourneyStatus {
   name
 }
 
-object "<b>TreatmentType</b>" as TreatmentType #E8E8E8 {
+object "<b>TreatmentType</b>" as TreatmentType {
   name
 }
 
-object "<b>Result</b>" as Result #E8E8E8 {
+object "<b>Result</b>" as Result {
   name
 }
 
-object "<b>AppointmentType</b>" as AppointmentType #E8E8E8 {
+object "<b>AppointmentType</b>" as AppointmentType {
   name
 }
 
-object "<b>EventType</b>" as EventType #E8E8E8 {
+object "<b>EventType</b>" as EventType {
   name
 }
 
-object "<b>HormoneType</b>" as HormoneType #E8E8E8 {
+object "<b>HormoneType</b>" as HormoneType {
   name
 }
 
-object "<b>DocumentType</b>" as DocumentType #E8E8E8 {
+object "<b>DocumentType</b>" as DocumentType {
   name
 }
 
-object "<b>NotificationType</b>" as NotificationType #E8E8E8 {
+object "<b>NotificationType</b>" as NotificationType {
   name
 }
 

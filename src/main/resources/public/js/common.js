@@ -19,3 +19,15 @@ function setTodayIn(dateField) {
 }
 
 // TODO senere: en opskrift til at vise en fejlbesked under et felt (bruges af flere sider)
+
+// BEKRÆFT SLETNING: alle slet-formularer har class="delete-form" (dagbog, hormoner, medicin, dokumenter).
+// Før formularen sendes, spørger browseren "Er du sikker?". Trykker man Annullér, stoppes afsendelsen.
+const deleteForms = document.querySelectorAll(".delete-form");
+deleteForms.forEach(function (form) {
+    form.addEventListener("submit", function (event) {
+        const sure = confirm("Vil du slette dette? Det kan ikke fortrydes.");
+        if (!sure) {
+            event.preventDefault();   // preventDefault = stop formularen, så intet sendes
+        }
+    });
+});

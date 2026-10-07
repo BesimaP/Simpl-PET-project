@@ -36,7 +36,7 @@
               <!-- th:if: rød prik ved ulæste påmindelser. ${unread} sættes for alle sider i RouteConfig (before-handler) -->
               <span class="dot" th:if="${unread != null and unread > 0}"></span>
             </a>
-            <a href="/min-profil" class="avatar desktop-only" aria-label="Min profil"
+            <a href="/min-profil" class="avatar" aria-label="Min profil"
                th:text="${#strings.toUpperCase(#strings.substring(session.patientName, 0, 1))}">A</a>
         </div>
     </header>
