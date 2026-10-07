@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title UC7: ViewNotifications
 
@@ -9,6 +12,7 @@ participant "Javalin" as j
 participant "DashboardController /\nNotificationController" as c
 participant "NotificationService" as s
 participant "MedicationService" as ms
+participant "AppointmentService" as as
 participant "RoundService" as rs
 participant "NotificationMapper" as nm
 participant "MedicationLogMapper" as mlm
@@ -39,9 +43,16 @@ loop for each dose today that is not taken and has no reminder from today with t
   cp --> nm : Connection
   nm -> db : INSERT INTO notification (patient_id, date_time, notification_type_id, title, message, is_read)\nVALUES (?, ?, (SELECT id FROM notification_type WHERE name = ?), ?, ?, ?)
 end
+c -> s : createAppointmentReminders(patientId)
+s -> as : getUpcoming(patientId)\n(appointments after now on the active journey, nearest first)
+as --> s : List<Appointment>
+loop for each appointment today or tomorrow without an existing reminder with the same message
+  s -> nm : save(new Notification(0, patientId, now,\nAPPOINTMENT_REMINDER, "Husk din aftale",\n"Scanning · Vitanova · 8. okt. 2026 kl. 10:30", false))
+  nm -> db : INSERT INTO notification (...)
+end
 c -> s : countUnread(patientId), getNotifications(patientId)
 c --> j : ctx.render("dashboard")
-j --> u : Dashboard: red dot on the bell + pop-up list
+j --> u : Dashboard: red dot on the bell + pop-up list\n(the bell is a link to /notifikationer – with JavaScript, dashboard.js opens the pop-up instead)
 
 == Patient opens the list ==
 u -> j : GET /notifikationer (clicks the bell)

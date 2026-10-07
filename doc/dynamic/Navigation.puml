@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title Navigationsdiagram - Simpl (skærmflow)
 
@@ -24,6 +27,8 @@ rectangle "Runde (Round)" {
   usecase "UC14: EndRound" as UC14
 }
 
+usecase "UC15: EndJourney" as UC15
+
 u --> UC1
 
 UC1 --> UC2 : ingen konto
@@ -44,5 +49,8 @@ UC8 --> UC13
 UC8 --> UC14
 
 UC14 --> UC8 : ny runde
+
+UC3 --> UC15 : ingen runde i gang
+UC15 --> UC3 : nyt forløb
 
 @enduml

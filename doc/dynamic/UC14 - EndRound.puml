@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title UC14: EndRound
 
@@ -14,12 +17,19 @@ participant "ConnectionPool" as cp
 database "PostgreSQL" as db
 
 u -> v : Clicks "Afslut runde"
-v --> u : dashboard.js opens dialog "Afslut runde N?" with "Resultat":\n"Ikke afgjort endnu" / "Positiv" / "Negativ"
+alt JavaScript on
+  v --> u : dashboard.js opens dialog "Afslut runde N?" with "Resultat":\n"Ikke afgjort endnu" / "Positiv" / "Negativ"
+else JavaScript off
+  v -> j : GET /afslut-runde (the button is a link)
+  j -> c : showEndRound(ctx)
+  c --> j : ctx.render("bekraeft") (title, text, action = /afslut-runde, showResult = true)
+  j --> u : Confirmation page with the same "Resultat" choice
+end
 u -> v : Selects result (optional), clicks "Afslut runde"
 v -> j : POST /afslut-runde (result)
 j -> c : endRound(ctx)
 note right of c : patientId == null (not logged in)\n→ ctx.redirect("/login")
-c -> c : ctx.formParam("result")\nblank → null, else Result.valueOf(result)
+c -> c : ctx.formParam("result")\nblank → null, else Result.valueOf(result)\n(unknown value → redirect /dashboard?fejl=ukendt)
 c -> s : endRound(patientId, result)
 s -> s : findActiveRound(patientId)
 s -> ds : findActiveJourney(patientId) (FertilityJourneyMapper)

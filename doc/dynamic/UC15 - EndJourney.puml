@@ -1,0 +1,59 @@
+@startuml
+!pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
+
+title UC15: EndJourney
+
+actor "Patient" as u
+participant "dashboard.html /\nbekraeft.html" as v
+participant "Javalin" as j
+participant "DashboardController" as c
+participant "DashboardService" as s
+participant "FertilityJourneyMapper" as fm
+participant "RoundMapper" as rm
+participant "ConnectionPool" as cp
+database "PostgreSQL" as db
+
+note over j, c : Every handler first checks ctx.sessionAttribute("patientId")\nnull (not logged in) → ctx.redirect("/login")
+
+note over u, v : Dashboard shows "Ingen runde i gang"\nwith the link "Afslut forløb"
+u -> v : Clicks "Afslut forløb"
+v -> j : GET /afslut-forloeb
+j -> c : showEndJourney(ctx)
+c --> j : ctx.render("bekraeft") (title, text, action = /afslut-forloeb)
+j --> u : Confirmation page "Afslut dit forløb?" ("Annullér" -> /dashboard)
+u -> v : Clicks "Afslut forløb"
+v -> j : POST /afslut-forloeb
+j -> c : endJourney(ctx)
+c -> s : endJourney(patientId)
+s -> fm : findActiveByPatient(patientId)
+fm -> cp : getConnection()
+cp --> fm : Connection
+fm -> db : SELECT fertility_journey.* ... JOIN journey_status\nWHERE patient_id = ? AND journey_status.name = 'ACTIVE'
+fm --> s : FertilityJourney (or null)
+note right of fm : Connection is returned to the pool\nautomatically (try-with-resources)
+alt No active journey (null)
+  s --> c : NO_ACTIVE_JOURNEY
+  c --> j : ctx.redirect("/dashboard")
+else Journey found
+  s -> rm : findActiveByJourney(journeyId)
+  rm -> db : SELECT ... FROM round WHERE fertility_journey_id = ? AND end_date IS NULL
+  rm --> s : Round (or null)
+  alt A round is in progress
+    s --> c : ROUND_IN_PROGRESS
+    c --> j : ctx.redirect("/dashboard?fejl=runde-i-gang-forloeb")
+    j --> u : "Afslut runden, før du afslutter forløbet."
+  else No round in progress
+    s -> fm : endJourney(journeyId)
+    fm -> cp : getConnection()
+    cp --> fm : Connection
+    fm -> db : UPDATE fertility_journey SET journey_status_id =\n(SELECT id FROM journey_status WHERE name = 'COMPLETED') WHERE id = ?
+    s --> c : OK
+    c --> j : ctx.redirect("/dashboard?gemt=forloeb-afsluttet")
+    j --> u : Dashboard with "Dit forløb er afsluttet ✓"\nand "Start dit forløb" again (UC3)
+  end
+end
+
+@enduml

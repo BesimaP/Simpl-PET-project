@@ -1,13 +1,28 @@
 @startuml
 !pragma layout smetana
 
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+hide circle
+
 title Klassediagram 4a — model og enums (Simpl v2)
 
 ' Gettere/settere og setId() er udeladt for læsbarhed.
-' Kun metoder med egen logik vises (endRound, markTaken, markRead).
+' Kun metoder med egen logik vises (endRound, markTaken, markRead, getDoseText, getValueText).
 ' Streger til enums er udeladt — koblingen fremgår af felttyperne
 
-package "model" {
+package "entities" {
 
   class Patient {
     - int id
@@ -83,6 +98,7 @@ package "model" {
     - String unit
     - boolean taken
     + void markTaken()
+    + String getDoseText()
   }
 
   class HormoneLog {
@@ -92,6 +108,7 @@ package "model" {
     - HormoneType hormoneType
     - double value
     - String unit
+    + String getValueText()
   }
 
   class Document {

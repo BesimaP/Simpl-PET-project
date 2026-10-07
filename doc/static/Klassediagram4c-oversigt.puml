@@ -1,0 +1,105 @@
+@startuml
+!pragma layout smetana
+left to right direction
+hide members
+hide circle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+
+title Klassediagram 4c (oversigt) — hvem kalder hvem\nside -> Controller -> Service -> Mapper -> PostgreSQL
+
+' Læs fra venstre mod højre. Én række = ét emne.
+' Metoderne står i Klassediagram 4c (controllers + services) og 4b (mappers).
+
+package "controllers" {
+  class LoginController
+  class ProfileController
+  class DashboardController
+  class TimelineController
+  class HormoneController
+  class MedicationController
+  class AppointmentController
+  class NotificationController
+  class DiaryController
+  class DiagnosisController
+  class DocumentController
+}
+
+package "services" {
+  class AuthService
+  class ProfileService
+  class DashboardService
+  class RoundService
+  class TimelineService
+  class HormoneService
+  class MedicationService
+  class AppointmentService
+  class NotificationService
+  class DiaryService
+  class DiagnosisService
+  class DocumentService
+}
+
+package "persistence (4b)" {
+  class PatientMapper
+  class FertilityJourneyMapper
+  class RoundMapper
+  class EventMapper
+  class HormoneLogMapper
+  class "MedicationMapper\nMedicationLogMapper" as MedMappers
+  class AppointmentMapper
+  class NotificationMapper
+  class DiaryEntryMapper
+  class DiagnosisMapper
+  class DocumentMapper
+}
+
+' ---------- én række per emne ----------
+LoginController --> AuthService
+AuthService --> PatientMapper
+
+ProfileController --> ProfileService
+ProfileService --> PatientMapper
+
+DashboardController --> DashboardService
+DashboardService --> FertilityJourneyMapper
+
+DashboardController --> RoundService
+RoundService --> RoundMapper
+
+TimelineController --> TimelineService
+TimelineService --> EventMapper
+
+HormoneController --> HormoneService
+HormoneService --> HormoneLogMapper
+
+MedicationController --> MedicationService
+MedicationService --> MedMappers
+
+AppointmentController --> AppointmentService
+AppointmentService --> AppointmentMapper
+
+NotificationController --> NotificationService
+NotificationService --> NotificationMapper
+
+DiaryController --> DiaryService
+DiaryService --> DiaryEntryMapper
+
+DiagnosisController --> DiagnosisService
+DiagnosisService --> DiagnosisMapper
+
+DocumentController --> DocumentService
+DocumentService --> DocumentMapper
+
+note "Dashboard viser lidt af det hele, så DashboardController\nbruger også Profile-, Notification-, Medication-,\nAppointment-, Hormone- og DiaryService (se 4c)" as N1
+N1 .. DashboardController
+@enduml

@@ -30,11 +30,12 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 
 ## Status (oktober 2026)
 
-- Frontend: alle 15 sider er bygget i HTML/CSS; sider med data er Thymeleaf-templates
+- Frontend: alle 16 sider er Thymeleaf-templates i `templates/` (HTML/CSS/JavaScript). Menuen er ét fælles fragment (`fragments/menu.html`), og siderne virker også, når JavaScript er slået fra
 - Database: PostgreSQL med 20 tabeller (inkl. 8 typetabeller), kørt i pgAdmin
 - Backend: alle sider virker mod PostgreSQL via controller → service → mapper, med én fælles `ConnectionPool` (HikariCP), der gives videre gennem konstruktørerne
-- Kodeord gemmes som BCrypt-hash
-- Næste: integrationstests mod en testdatabase i PostgreSQL
+- Kodeord gemmes som BCrypt-hash (mindst 8 tegn)
+- Fejl, ingen controller fanger, vises på en fælles fejlside (`fejl.html`)
+- Tests: JUnit-tests af alle services i `src/test/java`, sat op mod testdatabasen `Simpl_test` i PostgreSQL (kører fra uge 41)
 
 ## Tech stack
 
@@ -60,19 +61,20 @@ src/main/java/
 ├── services/              # Forretningslogik: regler og mapper-kald, uden Javalin (én per emne) – svarer med ServiceResult
 ├── entities/              # Model: dataklasser, én per tabel
 ├── persistence/           # ConnectionPool + mappers: al SQL (én mapper per tabel)
-├── exceptions/            # DatabaseException, NoActiveJourneyException, NoActiveRoundException
+├── exceptions/            # DatabaseException, NoActiveJourneyException, NoActiveRoundException, UserNotFoundException
 └── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …) – matcher navnene i typetabellerne
 
 src/main/resources/
-├── public/                # View: statiske sider (login.html, opretprofil.html …), css/, js/, img/
-└── templates/             # Thymeleaf-skabeloner til sider med data fra databasen
+├── public/                # css/, js/ og img/ (hentes direkte af browseren)
+└── templates/             # View: alle sider som Thymeleaf-skabeloner (login, dashboard, medicin …)
+    └── fragments/         # genbrugte stykker: menu.html (menuen) og besked.html (Gemt ✓ / fejl)
 
-src/test/java/             # JUnit-tests af services
+src/test/java/services/    # JUnit-tests af services – kører mod databasen Simpl_test (se TestData.java)
 ```
 
 Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST) → Javalin finder ruten → `HormoneController` læser felterne og kalder `HormoneService.saveLog()` → service tjekker regler (tomme felter, findes forløb/runde), bygger en `HormoneLog` og kalder `HormoneLogMapper.save()` → service svarer med `ServiceResult` (OK eller en fejl) → controlleren vælger side ud fra svaret.
 
-`ServiceResult` (i `enums`) er én fælles enum for svaret fra alle services: `OK, INVALID_INPUT, ALREADY_EXISTS, NO_ACTIVE_JOURNEY, NO_ACTIVE_ROUND, ROUND_IN_PROGRESS`.
+`ServiceResult` (i `enums`) er én fælles enum for svaret fra alle services: `OK, INVALID_INPUT, ALREADY_EXISTS, NO_ACTIVE_JOURNEY, NO_ACTIVE_ROUND, ROUND_IN_PROGRESS, NOT_FOUND`.
 
 ## Database
 
@@ -109,17 +111,22 @@ Navnene i typetabellerne matcher enum-klasserne i `enums` og `value` i HTML-drop
 1. Kør `doc/database/schema_postgres.sql` og derefter `data_postgres.sql` i pgAdmin på databasen `Simpl`.
 2. Åbn projektet i IntelliJ og lad Maven hente afhængighederne (Javalin, Thymeleaf, HikariCP, postgresql, jBCrypt).
 3. Kør `Main`. Konsollen skriver, at Javalin lytter på port 7070.
-4. Åbn `http://localhost:7070` i browseren – du lander på login-siden. Opret en bruger via "Opret profil".
+4. Åbn `http://localhost:7070` i browseren – du lander på login-siden. Log ind med en testbruger (alle har kodeordet `test1234`, fx `mette1990` / `test1234`), eller opret en ny via "Opret profil".
+
+### Kør testene
+
+1. Opret en tom database i pgAdmin, der hedder `Simpl_test` (højreklik på Databases → Create → Database…).
+2. Kør testene i `src/test/java` fra IntelliJ (højreklik → Run 'All Tests') eller med `mvn test`. Testene laver selv tabellerne ved at køre `schema_postgres.sql` – de rører aldrig databasen `Simpl`.
 
 ## Dokumentation
 
 Dokumentationen findes i `doc/`-mappen:
 
-- `doc/dynamic/` — idébeskrivelse, VPC, krav, entiteter, user stories med acceptkriterier, tasks, use case-beskrivelser, use case-diagram (`Usecase.puml`), navigationsdiagram (`Navigation.puml`) og sekvensdiagrammer for UC1–UC14 (`UC1 - LogIn.puml` … `UC14 - EndRound.puml`)
-- `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` model/enums, `Klassediagram4b` persistence-laget med ConnectionPool og mappers) og gruppekontrakt
+- `doc/dynamic/` — idébeskrivelse, VPC, krav, entiteter, user stories med acceptkriterier, tasks, use case-beskrivelser, use case-diagram (`Usecase.puml`), navigationsdiagram (`Navigation.puml`) og sekvensdiagrammer for UC1–UC15 (`UC1 - LogIn.puml` … `UC15 - EndJourney.puml`)
+- `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` entities/enums, `Klassediagram4b` persistence-laget med ConnectionPool og mappers, `Klassediagram4c` controllers og services + `Klassediagram4c-oversigt` uden metoder) og gruppekontrakt
 - `doc/database/` — ERD (`ERD.mmd`/`ERD.png`), PostgreSQL-schema (`schema_postgres.sql`) og testdata (`data_postgres.sql`)
 
-Sekvensdiagrammerne (UC1–UC14) er opdateret i oktober 2026, så de følger koden: side → Javalin → Controller → Service → Mapper → ConnectionPool → PostgreSQL.
+Sekvensdiagrammerne (UC1–UC15) er opdateret i oktober 2026, så de følger koden: side → Javalin → Controller → Service → Mapper → ConnectionPool → PostgreSQL.
 
 Alle diagrammer er skrevet i PlantUML og gemt som PNG ved siden af kildefilen, så de kan ses uden at klone projektet.
 
@@ -140,3 +147,9 @@ Normaliseret database (3NF) afledt af domænemodellen. Kragetæer viser kardinal
 ### Navigationsdiagram
 
 ![Navigationsdiagram](doc/dynamic/Navigation.png)
+
+### Klassediagram – hvem kalder hvem
+
+Controller → Service → Mapper, én række per emne. Metoderne står i `Klassediagram4c` (controllers og services) og `Klassediagram4b` (mappers).
+
+![Klassediagram 4c oversigt](doc/static/Klassediagram4c-oversigt.png)

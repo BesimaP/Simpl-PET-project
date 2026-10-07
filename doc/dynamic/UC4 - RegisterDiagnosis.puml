@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title UC4: RegisterDiagnosis
 

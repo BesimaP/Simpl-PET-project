@@ -7,7 +7,7 @@ Som patient vil jeg kunne oprette et nyt fertilitetsforløb, så jeg kan begynde
 
 **Acceptkriterier:**
 - Acceptkriterie 1: "Givet en patient er logget ind, når patienten opretter et nyt fertilitetsforløb, så vises det nye forløb på patientens oversigt" → tester at selve oprettelsen virker og bliver synlig (en patient kan godt have flere forløb over tid)
-- Acceptkriterie 2: "Givet at forløbet oprettes, når det gennemføres, så sættes startdato automatisk" → tester en specifik teknisk detalje (at man ikke selv skal indtaste dato)
+- Acceptkriterie 2: "Givet at patienten opretter et forløb, når formularen vises, så er startdatoen udfyldt med dags dato og kan ændres" → tester at man ikke behøver at indtaste datoen, men kan vælge en tidligere dato, hvis forløbet allerede er startet (fx med konsultationer og blodprøver før første runde)
 - Acceptkriterie 3: "Givet patienten allerede har et forløb med status ACTIVE, når hun forsøger at oprette et nyt, så vises en fejlbesked, og der oprettes ikke noget forløb" → tester at en patient højst kan have ét aktivt forløb ad gangen
 
 ### User story 2

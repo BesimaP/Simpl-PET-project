@@ -1,5 +1,7 @@
 # Tasks per user story
 
+*Opdateret 7. okt 2026 (aften): rettelser efter kodegennemgang – afslut forløb, ret fødselsdato, slet dokument, aftalepåmindelser, kommende medicin, sider der virker uden JavaScript, fælles fejlside og menu som Thymeleaf-fragment. Testene er flyttet til `src/test/java` og sat op mod PostgreSQL (se "Tekniske krav").*
+
 *Opdateret 7. okt 2026: hele appen kører nu på PostgreSQL. DAO-klasserne er omdøbt til mappers i `persistence`, og alle får en fælles `ConnectionPool` gennem konstruktøren (Main → RouteConfig → Controller → Service → Mapper). Henvisninger til `…DAO` nedenfor svarer nu til `…Mapper`.*
 
 *Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services).*
@@ -8,9 +10,10 @@
 
 ## User story 1 – Oprette fertilitetsforløb
 - [x]  Lav layout til at oprette et nyt fertilitetsforløb *(HTML/CSS lavet – tom-tilstanden i dashboard.html; knappen opretter forløb og går videre til start-runde)*
-- [x]  Gem det nye forløb i databasen med startdato sat automatisk *(POST /opret-forloeb → DashboardService.createJourney – startdato vælges i formularen, ikke automatisk)*
+- [x]  Gem det nye forløb i databasen med startdato *(POST /opret-forloeb → DashboardService.createJourney – startdato er forudfyldt med dags dato og kan ændres, jf. AC2, 7. okt)*
 - [x]  Vis det nye forløb på patientens oversigt *(Thymeleaf: GET /dashboard viser forløb/runde – tre tilstande med th:if, 25. sep)*
-- [x]  Test at oprettelsen virker og bliver synlig *(DashboardServiceTest)*
+- [x]  Afslut forløb, så patienten kan oprette et nyt senere ("flere forløb over tid") *(GET/POST /afslut-forloeb → DashboardService.endJourney – status COMPLETED; afvises med ROUND_IN_PROGRESS, hvis en runde er i gang, 7. okt)*
+- [x]  Test at oprettelsen virker og bliver synlig *(DashboardServiceTest – også afslut forløb og nyt forløb bagefter)*
 
 ## User story 2 – Tidslinje (Round)
 - [x]  Lav layout til tidslinjevisningen for en runde *(Thymeleaf: GET /tidslinje, th:each over events)*
@@ -24,7 +27,7 @@
 - [x]  Hent og sortér aftaler efter dato (nærmeste først) *(AppointmentService.getUpcoming/getPast, DAO sorterer)*
 - [x]  Vis dato, type og lokation for hver aftale *(Thymeleaf: GET /aftaler, th:each over kommende/tidligere; typen vises med dansk label via AppointmentType.getLabel)*
 - [x]  Lav layout til at oprette en aftale (dato, type som dropdown, lokation) og gem den på det aktive forløb *(POST /aftaler → AppointmentService)*
-- [ ]  Sørg for korrekt tilknytning til det rigtige forløb, hvis patienten har flere
+- [x]  Sørg for korrekt tilknytning til det rigtige forløb, hvis patienten har flere *(aftaler gemmes og vises altid på det AKTIVE forløb – der kan kun være ét ad gangen, afsluttede forløb har status COMPLETED, 7. okt)*
 - [x]  Test sortering og korrekt tilknytning *(AppointmentServiceTest)*
 
 ## User story 4 – Dagbogsnoter (Journey)
@@ -52,8 +55,8 @@
 ## User story 6b – Redigér profil og slet konto
 - [x]  Lav layout til at redigere profiloplysninger (navn, fødselsdato) *(HTML/CSS lavet)*
 - [x]  JavaScript: de to nye adgangskoder skal være ens, ellers fejlbesked og formularen sendes ikke *(js/min-profil.js)*
-- [x]  Gem ændringer i databasen *(POST /min-profil og /skift-kodeord → ProfileService)*
-- [x]  Implementér "slet konto" med bekræftelse, der fjerner alle patientens data *(bekræftelse i js/min-profil.js, POST /slet-konto → ProfileService.deleteAccount, CASCADE i schema.sql)*
+- [x]  Gem ændringer i databasen *(POST /min-profil → ProfileService.updateProfile – navn OG fødselsdato, ikke i fremtiden, 7. okt; POST /skift-kodeord → ProfileService.changePassword, mindst 8 tegn)*
+- [x]  Implementér "slet konto" med bekræftelse, der fjerner alle patientens data *(bekræftelse i js/min-profil.js – uden JavaScript bekræft-siden GET /slet-konto; POST /slet-konto → ProfileService.deleteAccount, CASCADE i schema_postgres.sql; uploadede filer slettes også fra uploads/, 7. okt)*
 - [x]  Test redigering og sletning *(ProfileServiceTest)*
 
 ## User story 7 – Diagnoser
@@ -69,6 +72,7 @@
 - [x]  Gem registreringen i databasen, med reference til den valgte Medication *(POST /medicin → MedicationService.logDose)*
 - [x]  Lav layout til medicinlisten, der viser tidligere registreringer *(Thymeleaf: GET /medicin, i dag/tidligere fra databasen)*
 - [x]  Implementér "markér som taget" på en planlagt dosis (taken) *(POST /medicin/taget → MedicationService.markTaken)*
+- [x]  Vis kommende doser (fra i morgen og frem) *(MedicationService.getUpcomingLogs, listen "Kommende" på /medicin; dosis vises uden ".0", 7. okt)*
 - [x]  Test at data gemmes og vises korrekt, inkl. korrekt reference til Medication og taget-status *(MedicationServiceTest)*
 
 ## User story 9 – Hormonlog
@@ -85,6 +89,7 @@
 - [x]  JavaScript: dagens dato sættes automatisk i startdato-feltet *(js/start-runde.js, fælles funktion i common.js)*
 - [x]  Lav layout til at afslutte en runde med et resultat (POSITIVE / NEGATIVE) *(HTML/CSS lavet)*
 - [x]  Gem resultatet på den specifikke Round, når den afsluttes *(POST /afslut-runde → RoundService.endRound → RoundDAO.endRound)*
+- [x]  "Afslut runde" virker også uden JavaScript *(knappen er et link til bekræft-siden GET /afslut-runde; med JavaScript åbner dialogen som før, 7. okt)*
 - [x]  Test start og afslutning *(RoundServiceTest)*
 
 ## User story 10b – Rundehistorik
@@ -98,11 +103,14 @@
 - [x]  JavaScript: filtype (PDF/JPG/PNG) og størrelse (maks 10 MB) tjekkes, når filen vælges; forkert fil afvises med fejlbesked; "Fjern fil"-knap *(js/dokumenter.js)*
 - [x]  Implementér gemning af dokumenter med filePath *(POST /dokumenter → DocumentService.uploadDocument, filen gemmes i uploads/, stien i databasen – Louise, 25. sep)*
 - [x]  Lav layout til at åbne og vise et valgt dokument *(GET /dokumenter/{id} sender filen til browseren – kun patientens egne, 25. sep)*
-- [x]  Test at dokumenter kan gemmes, listes og åbnes korrekt *(DocumentServiceTest, 8 tests)*
+- [x]  Vis upload-dato på listen (AC1: titel, type og upload-dato) *(7. okt)*
+- [x]  Slet et dokument – både rækken og filen på disken *(POST /dokumenter/slet → DocumentService.deleteDocument – kun egne, 7. okt)*
+- [x]  Test at dokumenter kan gemmes, listes, åbnes og slettes korrekt *(DocumentServiceTest)*
 
 ## User story 12 – Notifikationer
 - [x]  Implementér logik der genererer en notifikation for dagens planlagte medicindoser, når appen åbnes (MEDICATION_REMINDER) *(NotificationService.createMedicationReminders kaldes fra GET /dashboard; ingen dubletter; rød prik på klokken ved ulæste, 25. sep)*
 - [x]  Lav layout til notifikationslisten (titel, besked, isRead-status) *(Thymeleaf: GET /notifikationer, th:each med is-read)*
+- [x]  Generér påmindelser om aftaler i dag og i morgen (APPOINTMENT_REMINDER) *(NotificationService.createAppointmentReminders kaldes fra GET /dashboard; ingen dubletter, 7. okt)*
 - [x]  Implementér markering af en notifikation som læst *(POST /notifikationer/laest → NotificationService.markRead)*
 - [x]  Test at notifikationer genereres korrekt og kan markeres som læst *(NotificationServiceTest, 9 tests)*
 
@@ -111,8 +119,8 @@
 - [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `patientName` sættes ved login (accountId fjernet, uge 41: UserAccount er samlet ind i Patient); alle controllere læser fra sessionen og sender til /login, hvis den er tom
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
-- [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep)*
-- [ ]  Integrationstests mod en testdatabase i PostgreSQL – testene skal have en test-`ConnectionPool` i stedet for `DatabaseConnection` *(uge 41, torsdag)*
+- [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep – SQLite er udskiftet, se næste punkt)*
+- [ ]  Integrationstests mod en testdatabase i PostgreSQL *(7. okt: testene er flyttet til `src/test/java` og `TestData` bruger en `ConnectionPool` mod databasen `Simpl_test` og kører `schema_postgres.sql` før hver testklasse. Ikke kørt endnu – sammenlignes med undervisningen torsdag 8. okt)*
 - [x]  Skift fra SQLite til PostgreSQL: `ConnectionPool` (HikariCP), mappers i `persistence`, try-with-resources, typetabeller med `SELECT id … WHERE name = ?` og `JOIN` *(7. okt)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
@@ -123,3 +131,13 @@
 - [x]  `enums/Result.java` ser ud til at være en rest ved siden af `ServiceResult` → slet eller forklar *(ikke en rest: `Result` = rundens resultat POSITIVE/NEGATIVE, bruges i RoundDAO.endRound. `ServiceResult` = svaret fra service til controller. To forskellige ting)*
 - [ ]  Thymeleaf/OGNL: skriv aldrig ét enkelt tegn i enkelte anførselstegn (`'d'`) – det bliver en `char`. Brug `#temporals.day(...)` eller `'dd'` *(fundet 25. sep)*
 - [x]  `/logout`-rute: "Log ud" sletter sessionen (LoginController.logout) *(25. sep)*
+
+## Rettelser og oprydning (7. okt 2026)
+- [x]  Testdata: alle testbrugere har et rigtigt BCrypt-hash – kodeord `test1234` (fx mette1990 / test1234). Et ødelagt hash giver "forkert kodeord" i stedet for en 500-fejl
+- [x]  try/catch om `Integer.parseInt` og `Result.valueOf` på id'er og værdier fra formularer – ugyldigt input giver en fejlbesked i stedet for en 500-fejl
+- [x]  Fælles fejlside `templates/fejl.html`: `ExceptionConfig` fanger både `DatabaseException` og alle andre exceptions
+- [x]  Sider virker uden JavaScript: afslut runde, afslut forløb og slet konto har en bekræft-side (`templates/bekraeft.html`); klokken linker til /notifikationer; opret profil er en Thymeleaf-template med fejlbesked fra serveren
+- [x]  Menuen er ét Thymeleaf-fragment (`fragments/menu.html`) med det aktive menupunkt som parameter – `menu('medicin')`
+- [x]  Dashboard: dag-ringen får sin procent (`progressPercent`); hormonværdier og doser vises uden ".0"
+- [x]  Klassediagrammer opdateret: 4a (entities/enums), 4b (mappers) og nyt 4c (controllers + services) + 4c-oversigt – i sort/hvid
+- [x]  Use cases og sekvensdiagrammer opdateret: UC2 (fødselsdato, slet filer), UC3 (forudfyldt dato), UC7 (aftalepåmindelser), UC10 (kommende doser), UC12 (slet dokument), UC14 (bekræft-side) og ny UC15 EndJourney – alle i sort/hvid

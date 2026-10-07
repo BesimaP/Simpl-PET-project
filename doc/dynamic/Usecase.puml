@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 left to right direction
 
 title Use Case Diagram - Simpl
@@ -21,6 +24,7 @@ rectangle "Simpl" {
   usecase "UC12: ManageDocuments" as UC12
   usecase "UC13: ViewRoundHistory" as UC13
   usecase "UC14: EndRound" as UC14
+  usecase "UC15: EndJourney" as UC15
 }
 
 u -- UC1
@@ -37,6 +41,7 @@ u -- UC11
 u -- UC12
 u -- UC13
 u -- UC14
+u -- UC15
 
 ' Betingede udvidelser af login-flowet
 UC2 .> UC1 : <<extend>>\n(ingen konto)
@@ -45,6 +50,9 @@ UC3 .> UC1 : <<extend>>\n(intet aktivt forløb)
 ' Runden skriver selv hændelser på tidslinjen
 UC8 .> UC11 : <<include>>
 UC14 .> UC11 : <<include>>
+
+' Et forløb kan kun afsluttes, når der ikke er en runde i gang
+UC15 .> UC14 : kræver afsluttet runde
 
 note bottom of UC14
   Efter afsluttet runde kan

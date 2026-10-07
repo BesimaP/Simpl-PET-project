@@ -1,5 +1,4 @@
 // hormoner.js — JavaScript kun til hormoner.html (US9)
-// TODO senere: kurve over målinger (når backend kan hente rigtige data)
 
 // --- 1) Dagens dato i dato-feltet ---
 

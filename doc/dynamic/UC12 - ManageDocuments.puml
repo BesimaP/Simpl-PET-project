@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title UC12: ManageDocuments
 
@@ -33,7 +36,7 @@ c --> j : ctx.render("dokumenter") (documents, gemt, fejl)
 alt No documents
   j --> u : "Ingen dokumenter uploadet endnu."
 else Documents found
-  j --> u : List with title, type and upload date
+  j --> u : List with title, type and upload date + "Åbn" and "Slet"
 end
 
 == Upload document ==
@@ -85,5 +88,30 @@ else Document found
     j --> u : Browser shows the PDF / image
   end
 end
+
+== Delete document ==
+u -> v : Clicks "Slet" on a document
+v -> j : POST /dokumenter/slet (id in hidden field)
+j -> c : deleteDocument(ctx)
+c -> c : Integer.parseInt(ctx.formParam("id"))
+alt id is not a number
+  c --> j : ctx.redirect("/dokumenter?fejl=ukendt")
+else id OK
+  c -> s : deleteDocument(patientId, documentId)
+  s -> s : findDocument(patientId, documentId)\n(only the patient's own documents)
+  alt Not found / not hers
+    s --> c : NOT_FOUND
+    c --> j : ctx.redirect("/dokumenter?fejl=ukendt")
+  else Found
+    s -> fs : Files.deleteIfExists(Path.of(filePath))
+    s -> dm : delete(id)
+    dm -> cp : getConnection()
+    cp --> dm : Connection
+    dm -> db : DELETE FROM document WHERE id = ?
+    s --> c : OK
+    c --> j : ctx.redirect("/dokumenter?gemt=slettet")
+  end
+end
+j --> u : Updated list with "Slettet ✓"
 
 @enduml

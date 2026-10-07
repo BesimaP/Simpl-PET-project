@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title UC2: ManageProfile
 
@@ -18,10 +21,10 @@ u -> v : Fills in name, date of birth, username, password and\n"forløb?" (Nej/J
 v -> j : POST /opretprofil (firstName, lastName, dateOfBirth,\nusername, password, hasJourney, journeyStart)
 j -> c : createProfile(ctx)
 c -> s : createProfile(firstName, lastName, dateOfBirth,\nusername, password, hasJourney, journeyStart)
-s -> s : isBlank(...), LocalDate.parse(dateOfBirth / journeyStart)
-alt Empty field or invalid date
+s -> s : isBlank(...), LocalDate.parse(dateOfBirth / journeyStart),\ndateOfBirth not in the future, password.length() >= 8
+alt Empty field, invalid date or password too short
   s --> c : INVALID_INPUT
-  c --> j : ctx.redirect("/opretprofil.html?fejl=felter")
+  c --> j : ctx.redirect("/opretprofil?fejl=felter")
 else Fields OK
   s -> pm : findByUsername(username)
   pm -> cp : getConnection()
@@ -32,7 +35,7 @@ else Fields OK
   note right of pm : Connection is returned to the pool\nautomatically (try-with-resources)
   alt Username already taken
     s --> c : ALREADY_EXISTS
-    c --> j : ctx.redirect("/opretprofil.html?fejl=brugernavn")
+    c --> j : ctx.redirect("/opretprofil?fejl=brugernavn")
     j --> u : "Brugernavnet er optaget."
   else Username free
     s -> pm : save(new Patient(0, username,\nBCrypt.hashpw(password, ...), firstName, lastName, dob))
@@ -51,30 +54,41 @@ else Fields OK
   end
 end
 
-== Edit name (ProfileController + ProfileService) ==
+== Edit name and date of birth (ProfileController + ProfileService) ==
 note over u, c : Each /min-profil route: no patientId in session -> redirect /login
-u -> v : Changes first/last name, clicks "Gem ændringer"
-v -> j : POST /min-profil (firstName, lastName)
-j -> c : updateName(ctx)
-c -> s : updateName(patientId, firstName, lastName)
-alt First or last name empty
+u -> v : Changes first/last name and/or date of birth, clicks "Gem ændringer"
+v -> j : POST /min-profil (firstName, lastName, dateOfBirth)
+j -> c : updateProfile(ctx)
+c -> s : updateProfile(patientId, firstName, lastName, dateOfBirth)
+s -> s : isBlank(...), LocalDate.parse(dateOfBirth),\nnot in the future
+alt Empty field, invalid or future date
   s --> c : INVALID_INPUT
   c --> j : ctx.redirect("/min-profil?fejl=felter")
 else OK
-  s -> pm : updateName(id, firstName, lastName)
+  s -> pm : updateProfile(id, firstName, lastName, dob)
   pm -> cp : getConnection()
   cp --> pm : Connection
-  pm -> db : UPDATE patient SET first_name = ?, last_name = ? WHERE id = ?
+  pm -> db : UPDATE patient SET first_name = ?, last_name = ?,\ndate_of_birth = ? WHERE id = ?
   s --> c : OK
+  c -> c : ctx.sessionAttribute("patientName", new name)
   c --> j : ctx.redirect("/min-profil?gemt=1")
 end
 j --> u : GET /min-profil -> min-profil.html with message
 
 == Delete account ==
-u -> v : Clicks "Slet konto", confirms "Slet konto" in dialog\n("Annullér" just closes the dialog)
+alt JavaScript on
+  u -> v : Clicks "Slet konto" – min-profil.js opens the dialog\n("Annullér" just closes it)
+else JavaScript off
+  u -> j : GET /slet-konto (the link)
+  j -> c : showDeleteAccount(ctx)
+  c --> j : ctx.render("bekraeft") (title, text, action = /slet-konto)
+  j --> u : Confirmation page "Slet din konto?" ("Annullér" -> /min-profil)
+end
+u -> v : Confirms "Slet konto"
 v -> j : POST /slet-konto
 j -> c : deleteAccount(ctx)
 c -> s : deleteAccount(patientId)
+s -> s : documentService.deleteAllFiles(patientId)\n(deletes her uploaded files in uploads/ –\nCASCADE only removes the rows)
 s -> pm : delete(id)
 pm -> cp : getConnection()
 cp --> pm : Connection

@@ -1,6 +1,21 @@
 @startuml
 !pragma layout smetana
 
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+hide circle
+
 title Klassediagram 4b — persistence-laget (Simpl, PostgreSQL)
 
 package "persistence" {
@@ -20,7 +35,7 @@ package "persistence" {
     + save(patient : Patient) : int
     + findByUsername(username : String) : Patient
     + findById(id : int) : Patient
-    + updateName(id : int, firstName : String, lastName : String) : void
+    + updateProfile(id : int, firstName : String, lastName : String, dateOfBirth : LocalDate) : void
     + updatePassword(id : int, passwordHash : String) : void
     + delete(id : int) : void
   }
@@ -69,6 +84,7 @@ package "persistence" {
     + FertilityJourneyMapper(connectionPool : ConnectionPool)
     + save(journey : FertilityJourney) : int
     + findActiveByPatient(patientId : int) : FertilityJourney
+    + endJourney(id : int) : void
   }
 
   class AppointmentMapper {

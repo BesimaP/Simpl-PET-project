@@ -1,0 +1,286 @@
+@startuml
+!pragma layout smetana
+left to right direction
+hide circle
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+
+title Klassediagram 4c — controllers og services med metoder\n(læs fra venstre mod højre: én række = ét emne)
+
+' Overblikket uden metoder står i Klassediagram4c-oversigt.puml.
+' Mappers (persistence) står i Klassediagram 4b.
+' Små private hjælpere (isBlank, getAll, isOwnDose …) er udeladt.
+' Alle services svarer controlleren med enum ServiceResult (OK, INVALID_INPUT, NOT_FOUND …).
+
+package "controllers" {
+  class LoginController {
+    - authService : AuthService
+    + LoginController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - login(ctx : Context) : void
+    - showCreateProfile(ctx : Context) : void
+    - createProfile(ctx : Context) : void
+    - logout(ctx : Context) : void
+  }
+
+  class ProfileController {
+    - profileService : ProfileService
+    + ProfileController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showProfile(ctx : Context) : void
+    - updateProfile(ctx : Context) : void
+    - changePassword(ctx : Context) : void
+    - showDeleteAccount(ctx : Context) : void
+    - deleteAccount(ctx : Context) : void
+  }
+
+  class DashboardController {
+    - dashboardService : DashboardService
+    - roundService : RoundService
+    - profileService : ProfileService
+    - notificationService : NotificationService
+    - medicationService : MedicationService
+    - appointmentService : AppointmentService
+    - hormoneService : HormoneService
+    - diaryService : DiaryService
+    + DashboardController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showDashboard(ctx : Context) : void
+    - showRounds(ctx : Context) : void
+    - createJourney(ctx : Context) : void
+    - showEndJourney(ctx : Context) : void
+    - endJourney(ctx : Context) : void
+    - showStartRound(ctx : Context) : void
+    - startRound(ctx : Context) : void
+    - showEndRound(ctx : Context) : void
+    - endRound(ctx : Context) : void
+  }
+
+  class TimelineController {
+    - timelineService : TimelineService
+    - profileService : ProfileService
+    + TimelineController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showTimeline(ctx : Context) : void
+  }
+
+  class HormoneController {
+    - hormoneService : HormoneService
+    + HormoneController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    + showLogs(ctx : Context) : void
+    + saveLog(ctx : Context) : void
+    - deleteLog(ctx : Context) : void
+  }
+
+  class MedicationController {
+    - medicationService : MedicationService
+    + MedicationController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showLogs(ctx : Context) : void
+    - logDose(ctx : Context) : void
+    - markTaken(ctx : Context) : void
+    - markNotTaken(ctx : Context) : void
+  }
+
+  class AppointmentController {
+    - appointmentService : AppointmentService
+    + AppointmentController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showAppointments(ctx : Context) : void
+    - addAppointment(ctx : Context) : void
+  }
+
+  class NotificationController {
+    - notificationService : NotificationService
+    + NotificationController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showNotifications(ctx : Context) : void
+    - markRead(ctx : Context) : void
+    - markAllRead(ctx : Context) : void
+  }
+
+  class DiaryController {
+    - diaryService : DiaryService
+    + DiaryController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    + showEntries(ctx : Context) : void
+    + saveEntry(ctx : Context) : void
+    - deleteEntry(ctx : Context) : void
+  }
+
+  class DiagnosisController {
+    - diagnosisService : DiagnosisService
+    + DiagnosisController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showDiagnoses(ctx : Context) : void
+    - addDiagnosis(ctx : Context) : void
+  }
+
+  class DocumentController {
+    - documentService : DocumentService
+    + DocumentController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showDocuments(ctx : Context) : void
+    - uploadDocument(ctx : Context) : void
+    - openDocument(ctx : Context) : void
+    - deleteDocument(ctx : Context) : void
+  }
+}
+
+package "services" {
+  class AuthService {
+    + {static} MIN_PASSWORD_LENGTH : int = 8
+    - patientMapper : PatientMapper
+    - dashboardService : DashboardService
+    + AuthService(connectionPool : ConnectionPool)
+    + login(username : String, password : String) : Patient
+    + createProfile(firstName : String, lastName : String, dateOfBirth : String, username : String, password : String, hasJourney : String, journeyStart : String) : ServiceResult
+    + {static} passwordMatches(password : String, hash : String) : boolean
+  }
+
+  class ProfileService {
+    - patientMapper : PatientMapper
+    - documentService : DocumentService
+    + ProfileService(connectionPool : ConnectionPool)
+    + getPatient(patientId : int) : Patient
+    + updateProfile(patientId : int, firstName : String, lastName : String, dateOfBirth : String) : ServiceResult
+    + changePassword(patientId : int, currentPassword : String, newPassword : String, repeat : String) : ServiceResult
+    + deleteAccount(patientId : int) : ServiceResult
+  }
+
+  class DashboardService {
+    - journeyMapper : FertilityJourneyMapper
+    - roundMapper : RoundMapper
+    + DashboardService(connectionPool : ConnectionPool)
+    + createJourney(patientId : int, startDate : String) : ServiceResult
+    + endJourney(patientId : int) : ServiceResult
+    + findActiveJourney(patientId : int) : FertilityJourney
+  }
+
+  class RoundService {
+    - roundMapper : RoundMapper
+    - dashboardService : DashboardService
+    - timelineService : TimelineService
+    + RoundService(connectionPool : ConnectionPool)
+    + startRound(patientId : int, type : String, startDate : String) : ServiceResult
+    + endRound(patientId : int, result : Result) : ServiceResult
+    + findActiveRound(patientId : int) : Round
+    + getRounds(patientId : int) : List<Round>
+  }
+
+  class TimelineService {
+    - eventMapper : EventMapper
+    - connectionPool : ConnectionPool
+    + TimelineService(connectionPool : ConnectionPool)
+    + addEvent(roundId : int, dateTime : LocalDateTime, type : EventType, description : String) : void
+    + getEvents(patientId : int) : List<Event>
+  }
+
+  class HormoneService {
+    + {static} CHART_WIDTH : int = 320
+    + {static} CHART_HEIGHT : int = 140
+    - hormoneLogMapper : HormoneLogMapper
+    - roundService : RoundService
+    + HormoneService(connectionPool : ConnectionPool)
+    + saveLog(patientId : int, hormone : String, value : String, unit : String, date : String) : ServiceResult
+    + getLogs(patientId : int) : List<HormoneLog>
+    + deleteLog(patientId : int, logId : int) : ServiceResult
+    + getCurve(patientId : int, type : HormoneType) : HormoneCurve
+  }
+
+  class MedicationService {
+    - medicationMapper : MedicationMapper
+    - medicationLogMapper : MedicationLogMapper
+    - roundService : RoundService
+    + MedicationService(connectionPool : ConnectionPool)
+    + logDose(patientId : int, medicationName : String, dose : String, unit : String, date : String, time : String, taken : boolean) : ServiceResult
+    + getTodayLogs(patientId : int) : List<MedicationLog>
+    + getUpcomingLogs(patientId : int) : List<MedicationLog>
+    + getPastLogs(patientId : int) : List<MedicationLog>
+    + getMedicationNames() : Map<Integer, String>
+    + markTaken(patientId : int, logId : int) : ServiceResult
+    + markNotTaken(patientId : int, logId : int) : ServiceResult
+  }
+
+  class AppointmentService {
+    - appointmentMapper : AppointmentMapper
+    - dashboardService : DashboardService
+    - roundService : RoundService
+    - timelineService : TimelineService
+    + AppointmentService(connectionPool : ConnectionPool)
+    + addAppointment(patientId : int, type : String, location : String, date : String, time : String) : ServiceResult
+    + getUpcoming(patientId : int) : List<Appointment>
+    + getPast(patientId : int) : List<Appointment>
+  }
+
+  class NotificationService {
+    - notificationMapper : NotificationMapper
+    - medicationService : MedicationService
+    - appointmentService : AppointmentService
+    + NotificationService(connectionPool : ConnectionPool)
+    + getNotifications(patientId : int) : List<Notification>
+    + countUnread(patientId : int) : int
+    + createMedicationReminders(patientId : int) : int
+    + createAppointmentReminders(patientId : int) : int
+    + markRead(patientId : int, notificationId : int) : ServiceResult
+    + markAllRead(patientId : int) : ServiceResult
+  }
+
+  class DiaryService {
+    - diaryEntryMapper : DiaryEntryMapper
+    + DiaryService(connectionPool : ConnectionPool)
+    + saveEntry(patientId : int, date : String, title : String, note : String) : ServiceResult
+    + getEntries(patientId : int) : List<DiaryEntry>
+    + deleteEntry(patientId : int, entryId : int) : ServiceResult
+  }
+
+  class DiagnosisService {
+    - diagnosisMapper : DiagnosisMapper
+    + DiagnosisService(connectionPool : ConnectionPool)
+    + addDiagnosis(patientId : int, name : String, description : String) : ServiceResult
+    + getDiagnoses(patientId : int) : List<Diagnosis>
+  }
+
+  class DocumentService {
+    - {static} UPLOAD_DIR : String = "uploads"
+    - {static} MAX_SIZE_BYTES : long = 10 MB
+    - documentMapper : DocumentMapper
+    + DocumentService(connectionPool : ConnectionPool)
+    + uploadDocument(patientId : int, title : String, type : String, originalFileName : String, fileContent : InputStream, fileSize : long) : ServiceResult
+    + getDocuments(patientId : int) : List<Document>
+    + findDocument(patientId : int, documentId : int) : Document
+    + deleteDocument(patientId : int, documentId : int) : ServiceResult
+    + deleteAllFiles(patientId : int) : void
+  }
+}
+
+
+' ---------- én række per emne: controller -> service ----------
+LoginController --> AuthService
+ProfileController --> ProfileService
+DashboardController --> DashboardService
+DashboardController --> RoundService
+TimelineController --> TimelineService
+HormoneController --> HormoneService
+MedicationController --> MedicationService
+AppointmentController --> AppointmentService
+NotificationController --> NotificationService
+DiaryController --> DiaryService
+DiagnosisController --> DiagnosisService
+DocumentController --> DocumentService
+
+note "DashboardController bruger også Profile-, Notification-,\nMedication-, Appointment-, Hormone- og DiaryService\n(dashboardet viser lidt af det hele)" as N1
+N1 .. DashboardController
+
+@enduml

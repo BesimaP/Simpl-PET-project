@@ -1,8 +1,8 @@
 # Use case-beskrivelser
 
-*Forudsætning for UC3–UC14: patienten er logget ind (UC1). Forudsætning for UC8–UC14: patienten har et forløb med status ACTIVE.
+*Forudsætning for UC3–UC15: patienten er logget ind (UC1). Forudsætning for UC8–UC15: patienten har et forløb med status ACTIVE.
 
-*Opdateret 7. okt 2026, så beskrivelserne passer til koden og sekvensdiagrammerne.* Hver use case dækker én eller flere user stories (angivet i parentes).*
+*Opdateret 7. okt 2026 (aften), så beskrivelserne passer til koden og sekvensdiagrammerne – inkl. UC15 EndJourney.* Hver use case dækker én eller flere user stories (angivet i parentes).*
 - Note på en aftale (fx "husk fastende") – valgt fra af scope-hensyn: kræver kolonne, entity, mapper og service
 
 ## UC1: LogIn (US5)
@@ -20,21 +20,22 @@ Regnvejrsdag:
 
 
 ## UC2: ManageProfile (US6a, US6b)
-Systemet viser en skærm med felter til navn, fødselsdato, brugernavn og adgangskode, og et valg om patienten allerede er i et forløb (med startdato).
+Systemet viser en skærm med felter til navn, fødselsdato, brugernavn og adgangskode (mindst 8 tegn), og et valg om patienten allerede er i et forløb (med startdato).
 Brugeren udfylder felterne og klikker Opret profil.
 Systemet opretter en Patient med login og persondata (adgangskoden gemmes som BCrypt-hash) og gemmer den i databasen. Har brugeren valgt "ja" til forløb, oprettes forløbet samtidig (som i UC3).
 Brugeren logges ind med det samme og sendes til dashboardet.
-En logget-ind bruger kan efterfølgende åbne profilen for at rette fornavn og efternavn, skifte adgangskode, eller slette sin konto og alle tilknyttede data efter bekræftelse (ON DELETE CASCADE).
+En logget-ind bruger kan efterfølgende åbne profilen for at rette fornavn, efternavn og fødselsdato, skifte adgangskode, eller slette sin konto og alle tilknyttede data efter bekræftelse (ON DELETE CASCADE – og de uploadede filer slettes fra disken). Bekræftelsen er en dialog; uden JavaScript en bekræft-side.
 
 Regnvejrsdag:
 - Et eller flere påkrævede felter er tomme: Systemet viser en fejlbesked og gemmer ikke.
+- Fødselsdatoen er ugyldig eller i fremtiden, eller adgangskoden er under 8 tegn: Systemet viser en fejlbesked og gemmer ikke.
 - Brugernavn er allerede i brug: Systemet viser en fejlbesked og gemmer ikke.
 - Brugeren fortryder sletning i bekræftelsesdialogen: Intet slettes.
 
 
 ## UC3: CreateJourney (US1)
-Dashboardet viser "Start dit forløb" med et datofelt, når patienten ikke har et aktivt forløb.
-Brugeren vælger startdato og klikker Start forløb.
+Dashboardet viser "Start dit forløb" med et datofelt, når patienten ikke har et aktivt forløb. Datofeltet er udfyldt med dags dato.
+Brugeren beholder datoen eller vælger en tidligere startdato og klikker Start forløb.
 Systemet opretter et nyt FertilityJourney med status ACTIVE og den valgte startdato, og gemmer det i databasen.
 Dashboardet vises igen med beskeden "Dit forløb er oprettet".
 
@@ -78,7 +79,7 @@ Regnvejrsdag:
 
 ## UC7: ViewNotifications (US12)
 Systemet viser en skærm med patientens notifikationer, nyeste først, med titel, besked og læst-status.
-Systemet opretter selv notifikationer af typen MEDICATION_REMINDER for dagens planlagte doser, der ikke er taget, hver gang dashboardet åbnes (uden dubletter).
+Systemet opretter selv notifikationer, hver gang dashboardet åbnes (uden dubletter): MEDICATION_REMINDER for dagens planlagte doser, der ikke er taget, og APPOINTMENT_REMINDER for aftaler i dag og i morgen.
 Brugeren kan markere én notifikation som læst, eller markere alle som læst på én gang (isRead).
 
 Regnvejrsdag:
@@ -112,6 +113,7 @@ Systemet viser en skærm med medicinregistreringer for den aktive runde som en t
 Brugeren klikker Tilføj Medicin, vælger en medicin fra stamdata og udfylder dosis, enhed, dato og tidspunkt (og evt. at den allerede er taget).
 Brugeren klikker Gem. Systemet gemmer registreringen i databasen med reference til Medication og opdaterer listen.
 Brugeren kan markere en registrering som taget, hvorved taken sættes – og fortryde igen.
+Listen er delt i I dag, Kommende (fra i morgen og frem) og Tidligere.
 
 Regnvejrsdag:
 - Et eller flere påkrævede felter er tomme: Systemet viser en fejlbesked og gemmer ikke.
@@ -131,6 +133,7 @@ Systemet viser en skærm med patientens dokumenter med titel, type og upload-dat
 Brugeren klikker Tilføj Dokument, udfylder titel, vælger dokumenttype (henvisning, blodprøvesvar, behandlingsplan, andet) og vælger en fil.
 Brugeren klikker Gem. Systemet gemmer dokumentets titel, type og filsti i databasen og opdaterer listen.
 Brugeren kan vælge et dokument for at åbne det via den gemte filePath.
+Brugeren kan slette et dokument. Systemet sletter både rækken i databasen og filen på disken.
 
 Regnvejrsdag:
 - Patienten har ingen dokumenter: Systemet viser en besked om, at listen er tom.
@@ -149,12 +152,23 @@ Regnvejrsdag:
 
 ## UC14: EndRound (US10a)
 Systemet viser en mulighed for at afslutte den aktive runde.
-Brugeren vælger et resultat (positiv, negativ eller "ikke afgjort endnu") og bekræfter.
+Brugeren vælger et resultat (positiv, negativ eller "ikke afgjort endnu") og bekræfter – i en dialog, eller på en bekræft-side, hvis JavaScript er slået fra.
 Systemet sætter rundens slutdato til dagens dato (så er runden afsluttet) og gemmer resultatet i databasen.
 Brugeren sendes til rundehistorikken (UC13) og kan derefter starte en ny runde (UC8) under samme forløb.
 
 Regnvejrsdag:
 - Der er ingen runde i gang: Systemet viser en fejlbesked.
+
+
+## UC15: EndJourney (US1)
+Når der ikke er en runde i gang, viser dashboardet linket "Afslut forløb".
+Brugeren klikker Afslut forløb og bekræfter på bekræft-siden.
+Systemet sætter forløbets status til COMPLETED. Runder, logs og noter gemmes.
+Dashboardet viser "Dit forløb er afsluttet" og igen "Start dit forløb", så patienten senere kan oprette et nyt forløb (UC3).
+
+Regnvejrsdag:
+- Der er en runde i gang: Systemet viser en besked om, at runden skal afsluttes først (UC14), og afslutter ikke forløbet.
+- Patienten har intet aktivt forløb: Dashboardet vises uden ændringer.
 
 
 ## Fremtidige features
@@ -163,6 +177,4 @@ Følgende features er identificeret, men ligger uden for denne version og har de
 - Redigér, aflys og slet aftaler samt markér aftale som gennemført (UC5) — kræver status på Appointment
 - Antal udtagne æg, embryoner og oplagte embryoner ved End Round (UC14) — kræver nye attributter på Round
 - Medicinplan, der automatisk opretter alle planlagte doser i en periode (UC10)
-- Automatisk generering af APPOINTMENT_REMINDER-notifikationer (UC7), ud over MEDICATION_REMINDER
-- Hormonværdier vist som graf (UC9)
 - Note på en aftale, fx "husk fastende" (UC5) — valgt fra af scope-hensyn: kræver kolonne, entity, mapper og service

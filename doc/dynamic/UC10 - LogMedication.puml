@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title UC10: LogMedication
 
@@ -20,7 +23,7 @@ note over j, c : Every handler first checks ctx.sessionAttribute("patientId")\nn
 u -> v : Opens "Medicin"
 v -> j : GET /medicin
 j -> c : showLogs(ctx)
-c -> s : getTodayLogs(patientId), getPastLogs(patientId)
+c -> s : getTodayLogs(patientId), getUpcomingLogs(patientId),\ngetPastLogs(patientId) (I dag / Kommende / Tidligere)
 s -> rs : findActiveRound(patientId) (RoundMapper)
 alt NoActiveJourneyException / NoActiveRoundException
   rs --> s : throw

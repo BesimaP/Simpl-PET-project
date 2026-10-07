@@ -1,5 +1,8 @@
 @startuml
 !pragma layout smetana
+skinparam shadowing false
+skinparam monochrome true
+skinparam defaultFontName Arial
 
 title UC3: CreateJourney
 
@@ -13,7 +16,7 @@ participant "ConnectionPool" as cp
 database "PostgreSQL" as db
 
 note over u, v : GET /dashboard finds no active journey ->\ndashboard.html shows "Du har ikke et forløb endnu"
-u -> v : Picks start date, clicks "Start dit forløb"
+u -> v : Keeps today's date (pre-filled) or picks an earlier\nstart date, clicks "Start dit forløb"
 v -> j : POST /opret-forloeb (startDate)
 j -> c : createJourney(ctx)
 alt No patientId in session
