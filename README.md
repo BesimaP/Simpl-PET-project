@@ -67,7 +67,7 @@ src/main/resources/
 src/test/java/             # JUnit-tests af services
 ```
 
-Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST) → Javalin finder ruten → `HormoneController` læser felterne og kalder `HormoneService.saveLog()` → service tjekker regler (tomme felter, findes forløb/runde), bygger en `HormoneLog` og kalder `HormoneLogDAO.save()` → service svarer med `ServiceResult` (OK eller en fejl) → controlleren vælger side ud fra svaret.
+Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST) → Javalin finder ruten → `HormoneController` læser felterne og kalder `HormoneService.saveLog()` → service tjekker regler (tomme felter, findes forløb/runde), bygger en `HormoneLog` og kalder `HormoneLogMapper.save()` → service svarer med `ServiceResult` (OK eller en fejl) → controlleren vælger side ud fra svaret.
 
 `ServiceResult` (i `enums`) er én fælles enum for svaret fra alle services: `OK, INVALID_INPUT, ALREADY_EXISTS, NO_ACTIVE_JOURNEY, NO_ACTIVE_ROUND, ROUND_IN_PROGRESS`.
 

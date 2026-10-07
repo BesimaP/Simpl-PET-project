@@ -1,7 +1,7 @@
 package services;
 
-import dao.DatabaseConnection;
-import dao.HormoneLogDAO;
+import persistence.ConnectionPool;
+import persistence.HormoneLogMapper;
 import entities.HormoneCurve;
 import entities.HormoneLog;
 import entities.Round;
@@ -20,6 +20,11 @@ import java.util.List;
 // Forretningslogik for hormonmålinger (US9). Kender IKKE Javalin – controlleren kalder saveLog med felterne.
 // Svarer med ServiceResult: OK = ok, ellers hvad der gik galt (controlleren vælger side ud fra det).
 public class HormoneService {
+    private HormoneLogMapper hormoneLogMapper;
+
+    public HormoneService(ConnectionPool connectionPool) {
+        this.hormoneLogMapper = new HormoneLogMapper(connectionPool);
+    }
 
     // Gemmer én måling på den runde, der er i gang. En måling SKAL ligge på en runde (round_id i databasen).
     public ServiceResult saveLog(int patientId, String hormone, String value, String unit, String date) {
@@ -45,6 +50,7 @@ public class HormoneService {
         LocalDateTime dateTime;
         HormoneType hormoneType;
         double numericValue;
+
         try {
             dateTime = LocalDate.parse(date).atStartOfDay();
             hormoneType = HormoneType.valueOf(hormone);
@@ -54,10 +60,9 @@ public class HormoneService {
         }
 
         // 4. byg kortet og læg det i skuffen hormone_log
-        HormoneLogDAO hormoneLogDao = new HormoneLogDAO(DatabaseConnection.getConnection());
         HormoneLog log = new HormoneLog(0, round.getId(), dateTime, hormoneType, numericValue, unit);
 
-        hormoneLogDao.save(log);
+        hormoneLogMapper.save(log);
 
         return ServiceResult.OK;
     }
@@ -67,7 +72,7 @@ public class HormoneService {
     public List<HormoneLog> getLogs(int patientId) {
         try {
             Round round = new RoundService().findActiveRound(patientId);
-            return new HormoneLogDAO(DatabaseConnection.getConnection()).findByRound(round.getId());
+            return hormoneLogMapper.findByRound(round.getId());
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
             return new ArrayList<>();
         }
@@ -77,7 +82,7 @@ public class HormoneService {
     public ServiceResult deleteLog(int patientId, int logId) {
         for (HormoneLog log : getLogs(patientId)) {
             if (log.getId() == logId) {
-                new HormoneLogDAO(DatabaseConnection.getConnection()).delete(logId);
+                hormoneLogMapper.delete(logId);
                 return ServiceResult.OK;
             }
         }
