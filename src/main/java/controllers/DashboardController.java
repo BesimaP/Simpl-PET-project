@@ -24,12 +24,14 @@ public class DashboardController {
     private NotificationService notificationService;
     private DashboardService dashboardService;
     private DiaryService diaryService;
+    private RoundService roundService;
 
     public DashboardController(ConnectionPool connectionPool) {
         this.profileService = new ProfileService(connectionPool);
         this.dashboardService = new DashboardService(connectionPool);
         this.notificationService = new NotificationService(connectionPool);
         this.diaryService = new DiaryService(connectionPool);
+        this.roundService = new RoundService(connectionPool);
     }
 
     public void setRoutes(JavalinConfig config) {
@@ -61,7 +63,7 @@ public class DashboardController {
         Round round = null;
         try {
             journey = dashboardService.findActiveJourney(patientId);
-            round = new RoundService().findActiveRound(patientId);
+            round = roundService.findActiveRound(patientId);
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
             // ingen fejl – bare en af de to tilstande
         }
@@ -95,7 +97,7 @@ public class DashboardController {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("rounds", new RoundService().getRounds(patientId));   // requestscope -> ${rounds}
+        ctx.attribute("rounds", roundService.getRounds(patientId));   // requestscope -> ${rounds}
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
@@ -136,7 +138,7 @@ public class DashboardController {
         String type = ctx.formParam("type");
         String startDate = ctx.formParam("startDate");
 
-        ServiceResult result = new RoundService().startRound(patientId, type, startDate);
+        ServiceResult result = roundService.startRound(patientId, type, startDate);
 
         // vælg side ud fra svaret
         switch (result) {
@@ -160,7 +162,7 @@ public class DashboardController {
         String resultParam = ctx.formParam("result");
         Result result = (resultParam == null || resultParam.isBlank()) ? null : Result.valueOf(resultParam);
 
-        ServiceResult outcome = new RoundService().endRound(patientId, result);
+        ServiceResult outcome = roundService.endRound(patientId, result);
 
         switch (outcome) {
             case OK -> ctx.redirect("/rundehistorik?gemt=afsluttet");
