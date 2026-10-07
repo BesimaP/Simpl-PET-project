@@ -1,6 +1,6 @@
 package services;
 
-import dao.PatientDAO;
+import persistence.PatientMapper;
 import entities.Patient;
 import enums.ServiceResult;
 import org.mindrot.jbcrypt.BCrypt;
@@ -9,15 +9,15 @@ import persistence.ConnectionPool;
 // Forretningslogik for min-profil (US6b). Kender IKKE Javalin – ProfileController læser formularen og kalder én metode her.
 // Alle tre metoder gemmer/ændrer noget, så de svarer med ServiceResult. Controlleren vælger side ud fra svaret.
 public class ProfileService {
-    private PatientDAO patientDAO;
+    private PatientMapper patientMapper;
 
     public ProfileService(ConnectionPool connectionPool) {
-        this.patientDAO = new PatientDAO(connectionPool);
+        this.patientMapper = new PatientMapper(connectionPool);
     }
 
     // Henter patientens kort – til at forudfylde felterne på min-profil (GET)
     public Patient getPatient(int patientId) {
-        return patientDAO.findById(patientId);
+        return patientMapper.findById(patientId);
     }
 
     // Retter patientens navn
@@ -28,7 +28,7 @@ public class ProfileService {
         }
 
         // 2. bed arkivaren rette navnet på patientens kort (UPDATE patient SET first_name = ?, last_name = ? WHERE id = ?)
-        patientDAO.updateName(patientId, firstName.trim(), lastName.trim());
+        patientMapper.updateName(patientId, firstName.trim(), lastName.trim());
 
         // 3. gik godt
         return ServiceResult.OK;
@@ -47,7 +47,7 @@ public class ProfileService {
         }
 
         // 3. hent patientens kort fra databasen – null = findes ikke
-        Patient patient = patientDAO.findById(patientId);
+        Patient patient = patientMapper.findById(patientId);
         if (patient == null) {
             return ServiceResult.INVALID_INPUT;
         }
@@ -58,7 +58,7 @@ public class ProfileService {
         }
 
         // 5. bed arkivaren gemme det nye kodeord
-        patientDAO.updatePassword(patientId, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+        patientMapper.updatePassword(patientId, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
 
         // 6. gik godt
         return ServiceResult.OK;
@@ -67,7 +67,7 @@ public class ProfileService {
     // Sletter kontoen = patienten – alt under den ryger med (ON DELETE CASCADE i schema.sql)
     public ServiceResult deleteAccount(int patientId) {
         // 1. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?)
-        patientDAO.delete(patientId);
+        patientMapper.delete(patientId);
 
         // 2. gik godt
         return ServiceResult.OK;

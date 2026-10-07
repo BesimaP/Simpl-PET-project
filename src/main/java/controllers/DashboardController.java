@@ -21,11 +21,13 @@ import java.util.List;
 // Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen DAO'er her.
 public class DashboardController {
     private ProfileService profileService;
+    private NotificationService notificationService;
     private DashboardService dashboardService;
 
     public DashboardController(ConnectionPool connectionPool) {
         this.profileService = new ProfileService(connectionPool);
         this.dashboardService = new DashboardService(connectionPool);
+        this.notificationService = new NotificationService(connectionPool);
     }
 
     public void setRoutes(JavalinConfig config) {
@@ -48,7 +50,6 @@ public class DashboardController {
         ctx.attribute("today", LocalDate.now());
 
         // påmindelser om dagens medicin oprettes, når forsiden åbnes (US12). Tallet bruges til prikken på klokken
-        NotificationService notificationService = new NotificationService();
         notificationService.createMedicationReminders(patientId);
         ctx.attribute("unread", notificationService.countUnread(patientId));
         ctx.attribute("notifications", notificationService.getNotifications(patientId));   // til pop-op'en ved klokken
@@ -152,7 +153,6 @@ public class DashboardController {
             ctx.redirect("/login");
             return;
         }
-
 
         // resultatet er valgfrit: "POSITIVE", "NEGATIVE" eller tomt (kan udfyldes senere)
         String resultParam = ctx.formParam("result");
