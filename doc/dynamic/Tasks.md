@@ -73,6 +73,7 @@
 - [x]  Lav layout til medicinlisten, der viser tidligere registreringer *(Thymeleaf: GET /medicin, i dag/tidligere fra databasen)*
 - [x]  Implementér "markér som taget" på en planlagt dosis (taken) *(POST /medicin/taget → MedicationService.markTaken)*
 - [x]  Vis kommende doser (fra i morgen og frem) *(MedicationService.getUpcomingLogs, listen "Kommende" på /medicin; dosis vises uden ".0", 7. okt)*
+- [x]  Slet en dosis, fx en fejlindtastning (POST /medicin/slet → MedicationService.deleteDose – kun egne) *(MedicationServiceTest)*
 - [x]  Test at data gemmes og vises korrekt, inkl. korrekt reference til Medication og taget-status *(MedicationServiceTest)*
 
 ## User story 9 – Hormonlog

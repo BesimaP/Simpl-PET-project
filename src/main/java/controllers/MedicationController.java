@@ -22,6 +22,7 @@ public class MedicationController {
         config.routes.post("/medicin", ctx -> logDose(ctx));
         config.routes.post("/medicin/taget", ctx -> markTaken(ctx));   // knappen på hver dosis
         config.routes.post("/medicin/ikke-taget", ctx -> markNotTaken(ctx));   // fortryd på hver dosis
+        config.routes.post("/medicin/slet", ctx -> deleteDose(ctx));           // "Slet" på én dosis (fx en fejlindtastning)
     }
 
     // GET /medicin – hent dagens og tidligere doser + medicinnavne, og fyld skabelonen
@@ -61,6 +62,24 @@ public class MedicationController {
         }
         medicationService.markTaken(patientId, logId);   // service tjekker, at dosen er patientens egen
         ctx.redirect("/medicin");
+    }
+
+    // POST /medicin/slet – slet én dosis (id i et skjult felt). Service tjekker, at dosen er patientens egen
+    private void deleteDose(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        int logId;
+        try {
+            logId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/medicin?fejl=ukendt");
+            return;
+        }
+        ServiceResult result = medicationService.deleteDose(patientId, logId);
+        ctx.redirect(result == ServiceResult.OK ? "/medicin?gemt=slettet" : "/medicin?fejl=ukendt");
     }
 
     // POST /medicin/ikke-taget – fortryd "markér som taget" (id i et skjult felt)

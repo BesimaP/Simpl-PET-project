@@ -145,6 +145,15 @@ public class MedicationService {
         return ServiceResult.OK;
     }
 
+    // Sletter én dosis (fx en fejlindtastning) – kun patientens egen dosis. Svar: OK · NOT_FOUND
+    public ServiceResult deleteDose(int patientId, int logId) {
+        if (!isOwnDose(patientId, logId)) {
+            return ServiceResult.NOT_FOUND;
+        }
+        medicationLogMapper.delete(logId);
+        return ServiceResult.OK;
+    }
+
     // hjælper: findes dosen i patientens egen runde? Så man ikke kan ændre andres ved at rette id'et i det skjulte felt
     private boolean isOwnDose(int patientId, int logId) {
         for (MedicationLog log : getAll(patientId)) {

@@ -115,6 +115,7 @@ Brugeren klikker Tilføj Medicin, vælger en medicin fra stamdata (listen viser 
 Brugeren klikker Gem. Systemet gemmer registreringen i databasen med reference til Medication og opdaterer listen.
 Brugeren kan markere en registrering som taget, hvorved taken sættes – og fortryde igen.
 Listen er delt i I dag, Kommende (fra i morgen og frem) og Tidligere.
+Brugeren kan slette en dosis, fx hvis den er tastet forkert.
 
 Regnvejrsdag:
 - Et eller flere påkrævede felter er tomme: Systemet viser en fejlbesked og gemmer ikke.
