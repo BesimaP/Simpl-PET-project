@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 // Koordinatoren for dashboard, start-runde.html og rundehistorik.
-// Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen DAO'er her.
+// Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen mappers her.
 public class DashboardController {
     private ProfileService profileService;
     private NotificationService notificationService;
@@ -27,6 +27,7 @@ public class DashboardController {
     private RoundService roundService;
     private MedicationService medicationService;
     private HormoneService hormoneService;
+    private AppointmentService appointmentService;
 
     public DashboardController(ConnectionPool connectionPool) {
         this.profileService = new ProfileService(connectionPool);
@@ -36,6 +37,7 @@ public class DashboardController {
         this.roundService = new RoundService(connectionPool);
         this.medicationService = new MedicationService(connectionPool);
         this.hormoneService = new HormoneService(connectionPool);
+        this.appointmentService = new AppointmentService(connectionPool);
     }
 
     public void setRoutes(JavalinConfig config) {
@@ -81,7 +83,7 @@ public class DashboardController {
         // små kort: dagens medicin, næste aftale, seneste hormonværdi, antal noter
         ctx.attribute("todayMeds", medicationService.getTodayLogs(patientId));
         ctx.attribute("names", medicationService.getMedicationNames());
-        List<Appointment> upcoming = new AppointmentService().getUpcoming(patientId);
+        List<Appointment> upcoming = appointmentService.getUpcoming(patientId);
         ctx.attribute("nextAppointment", upcoming.isEmpty() ? null : upcoming.get(0));   // første = nærmeste
         List<HormoneLog> logs = hormoneService.getLogs(patientId);
         ctx.attribute("latestHormone", logs.isEmpty() ? null : logs.get(0));             // nyeste først

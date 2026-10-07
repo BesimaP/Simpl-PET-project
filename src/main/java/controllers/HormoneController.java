@@ -8,7 +8,7 @@ import persistence.ConnectionPool;
 import services.HormoneService;
 
 // Koordinatoren for hormoner.html (US9). Læser formularen, kalder HormoneService og sender brugeren videre.
-// Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
+// Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
 public class HormoneController {
     private HormoneService hormoneService; // "den der bestemmer" for hormoner
 

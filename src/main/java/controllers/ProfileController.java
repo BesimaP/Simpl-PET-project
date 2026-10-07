@@ -7,7 +7,7 @@ import persistence.ConnectionPool;
 import services.ProfileService;
 
 // Koordinatoren for min-profil (US6b).
-// Ruterne er én linje hver. Metoderne læser formularen, kalder ProfileService og sender brugeren videre – ingen DAO'er her.
+// Ruterne er én linje hver. Metoderne læser formularen, kalder ProfileService og sender brugeren videre – ingen mappers her.
 public class ProfileController {
     private ProfileService profileService; // "den der bestemmer" for min-profil
 

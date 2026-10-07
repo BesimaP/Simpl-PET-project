@@ -1,7 +1,7 @@
 package enums;
 
 // Behandlingstype for en runde (ordlisten). Bruges i Round.treatmentType.
-// Matcher CHECK-constraint på round.treatment_type i schema.sql.
+// Matcher navnene i tabellen treatment_type i schema_postgres.sql.
 public enum TreatmentType {
     IVF,   // in vitro-fertilisering
     ICSI,  // intracytoplasmatisk sædcelleinjektion
