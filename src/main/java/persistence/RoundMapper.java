@@ -5,7 +5,6 @@ import enums.Result;
 import enums.RoundStatus;
 import enums.TreatmentType;
 import exceptions.DatabaseException;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
