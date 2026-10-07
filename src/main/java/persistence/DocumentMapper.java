@@ -1,4 +1,4 @@
-package dao;
+package persistence;
 
 import exceptions.DatabaseException;
 
@@ -14,22 +14,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Al SQL for tabellen document (US11). Selve filen ligger på disken – databasen kender kun stien.
-public class DocumentDAO {
-    private Connection connection;
+public class DocumentMapper {
+    private ConnectionPool connectionPool; // nøgleringen
 
-    public DocumentDAO(Connection connection) {
-        this.connection = connection;
+    public DocumentMapper(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
     }
 
-    // gemmer ét dokument (titel, type og sti til filen) og returnerer det id, databasen gav det
+    // gemmer ét dokument (titel, type og sti til filen) og returnerer det id, databasen finder selv id'et
     public int save(Document document) {
-        String sql = "INSERT INTO document (patient_id, upload_date, title, document_type, file_path) VALUES (?, ?, ?, ?, ?)";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+        String sql = "INSERT INTO document (patient_id, upload_date, title, document_type_id, file_path) VALUES (?, ?, ?, (SELECT id FROM document_type WHERE name = ?), ?)";
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+
             statement.setInt(1, document.getPatientId());
-            statement.setString(2, document.getUploadDate().toString()); // LocalDate -> "2026-10-05"
+            statement.setObject(2, document.getUploadDate()); // LocalDate direkte
             statement.setString(3, document.getTitle());
-            statement.setString(4, document.getDocumentType().name()); // enum -> "BLOOD_TEST_RESULT" (matcher CHECK)
+            statement.setString(4, document.getDocumentType().name()); // ordet, fx "BLOOD_TEST_RESULT" -> databasen finder selv id'et
             statement.setString(5, document.getFilePath());            // fx "uploads/blodprove-sep.pdf"
             statement.executeUpdate();
 
@@ -46,10 +47,10 @@ public class DocumentDAO {
 
     // henter alle patientens dokumenter, nyeste først – til listen "Mine dokumenter"
     public List<Document> findByPatient(int patientId) {
-        String sql = "SELECT * FROM document WHERE patient_id = ? ORDER BY upload_date DESC, title";
+        String sql = "SELECT d.*, dt.name AS document_type FROM document d JOIN document_type dt ON dt.id = d.document_type_id WHERE d.patient_id = ? ORDER BY d.upload_date DESC, d.title";
         List<Document> documents = new ArrayList<>();
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, patientId);
             ResultSet rs = statement.executeQuery();
 
@@ -66,8 +67,8 @@ public class DocumentDAO {
     // sletter rækken i databasen. OBS: selve filen på disken skal slettes et andet sted (i service/controller)
     public void delete(int id) {
         String sql = "DELETE FROM document WHERE id = ?";
-        try {
-            PreparedStatement statement = connection.prepareStatement(sql);
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -80,7 +81,7 @@ public class DocumentDAO {
         return new Document(
                 rs.getInt("id"),
                 rs.getInt("patient_id"),
-                LocalDate.parse(rs.getString("upload_date")),               // "2026-10-05" -> LocalDate
+                rs.getObject("upload_date", LocalDate.class),               // PostgreSQL giver selv en LocalDate
                 rs.getString("title"),
                 DocumentType.valueOf(rs.getString("document_type")), // "OTHER" -> enum
                 rs.getString("file_path")
