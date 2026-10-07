@@ -1,5 +1,6 @@
 package controllers;
 
+import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import persistence.ConnectionPool;
@@ -29,6 +30,8 @@ public class NotificationController {
         NotificationService service = notificationService;
         ctx.attribute("notifications", service.getNotifications(patientId));   // requestscope -> ${notifications}
         ctx.attribute("unread", service.countUnread(patientId));               // requestscope -> ${unread} (knappen vises kun, hvis > 0)
+        // fejl fra sidste POST (?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("notifikationer");
     }
 
@@ -60,7 +63,7 @@ public class NotificationController {
             ctx.redirect("/notifikationer");
             return;
         }
-        notificationService.markRead(patientId, notificationId);   // service tjekker, at den er patientens egen
-        ctx.redirect("/notifikationer");
+        ServiceResult result = notificationService.markRead(patientId, notificationId);   // service tjekker, at den er patientens egen
+        ctx.redirect(result == ServiceResult.OK ? "/notifikationer" : "/notifikationer?fejl=ukendt");
     }
 }

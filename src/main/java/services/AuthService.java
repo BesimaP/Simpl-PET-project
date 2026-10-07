@@ -28,13 +28,13 @@ public class AuthService {
     public Patient login(String username, String password) throws UserNotFoundException {
         // regel: begge felter skal være udfyldt (BCrypt kan ikke tjekke et kodeord, der er null)
         if (isBlank(username) || isBlank(password)) {
-            throw new UserNotFoundException("Forkert brugernavn eller kodeord");
+            throw new UserNotFoundException("Forkert brugernavn eller adgangskode");
         }
 
         Patient patient = patientMapper.findByUsername(username);
 
         if (patient == null || !passwordMatches(password, patient.getPasswordHash())) {
-            throw new UserNotFoundException("Forkert brugernavn eller kodeord");
+            throw new UserNotFoundException("Forkert brugernavn eller adgangskode");
         }
 
         // brugernavn og kodeord passer – giv patientens kort tilbage (id'et skal i sessionen)

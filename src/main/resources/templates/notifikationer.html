@@ -40,6 +40,9 @@
     </div>
   </header>
 
+  <!-- besked fra controlleren, fx en fejl ved "Markér som læst". Fragmentet ligger i templates/fragments/besked.html -->
+  <div th:replace="~{fragments/besked :: besked}"></div>
+
   <!-- Notifikationer som .rounds-underkort, samme mønster som rundehistorik. is-read = læst (grå) -->
   <section class="card" aria-labelledby="notif-title">
     <div class="section-head">

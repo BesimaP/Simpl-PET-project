@@ -60,8 +60,8 @@ public class MedicationController {
             ctx.redirect("/medicin?fejl=ukendt");
             return;
         }
-        medicationService.markTaken(patientId, logId);   // service tjekker, at dosen er patientens egen
-        ctx.redirect("/medicin");
+        ServiceResult result = medicationService.markTaken(patientId, logId);   // service tjekker, at dosen er patientens egen
+        ctx.redirect(result == ServiceResult.OK ? "/medicin" : "/medicin?fejl=ukendt");
     }
 
     // POST /medicin/slet – slet én dosis (id i et skjult felt). Service tjekker, at dosen er patientens egen
@@ -96,8 +96,8 @@ public class MedicationController {
             ctx.redirect("/medicin?fejl=ukendt");
             return;
         }
-        medicationService.markNotTaken(patientId, logId);
-        ctx.redirect("/medicin");
+        ServiceResult result = medicationService.markNotTaken(patientId, logId);
+        ctx.redirect(result == ServiceResult.OK ? "/medicin" : "/medicin?fejl=ukendt");
     }
 
     // POST /medicin – når brugeren trykker "Gem". ctx = kuverten fra Javalin
