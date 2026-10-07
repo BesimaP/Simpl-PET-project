@@ -3,29 +3,34 @@ package controllers;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
+import persistence.ConnectionPool;
 import services.AppointmentService;
 
 // Koordinatoren for aftaler (US3). Læser formularen, kalder AppointmentService og sender brugeren videre.
-// Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
+// Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
 public class AppointmentController {
+    private AppointmentService appointmentService;
+
+    public AppointmentController(ConnectionPool connectionPool) {
+        this.appointmentService = new AppointmentService(connectionPool);
+    }
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig
-    public static void setRoutes(JavalinConfig config) {
+    public void setRoutes(JavalinConfig config) {
         config.routes.get("/aftaler", ctx -> showAppointments(ctx));  // vis siden med aftalerne (Thymeleaf)
         config.routes.post("/aftaler", ctx -> addAppointment(ctx));   // gem en aftale (formularen på siden)
     }
 
     // GET /aftaler – hent kommende og tidligere aftaler og fyld skabelonen
-    private static void showAppointments(Context ctx) {
+    private void showAppointments(Context ctx) {
         // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        AppointmentService service = new AppointmentService();
-        ctx.attribute("upcoming", service.getUpcoming(patientId));   // requestscope -> ${upcoming}
-        ctx.attribute("past", service.getPast(patientId));           // requestscope -> ${past}
+        ctx.attribute("upcoming", appointmentService.getUpcoming(patientId));   // requestscope -> ${upcoming}
+        ctx.attribute("past", appointmentService.getPast(patientId));           // requestscope -> ${past}
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
@@ -33,7 +38,7 @@ public class AppointmentController {
     }
 
     // POST /aftaler – når brugeren trykker "Gem aftale". ctx = kuverten fra Javalin
-    private static void addAppointment(Context ctx) {
+    private void addAppointment(Context ctx) {
         // 1. hvem er logget ind?
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -48,7 +53,7 @@ public class AppointmentController {
         String time = ctx.formParam("time");         // fx "10:30"
 
         // 3. bed service gemme aftalen – den finder selv forløbet. Svar: OK = ok, ellers hvad der gik galt
-        ServiceResult result = new AppointmentService().addAppointment(patientId, type, location, date, time);
+        ServiceResult result = appointmentService.addAppointment(patientId, type, location, date, time);
 
         // 4. vælg side ud fra svaret – redirect til RUTEN /aftaler (aftaler hænger på forløbet, så "ingen runde" findes ikke her)
         switch (result) {

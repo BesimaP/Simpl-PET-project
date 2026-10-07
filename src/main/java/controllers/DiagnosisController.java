@@ -3,23 +3,27 @@ package controllers;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
-import org.jetbrains.annotations.NotNull;
 import persistence.ConnectionPool;
 import services.DiagnosisService;
 
 // Koordinatoren for /diagnoser (US7). Læser formularen, kalder DiagnosisService og sender brugeren videre.
 public class DiagnosisController {
+    private DiagnosisService diagnosisService; // "den der bestemmer" for diagnoser
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: DiagnosisController.setRoutes(config)
-    public static void setRoutes(JavalinConfig config, ConnectionPool connectionPool) {
-        DiagnosisService diagnosisService = new DiagnosisService(connectionPool);
+    // nøgleringen gives med fra RouteConfig og videre til DiagnosisService
+    public DiagnosisController(ConnectionPool connectionPool) {
+        this.diagnosisService = new DiagnosisService(connectionPool);
+    }
+
+    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new DiagnosisController(connectionPool).setRoutes(config)
+    public void setRoutes(JavalinConfig config) {
         // "når der kommer POST til /diagnoser (formularen på diagnoser.html), så kald addDiagnosis med den ctx, Javalin rækker os"
-        config.routes.post("/diagnoser", ctx -> addDiagnosis(ctx, diagnosisService));
-        config.routes.get("/diagnoser", ctx -> showDiagnoses(ctx, diagnosisService));
+        config.routes.post("/diagnoser", ctx -> addDiagnosis(ctx));
+        config.routes.get("/diagnoser", ctx -> showDiagnoses(ctx));
     }
 
     // GET /diagnoser – hent listen og fyld skabelonen
-    private static void showDiagnoses(Context ctx, DiagnosisService diagnosisService) {
+    private void showDiagnoses(Context ctx) {
         // 1. hvem er logget ind? (sat i sessionen ved login). Integer, fordi den er null, hvis ingen er logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -37,7 +41,7 @@ public class DiagnosisController {
     }
 
     // POST /diagnoser – når brugeren trykker "Gem diagnose". ctx = kuverten fra Javalin
-    private static void addDiagnosis(Context ctx, DiagnosisService diagnosisService) {
+    private void addDiagnosis(Context ctx) {
         // 1. hvem er logget ind? (sat i sessionen ved login)
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {

@@ -1,7 +1,6 @@
 package services;
 
 import persistence.AppointmentMapper;
-import dao.DatabaseConnection;
 import entities.Appointment;
 import entities.FertilityJourney;
 import enums.AppointmentType;
@@ -11,7 +10,6 @@ import exceptions.NoActiveRoundException;
 import enums.ServiceResult;
 import exceptions.NoActiveJourneyException;
 import persistence.ConnectionPool;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -56,20 +54,20 @@ public class AppointmentService {
         //    findActiveJourney kaster, hvis der ikke er et – vi fanger og oversætter til et ServiceResult
         FertilityJourney journey;
         try {
-            journey = new DashboardService().findActiveJourney(patientId);
+            journey = dashboardService.findActiveJourney(patientId);
         } catch (NoActiveJourneyException e) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         }
 
         // 4. byg kortet (id 0 = databasen giver et) og læg det i skuffen appointment
-        new AppointmentMapper(DatabaseConnection.getConnection()).save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
+        appointmentMapper.save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
 
         // 5. de store trin (ægudtagning, oplægning, graviditetstest) skal også på tidslinjen (US2) – men kun hvis en runde er i gang
         EventType eventType = toEventType(appointmentType);
         if (eventType != null) {
             try {
-                Round round = new RoundService().findActiveRound(patientId);
-                new TimelineService().addEvent(round.getId(), dateTime, eventType, location);
+                Round round = roundService.findActiveRound(patientId);
+                timelineService.addEvent(round.getId(), dateTime, eventType, location);
             } catch (NoActiveJourneyException | NoActiveRoundException e) {
                 // ingen runde i gang = aftalen gemmes, men kommer ikke på tidslinjen. Ikke en fejl
             }
@@ -110,11 +108,11 @@ public class AppointmentService {
         return past;
     }
 
-    // hjælper: alle aftaler på forløbet, tidligste først (DAO'en sorterer). Bruges af de to ovenfor
+    // hjælper: alle aftaler på forløbet, tidligste først (mapperen sorterer). Bruges af de to ovenfor
     private List<Appointment> getAll(int patientId) {
         try {
-            FertilityJourney journey = new DashboardService().findActiveJourney(patientId);
-            return new AppointmentMapper(DatabaseConnection.getConnection()).findByJourney(journey.getId());
+            FertilityJourney journey = dashboardService.findActiveJourney(patientId);
+            return appointmentMapper.findByJourney(journey.getId());
         } catch (NoActiveJourneyException e) {
             return new ArrayList<>();
         }

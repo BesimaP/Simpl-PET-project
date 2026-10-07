@@ -20,12 +20,12 @@ public class FertilityJourneyMapper {
 
         // Gemmer et nyt forløb og returnerer det id, databasen gav det
         public int save(FertilityJourney journey) {
-            String sql = "INSERT INTO fertility_journey (patient_id, start_date, journey_status_id) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO fertility_journey (patient_id, start_date, journey_status_id) VALUES (?, ?, (SELECT id FROM journey_status WHERE name = ?))";
             try (Connection connection = connectionPool.getConnection();
                 PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
                 statement.setInt(1, journey.getPatientId());
                 statement.setObject(2, journey.getStartDate()); // LocalDate -> DATE
-                statement.setInt(3, 1);       // 1 = ACTIVE i tabellen journey_status
+                statement.setString(3, journey.getStatus().name()); // ordet, fx "ACTIVE" -> databasen finder selv id'et
                 statement.executeUpdate();
 
                 ResultSet keys = statement.getGeneratedKeys();
@@ -43,9 +43,11 @@ public class FertilityJourneyMapper {
         // Bruges af dashboard: "har patienten et forløb, eller skal vi vise 'opret forløb'-skærmen?"
         public FertilityJourney findActiveByPatient(int patientId) {
             // to betingelser: rigtig patient OG status ACTIVE. Afsluttede forløb (COMPLETED) kommer ikke med.
-            // journey_status_id = 1 betyder ACTIVE (se tabellen journey_status).
-            // Tallet står direkte i SQL'en, fordi det aldrig ændrer sig – patient_id er et ?, fordi det gør.
-            String sql = "SELECT * FROM fertility_journey WHERE patient_id = ? AND journey_status_id = 1";
+            // JOIN: læg status-kortet ved siden af, så vi kan spørge på ordet "ACTIVE" i stedet for tallet 1
+            String sql = "SELECT fertility_journey.* "
+                    + "FROM fertility_journey "
+                    + "JOIN journey_status ON journey_status.id = fertility_journey.journey_status_id "
+                    + "WHERE fertility_journey.patient_id = ? AND journey_status.name = 'ACTIVE'";
 
             try (Connection connection = connectionPool.getConnection();
                 // gør SQL'en klar til at køre
@@ -58,12 +60,11 @@ public class FertilityJourneyMapper {
 
                 // if, ikke while: der kan højst være ét aktivt forløb per patient (regel fra US1)
                 if (rs.next()) {
-                    // rækken -> et FertilityJourney-objekt (kortet). Tekst i databasen oversættes tilbage:
-                    // "2026-08-28" -> LocalDate, "ACTIVE" -> enum JourneyStatus
+                    // rækken -> et FertilityJourney-objekt (kortet). Status er altid ACTIVE her (det spurgte vi efter)
                     return new FertilityJourney(
                             rs.getInt("id"),
                             rs.getInt("patient_id"),
-                            LocalDate.parse(rs.getString("start_date")),
+                            rs.getObject("start_date", LocalDate.class),   // PostgreSQL giver selv en LocalDate
                             JourneyStatus.ACTIVE);
                 }
                 return null; // ingen række = patienten har intet aktivt forløb

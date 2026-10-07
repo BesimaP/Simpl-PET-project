@@ -7,7 +7,7 @@ import io.javalin.config.JavalinConfig;
 public class ExceptionConfig {
 
     public static void register(JavalinConfig config) {
-        // kaster en DAO en DatabaseException, ender den her i stedet for som en 500-side uden forklaring.
+        // kaster en mapper en DatabaseException, ender den her i stedet for som en 500-side uden forklaring.
         // (senere: ctx.render("error") med beskeden, når fejlsiden er en template)
         config.routes.exception(DatabaseException.class, (e, ctx) -> {
             ctx.status(500);

@@ -7,7 +7,7 @@ import persistence.ConnectionPool;
 import services.MedicationService;
 
 // Koordinatoren for medicin.html (US8). Læser formularen, kalder MedicationService og sender brugeren videre.
-// Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
+// Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
 public class MedicationController {
 
     private MedicationService medicationService;

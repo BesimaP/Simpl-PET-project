@@ -64,7 +64,7 @@ public class ProfileService {
         return ServiceResult.OK;
     }
 
-    // Sletter kontoen = patienten – alt under den ryger med (ON DELETE CASCADE i schema.sql)
+    // Sletter kontoen = patienten – alt under den ryger med (ON DELETE CASCADE i schema_postgres.sql)
     public ServiceResult deleteAccount(int patientId) {
         // 1. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?)
         patientMapper.delete(patientId);

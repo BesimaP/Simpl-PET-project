@@ -44,7 +44,11 @@ public class EventMapper {
 
         // henter alle trin i én runde i tidsrækkefølge – det ER tidslinjen
         public List<Event> findByRound(int roundId) {
-            String sql = "SELECT e.*, et.name AS event_type FROM event e JOIN event_type et ON e.event_type_id = et.id WHERE e.round_id = ? ORDER BY e.date_time";
+            String sql = "SELECT event.*, event_type.name AS event_type "
+                    + "FROM event "
+                    + "JOIN event_type ON event.event_type_id = event_type.id "
+                    + "WHERE event.round_id = ? "
+                    + "ORDER BY event.date_time";
             List<Event> events = new ArrayList<>();
             try (Connection connection = connectionPool.getConnection()){
                 PreparedStatement statement = connection.prepareStatement(sql);

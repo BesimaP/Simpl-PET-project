@@ -14,7 +14,7 @@ public class Medication {
         this.description = description;
     }
 
-    // gettere: læs felterne. setId bruges af DAO'en efter save; resten kan ikke ændres udefra
+    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
     public int getId() {
         return id;
     }

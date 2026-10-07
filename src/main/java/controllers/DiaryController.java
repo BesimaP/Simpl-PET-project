@@ -7,7 +7,7 @@ import persistence.ConnectionPool;
 import services.DiaryService;
 
 // Koordinatoren for dagbog.html (US4). Læser formularen, kalder DiaryService og sender brugeren videre.
-// Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
+// Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
 public class DiaryController {
     private DiaryService diaryService; // "den der bestemmer" for dagbogen
 
