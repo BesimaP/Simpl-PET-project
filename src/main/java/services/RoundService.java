@@ -23,10 +23,12 @@ public class RoundService {
 
     private RoundMapper roundMapper;
     private DashboardService dashboardService;
+    private TimelineService timelineService;
 
     public RoundService(ConnectionPool connectionPool) {
         this.roundMapper = new RoundMapper(connectionPool);
         this.dashboardService = new DashboardService(connectionPool);
+        this.timelineService = new TimelineService(connectionPool);
     }
 
     public RoundService() {
@@ -74,7 +76,7 @@ public class RoundService {
         roundMapper.save(round); // save sætter round.id til det id, databasen gav
 
         // 6. første trin på tidslinjen: runden er startet (US2). Startdato kl. 00:00, fordi Event bruger LocalDateTime
-        new TimelineService().addEvent(round.getId(), start.atStartOfDay(), EventType.STIMULATION_START, treatmentType.name());
+        timelineService.addEvent(round.getId(), start.atStartOfDay(), EventType.STIMULATION_START, treatmentType.name());
 
         return ServiceResult.OK; // ok
     }
