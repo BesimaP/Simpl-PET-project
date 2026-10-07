@@ -25,6 +25,7 @@ public class DashboardController {
     private DashboardService dashboardService;
     private DiaryService diaryService;
     private RoundService roundService;
+    private MedicationService medicationService;
 
     public DashboardController(ConnectionPool connectionPool) {
         this.profileService = new ProfileService(connectionPool);
@@ -32,6 +33,7 @@ public class DashboardController {
         this.notificationService = new NotificationService(connectionPool);
         this.diaryService = new DiaryService(connectionPool);
         this.roundService = new RoundService(connectionPool);
+        this.medicationService = new MedicationService(connectionPool);
     }
 
     public void setRoutes(JavalinConfig config) {
@@ -75,7 +77,7 @@ public class DashboardController {
         }
 
         // små kort: dagens medicin, næste aftale, seneste hormonværdi, antal noter
-        MedicationService medicationService = new MedicationService();
+
         ctx.attribute("todayMeds", medicationService.getTodayLogs(patientId));
         ctx.attribute("names", medicationService.getMedicationNames());
         List<Appointment> upcoming = new AppointmentService().getUpcoming(patientId);

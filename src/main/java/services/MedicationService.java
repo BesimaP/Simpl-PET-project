@@ -1,12 +1,13 @@
 package services;
-
-import dao.*;
 import entities.Medication;
 import entities.MedicationLog;
 import entities.Round;
 import enums.ServiceResult;
 import exceptions.NoActiveJourneyException;
 import exceptions.NoActiveRoundException;
+import persistence.ConnectionPool;
+import persistence.MedicationLogMapper;
+import persistence.MedicationMapper;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +21,20 @@ import java.util.Map;
 // Forretningslogik for medicin (US8). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 // Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldigt tal, dato eller ukendt medicin · NO_ACTIVE_JOURNEY · NO_ACTIVE_ROUND
 public class MedicationService {
+
+    private MedicationMapper medicationMapper;
+    private MedicationLogMapper medicationLogMapper;
+    private RoundService roundService;
+
+    public MedicationService(ConnectionPool connectionPool){
+        this.medicationMapper = new MedicationMapper(connectionPool);
+        this.medicationLogMapper = new MedicationLogMapper(connectionPool);
+        this.roundService = new RoundService(connectionPool);
+    }
+
+    public MedicationService(){
+
+    }
 
     // Logger én dosis i patientens aktive runde (en dosis SKAL ligge på en runde – round_id i databasen)
     public ServiceResult logDose(int patientId, String medicationName, String dose, String unit, String date, String time, boolean taken) {
@@ -45,7 +60,7 @@ public class MedicationService {
         }
 
         // 4. find lægemidlet ud fra navnet (dropdownens value)
-        Medication medication = new MedicationDAO(DatabaseConnection.getConnection()).findByName(medicationName);
+        Medication medication = medicationMapper.findByName(medicationName);
         if (medication == null) {
             return ServiceResult.INVALID_INPUT;
         }
@@ -54,7 +69,7 @@ public class MedicationService {
         //    findActiveRound kaster, hvis der ikke er forløb eller runde – vi fanger og oversætter til et ServiceResult
         Round round;
         try {
-            round = new RoundService().findActiveRound(patientId);
+           round = roundService.findActiveRound(patientId);
         } catch (NoActiveJourneyException e) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         } catch (NoActiveRoundException e) {
@@ -62,7 +77,7 @@ public class MedicationService {
         }
 
         // 6. gem – taken = true betyder "allerede taget", false betyder "planlagt"
-        new MedicationLogDAO(DatabaseConnection.getConnection()).
+        medicationLogMapper.
                 save(new MedicationLog(0, round.getId(), medication.getId(), scheduled, doseValue, unit, taken));
 
         return ServiceResult.OK;
@@ -93,7 +108,7 @@ public class MedicationService {
     // Opslag id -> navn (fx 1 -> "Gonal-F"), så skabelonen kan vise navnet. Loggen har kun medicationId
     public Map<Integer, String> getMedicationNames() {
         Map<Integer, String> names = new HashMap<>();
-        for (Medication med : new MedicationDAO(DatabaseConnection.getConnection()).findAll()) {
+        for (Medication med : medicationMapper.findAll()) {
             names.put(med.getId(), med.getDescription());   // description = det pæne navn ("Gonal-F"), name = koden ("GONAL_F")
         }
         return names;
@@ -101,21 +116,21 @@ public class MedicationService {
 
     // Markér én dosis som taget (US8 AC3)
     public ServiceResult markTaken(int logId) {
-        new MedicationLogDAO(DatabaseConnection.getConnection()).markTaken(logId);
+        medicationLogMapper.markTaken(logId);
         return ServiceResult.OK;
     }
 
     // Fortryd "markér som taget" (sæt dosen tilbage til planlagt)
     public ServiceResult markNotTaken(int logId) {
-        new MedicationLogDAO(DatabaseConnection.getConnection()).markNotTaken(logId);
+        medicationLogMapper.markNotTaken(logId);
         return ServiceResult.OK;
     }
 
     // hjælper: alle doser i den runde, der er i gang. Intet forløb eller ingen runde er ikke en fejl her -> tom liste
     private List<MedicationLog> getAll(int patientId) {
         try {
-            Round round = new RoundService().findActiveRound(patientId);
-            return new MedicationLogDAO(DatabaseConnection.getConnection()).findByRound(round.getId());
+           Round round =  roundService.findActiveRound(patientId);
+            return medicationLogMapper.findByRound(round.getId());
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
             return new ArrayList<>();
         }

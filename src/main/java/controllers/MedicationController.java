@@ -3,14 +3,21 @@ package controllers;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
+import persistence.ConnectionPool;
 import services.MedicationService;
 
 // Koordinatoren for medicin.html (US8). Læser formularen, kalder MedicationService og sender brugeren videre.
 // Ingen SQL og ingen DAO'er her – det bor i service- og dao-laget.
 public class MedicationController {
 
+    private MedicationService medicationService;
+
+    public MedicationController(ConnectionPool connectionPool){
+        this.medicationService = new MedicationService(connectionPool);
+    }
+
     // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: MedicationController.setRoutes(config)
-    public static void setRoutes(JavalinConfig config) {
+    public void setRoutes(JavalinConfig config) {
         config.routes.get("/medicin", ctx -> showLogs(ctx));
         config.routes.post("/medicin", ctx -> logDose(ctx));
         config.routes.post("/medicin/taget", ctx -> markTaken(ctx));   // knappen på hver dosis
@@ -18,17 +25,17 @@ public class MedicationController {
     }
 
     // GET /medicin – hent dagens og tidligere doser + medicinnavne, og fyld skabelonen
-    private static void showLogs(Context ctx) {
+    private void showLogs(Context ctx) {
         // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        MedicationService service = new MedicationService();
-        ctx.attribute("today", service.getTodayLogs(patientId));   // requestscope -> ${today}
-        ctx.attribute("past", service.getPastLogs(patientId));     // requestscope -> ${past}
-        ctx.attribute("names", service.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
+
+        ctx.attribute("today", medicationService.getTodayLogs(patientId));   // requestscope -> ${today}
+        ctx.attribute("past", medicationService.getPastLogs(patientId));     // requestscope -> ${past}
+        ctx.attribute("names", medicationService.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
@@ -36,31 +43,31 @@ public class MedicationController {
     }
 
     // POST /medicin/taget – knappen "markér som taget" på én dosis (id i et skjult felt)
-    private static void markTaken(Context ctx) {
+    private void markTaken(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
         int logId = Integer.parseInt(ctx.formParam("id"));   // "17" -> 17
-        new MedicationService().markTaken(logId);
+        medicationService.markTaken(logId);
         ctx.redirect("/medicin");
     }
 
     // POST /medicin/ikke-taget – fortryd "markér som taget" (id i et skjult felt)
-    private static void markNotTaken(Context ctx) {
+    private void markNotTaken(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
         int logId = Integer.parseInt(ctx.formParam("id"));
-        new MedicationService().markNotTaken(logId);
+        medicationService.markNotTaken(logId);
         ctx.redirect("/medicin");
     }
 
     // POST /medicin – når brugeren trykker "Gem". ctx = kuverten fra Javalin
-    private static void logDose(Context ctx) {
+    private void logDose(Context ctx) {
         // 1. åbn kuverten: læs felterne (name="medication", "dose", "unit", "date", "time", "taken" i medicin.html)
         String medication = ctx.formParam("medication"); // fx "GONAL_F" – value i dropdownen, matcher medication.name i databasen
         String dose = ctx.formParam("dose");             // fx "150" – tekst endnu, service laver den om til tal
@@ -76,7 +83,7 @@ public class MedicationController {
         }
 
         // 2. bed service gemme dosen – den finder selv forløb, runde og lægemiddel. Svar: OK = ok, ellers hvad der gik galt
-        ServiceResult result = new MedicationService().logDose(patientId, medication, dose, unit, date, time, taken);
+        ServiceResult result = medicationService.logDose(patientId, medication, dose, unit, date, time, taken);
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
