@@ -3,13 +3,19 @@ package controllers;
 import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
+import persistence.ConnectionPool;
 import services.ProfileService;
 
 // Koordinatoren for min-profil (US6b).
 // Ruterne er én linje hver. Metoderne læser formularen, kalder ProfileService og sender brugeren videre – ingen DAO'er her.
 public class ProfileController {
+    private ProfileService profileService; // "den der bestemmer" for min-profil
 
-    public static void setRoutes(JavalinConfig config) {
+    public ProfileController(ConnectionPool connectionPool) {
+        this.profileService = new ProfileService(connectionPool);
+    }
+
+    public void setRoutes(JavalinConfig config) {
         config.routes.get("/min-profil", ctx -> showProfile(ctx));         // vis siden med navnet forudfyldt (Thymeleaf)
         config.routes.post("/min-profil", ctx -> updateName(ctx));         // formular "Ret navn"
         config.routes.post("/skift-kodeord", ctx -> changePassword(ctx));  // formular "Skift kodeord"
@@ -17,14 +23,14 @@ public class ProfileController {
     }
 
     // GET /min-profil – hent patientens kort og fyld skabelonen
-    private static void showProfile(Context ctx) {
+    private void showProfile(Context ctx) {
         // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("patient", new ProfileService().getPatient(patientId));   // requestscope -> ${patient.name}
+        ctx.attribute("patient", profileService.getPatient(patientId));   // requestscope -> ${patient.name}
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
@@ -32,7 +38,7 @@ public class ProfileController {
     }
 
     // POST /min-profil – ret navn
-    private static void updateName(Context ctx) {
+    private void updateName(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -44,7 +50,7 @@ public class ProfileController {
         String lastName = ctx.formParam("lastName");
 
         // bed service rette navnet – den tjekker, at feltet ikke er tomt
-        ServiceResult result = new ProfileService().updateName(patientId, firstName, lastName);
+        ServiceResult result = profileService.updateName(patientId, firstName, lastName);
 
         // vælg side ud fra svaret
         switch (result) {
@@ -55,7 +61,7 @@ public class ProfileController {
     }
 
     // POST /skift-kodeord
-    private static void changePassword(Context ctx) {
+    private void changePassword(Context ctx) {
         // patientens id (sat i sessionen ved login) – kodeordet ligger på patienten
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -69,7 +75,7 @@ public class ProfileController {
         String repeatPassword = ctx.formParam("repeat-password");
 
         // bed service skifte kodeord – den tjekker tomme felter, at de to nye er ens, og at det gamle passer
-        ServiceResult result = new ProfileService().changePassword(patientId, currentPassword, newPassword, repeatPassword);
+        ServiceResult result = profileService.changePassword(patientId, currentPassword, newPassword, repeatPassword);
 
         switch (result) {
             case OK -> ctx.redirect("/min-profil?gemt=kodeord");
@@ -79,7 +85,7 @@ public class ProfileController {
     }
 
     // POST /slet-konto
-    private static void deleteAccount(Context ctx) {
+    private void deleteAccount(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -87,7 +93,7 @@ public class ProfileController {
         }
 
         // bed service slette kontoen = patienten (alt under den ryger med via CASCADE)
-        new ProfileService().deleteAccount(patientId);
+        profileService.deleteAccount(patientId);
 
         // kontoen findes ikke mere: glem sessionen, og tilbage til login
         ctx.req().getSession().invalidate();

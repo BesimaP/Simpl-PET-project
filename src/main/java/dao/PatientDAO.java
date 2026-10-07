@@ -14,7 +14,7 @@ import java.time.LocalDate;
 // Al SQL for tabellen patient. Arkivaren: den eneste, der taler SQL med patient-skuffen
 public class PatientDAO {
 
-    private ConnectionPool connectionPool; // nøgleknippet (gives med udefra)
+    private ConnectionPool connectionPool; // nøgleringen (gives med udefra)
 
     public PatientDAO(ConnectionPool connectionPool) {
         this.connectionPool = connectionPool;
@@ -24,7 +24,7 @@ public class PatientDAO {
     public int save(Patient patient) {
         String sql = "INSERT INTO patient (username, password_hash, first_name, last_name, date_of_birth) VALUES (?, ?, ?, ?, ?)";
 
-        // try ( … ): lån en forbindelse fra nøgleknippet – den afleveres automatisk, når blokken er færdig
+        // try ( … ): lån en forbindelse fra nøgleringen – den afleveres automatisk, når blokken er færdig
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 

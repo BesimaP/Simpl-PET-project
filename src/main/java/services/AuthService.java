@@ -1,21 +1,30 @@
 package services;
 
-import dao.DatabaseConnection;
 import dao.PatientDAO;
 import entities.Patient;
 import enums.ServiceResult;
 import exceptions.UserNotFoundException;
 import org.mindrot.jbcrypt.BCrypt;
+import persistence.ConnectionPool;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 // Forretningslogik for login og opret profil. Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 public class AuthService {
+    private PatientDAO patientDao;          // lomme 1: arkivaren (laves én gang i konstruktøren)
+    private ConnectionPool connectionPool;  // lomme 2: nøgleringen (gives videre til DashboardService)
+
+    // Konstruktøren: den, der laver en AuthService, SKAL give nøgleringen med.
+    // Kaldes fra LoginController: new AuthService(connectionPool)
+    public AuthService(ConnectionPool connectionPool) {
+        this.patientDao = new PatientDAO(connectionPool); // lav arkivaren, giv ham ringen, læg ham i lommen
+        this.connectionPool = connectionPool;             // læg også selve ringen i lommen
+    }
 
     // Login: giver patientens id tilbage (det er det, sessionen skal huske) – ellers kastes UserNotFoundException
     public Patient login(String username, String password) throws UserNotFoundException {
-        Patient patient = new PatientDAO(DatabaseConnection.getConnection()).findByUsername(username);
+        Patient patient = patientDao.findByUsername(username);
 
         if (patient == null || !BCrypt.checkpw(password, patient.getPasswordHash())) {
             throw new UserNotFoundException("Forkert brugernavn eller kodeord");
@@ -56,8 +65,6 @@ public class AuthService {
             }
         }
 
-        PatientDAO patientDao = new PatientDAO(DatabaseConnection.getConnection());
-
         // 1. regel: brugernavn skal være unikt
         if (patientDao.findByUsername(username) != null) {
             return ServiceResult.ALREADY_EXISTS; // brugernavnet er optaget
@@ -68,7 +75,7 @@ public class AuthService {
 
         // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardtom.html
         if (wantsJourney) {
-            new DashboardService().createJourney(patientId, journeyStart);
+            new DashboardService(connectionPool).createJourney(patientId, journeyStart); // ringen gives videre
         }
 
         return ServiceResult.OK;

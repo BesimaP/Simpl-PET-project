@@ -6,12 +6,23 @@ import entities.FertilityJourney;
 import enums.JourneyStatus;
 import enums.ServiceResult;
 import exceptions.NoActiveJourneyException;
+import persistence.ConnectionPool;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 // Forretningslogik for forløb (FertilityJourney, US1). Kender IKKE Javalin.
 public class DashboardService {
+    private ConnectionPool connectionPool; // nøgleringen (bruges, når forløb laves om til PostgreSQL)
+
+    // ny konstruktør: med nøgleringen
+    public DashboardService(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
+    }
+
+    // MIDLERTIDIG: tom konstruktør, så de andre filer stadig virker, indtil de også får nøgleringen
+    public DashboardService() {
+    }
 
     // Opretter et forløb til patienten. Regel: kun ét aktivt forløb ad gangen.
     // OK = oprettet, ALREADY_EXISTS = der var allerede et aktivt forløb, INVALID_INPUT = ingen dato

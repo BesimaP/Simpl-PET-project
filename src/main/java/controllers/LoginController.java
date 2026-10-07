@@ -4,15 +4,21 @@ import enums.ServiceResult;
 import exceptions.UserNotFoundException;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
+import persistence.ConnectionPool;
 import services.AuthService;
 import entities.Patient;
 
 // Koordinatoren for login.html og opretprofil.html.
 // Ruterne er én linje hver og peger på en metode nedenunder. Al logik ligger i AuthService.
 public class LoginController {
+    private AuthService authService;
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra Main: LoginController.setRoutes(config)
-    public static void setRoutes(JavalinConfig config) {
+    public LoginController(ConnectionPool connectionPool) {
+        this.authService = new AuthService(connectionPool);
+    }
+
+    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new LoginController(connectionPool).setRoutes(config)
+    public void setRoutes(JavalinConfig config) {
         // ctx -> login(ctx) = "kald metoden login med den ctx, Javalin rækker os";
         config.routes.get("/login", ctx -> ctx.render("login"));
         config.routes.post("/login", ctx -> login(ctx));
@@ -21,20 +27,20 @@ public class LoginController {
     }
 
     // GET /logout – glem hvem der er logget ind og send til login. Bruges af "Log ud" i menuen
-    private static void logout(Context ctx) {
+    private void logout(Context ctx) {
         ctx.req().getSession().invalidate();   // sletter hele sessionen (patientId og patientName)
         ctx.redirect("/login");
     }
 
     // POST /login – læs kuverten, spørg service, send brugeren videre
-    private static void login(Context ctx) {
+    private void login(Context ctx) {
         // 1. åbn kuverten: de to felter (name="username", "password" i login.html)
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 
         try {
             // 2. spørg service. Svaret er patientens kort – eller en UserNotFoundException, som fanges nedenfor
-            Patient patient = new AuthService().login(username, password);
+            Patient patient = authService.login(username, password);
 
             // 3. sessionscope: husk hvem der er logget ind, til browseren lukkes. Alle andre controllere læser herfra
             ctx.sessionAttribute("patientId", patient.getId());              // hvem er patienten
@@ -52,7 +58,7 @@ public class LoginController {
 
 
     // POST /opretprofil – læs kuverten, spørg service, send brugeren videre
-    private static void createProfile(Context ctx) {
+    private void createProfile(Context ctx) {
         // 1. åbn kuverten: felterne fra opretprofil.html
         String firstName = ctx.formParam("firstName");
         String lastName = ctx.formParam("lastName");
@@ -63,14 +69,14 @@ public class LoginController {
         String journeyStart = ctx.formParam("journeyStart"); // startdato for forløbet – kun brugt ved "yes"
 
         // 2. bed service oprette patienten (+ forløb ved "yes"). Svar: OK, ellers hvad der gik galt
-        ServiceResult result = new AuthService().createProfile(firstName, lastName, dateOfBirth, username, password, hasJourney, journeyStart);
+        ServiceResult result = authService.createProfile(firstName, lastName, dateOfBirth, username, password, hasJourney, journeyStart);
 
         // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
             case OK -> {
                 // profilen findes nu – log brugeren ind med det samme, så hun ikke skal skrive det hele igen
                 try {
-                    Patient patient = new AuthService().login(username, password);
+                    Patient patient = authService.login(username, password);
                     ctx.sessionAttribute("patientId", patient.getId());
                     ctx.sessionAttribute("patientName", patient.getName());
                     ctx.redirect("/dashboard?gemt=oprettet");
