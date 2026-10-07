@@ -153,6 +153,7 @@ public class DashboardController {
             return;
         }
 
+
         // resultatet er valgfrit: "POSITIVE", "NEGATIVE" eller tomt (kan udfyldes senere)
         String resultParam = ctx.formParam("result");
         Result result = (resultParam == null || resultParam.isBlank()) ? null : Result.valueOf(resultParam);
