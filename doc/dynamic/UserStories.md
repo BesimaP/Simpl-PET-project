@@ -91,7 +91,7 @@ Som patient vil jeg kunne starte og afslutte en runde, så mit forløb afspejler
 Som patient vil jeg kunne se min rundehistorik, så jeg kan følge, hvordan mine tidligere forsøg er gået.
 
 **Acceptkriterier:**
-- Acceptkriterie 1: "Givet tidligere gennemførte runder, når rundehistorikken åbnes, så vises alle runder tilknyttet det aktive forløb" → tester at historikken viser alle runder, ikke kun den seneste
+- Acceptkriterie 1: "Givet tidligere gennemførte runder, når rundehistorikken åbnes, så vises alle runder grupperet pr. forløb – også fra afsluttede forløb" → tester at historikken viser alle runder, ikke kun den seneste eller kun det aktive forløb
 - Acceptkriterie 2: "Givet en runde vælges i historikken, når den åbnes, så vises rundenummer, behandlingstype, start- og slutdato, status og resultat" → tester at detaljerne vises korrekt
 
 *US10 er splittet i 10a og 10b efter INVEST-vurdering (Small): at starte/afslutte en runde og at se historik er to selvstændige features.*
