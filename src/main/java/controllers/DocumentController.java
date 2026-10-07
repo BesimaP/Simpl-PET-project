@@ -4,6 +4,7 @@ import enums.ServiceResult;
 import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
+import persistence.ConnectionPool;
 import services.DocumentService;
 import entities.Document;
 
@@ -13,15 +14,20 @@ import java.nio.file.Path;
 
 // Koordinatoren for dokumenter.html (US11). Læser formularen, kalder DocumentService og sender brugeren videre.
 public class DocumentController {
+    private DocumentService documentService;
 
-    public static void setRoutes(JavalinConfig config) {
+    public DocumentController(ConnectionPool connectionPool) {
+        this.documentService = new DocumentService(connectionPool);
+    }
+
+    public void setRoutes(JavalinConfig config) {
         config.routes.get("/dokumenter", ctx -> showDocuments(ctx));
         config.routes.post("/dokumenter", ctx -> uploadDocument(ctx));
         config.routes.get("/dokumenter/{id}", ctx -> openDocument(ctx));   // "Åbn" på listen – {id} = path-parameter
     }
 
     // GET /dokumenter/{id} – send selve filen tilbage til browseren (PDF vises, billeder vises)
-    private static void openDocument(Context ctx) {
+    private void openDocument(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -38,7 +44,7 @@ public class DocumentController {
         }
 
         // 2. kun patientens egne dokumenter – ellers null
-        Document document = new DocumentService().findDocument(patientId, documentId);
+        Document document = documentService.findDocument(patientId, documentId);
         if (document == null) {
             ctx.status(404);
             return;
@@ -55,13 +61,13 @@ public class DocumentController {
     }
 
     // GET /dokumenter – hent rundens dokumenter og fyld skabelonen
-    private static void showDocuments(Context ctx) {
+    private void showDocuments(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("documents", new DocumentService().getDocuments(patientId));  // requestscope -> ${documents}
+        ctx.attribute("documents", documentService.getDocuments(patientId));  // requestscope -> ${documents}
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
@@ -69,7 +75,7 @@ public class DocumentController {
     }
 
     // POST /dokumenter – når brugeren trykker "Upload". Filen læses med ctx.uploadedFile("file")
-    private static void uploadDocument(Context ctx) {
+    private void uploadDocument(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
@@ -85,8 +91,7 @@ public class DocumentController {
             return;
         }
 
-        ServiceResult result = new DocumentService()
-                .uploadDocument(patientId, title, type, file.filename(), file.content(), file.size());
+        ServiceResult result = documentService.uploadDocument(patientId, title, type, file.filename(), file.content(), file.size());
 
         switch (result) {
             case OK -> ctx.redirect("/dokumenter?gemt=1");

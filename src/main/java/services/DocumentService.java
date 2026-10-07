@@ -1,7 +1,7 @@
 package services;
 
-import dao.DatabaseConnection;
-import dao.DocumentDAO;
+import persistence.ConnectionPool;
+import persistence.DocumentMapper;
 import entities.Document;
 import enums.DocumentType;
 import enums.ServiceResult;
@@ -22,6 +22,13 @@ public class DocumentService {
 
     private static final String UPLOAD_DIR = "uploads";
     private static final long MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+    private DocumentMapper documentMapper;
+    private ConnectionPool connectionPool;
+
+    public DocumentService(ConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
+        this.documentMapper = new DocumentMapper(connectionPool);
+    }
 
     public ServiceResult uploadDocument(int patientId, String title, String type,
                                         String originalFileName, InputStream fileContent, long fileSize) {
@@ -61,15 +68,14 @@ public class DocumentService {
         }
 
         // 6. gem rækken i databasen – kun stien til filen og dagens dato
-        new DocumentDAO(DatabaseConnection.getConnection())
-                .save(new Document(0, patientId, LocalDate.now(), title, documentType, target.toString()));
+        documentMapper.save(new Document(0, patientId, LocalDate.now(), title, documentType, target.toString()));
 
         return ServiceResult.OK;
     }
 
     // Hent alle patientens dokumenter – til listen på siden
     public java.util.List<Document> getDocuments(int patientId) {
-        return new DocumentDAO(DatabaseConnection.getConnection()).findByPatient(patientId);
+        return documentMapper.findByPatient(patientId);
     }
 
     // Finder ét dokument ud fra id – men kun blandt patientens egne, så man ikke kan åbne andres filer ved at gætte et id.

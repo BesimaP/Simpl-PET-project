@@ -20,7 +20,7 @@ public class RouteConfig {
         new ProfileController(connectionPool).setRoutes(config);
         new NotificationController(connectionPool).setRoutes(config);
         new TimelineController(connectionPool).setRoutes(config);
-        DocumentController.setRoutes(config);
+        new DocumentController(connectionPool).setRoutes(config);
 
         config.routes.get("/", ctx -> ctx.redirect("/login"));
 
