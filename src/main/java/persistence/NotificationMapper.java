@@ -112,19 +112,6 @@ public class NotificationMapper {
         }
     }
 
-    // sletter én påmindelse ud fra dens id
-    public void delete(int id) {
-        String sql = "DELETE FROM notification WHERE id = ?";
-        try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, id);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Could not delete notification " + id, e);
-        }
-    }
-
     // én række fra databasen -> ét Notification-objekt
     private Notification mapRow(ResultSet rs) throws SQLException {
         return new Notification(

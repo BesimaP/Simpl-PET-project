@@ -59,8 +59,4 @@ public class Notification {
         return read;
     }
 
-    // Markér som læst (UC7)
-    public void markRead() {
-        this.read = true;
-    }
 }

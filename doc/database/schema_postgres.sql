@@ -1,6 +1,6 @@
 -- =========================================================
 -- SIMPL – databaseskema i PostgreSQL (uge 40)
--- Kør hele scriptet på én gang i pgAdmin Query Tool (F5) på databasen "simpl".
+-- Kør hele scriptet på én gang i pgAdmin Query Tool (F5) på databasen "Simpl" (stort S – Postgres skelner mellem store og små bogstaver i navne i anførselstegn).
 -- 20 tabeller = de 20 kasser i domænemodellen (doc/static/Domænemodel1.puml).
 -- Konventioner:
 --   - primærnøgle hedder id i alle tabeller; fremmednøgler hedder <tabel>_id
@@ -148,7 +148,9 @@ CREATE TABLE round (
     start_date           DATE NOT NULL,
     end_date             DATE,
     result_id            INT REFERENCES result(id),   -- NULL indtil runden afsluttes
-    UNIQUE (fertility_journey_id, round_number)
+    UNIQUE (fertility_journey_id, round_number),
+    CHECK (round_number > 0),                              -- runder tælles fra 1
+    CHECK (end_date IS NULL OR end_date >= start_date)     -- en runde kan ikke slutte, før den starter
 );
 
 -- Højst én runde i gang pr. forløb – samme idé som one_active_journey_per_patient ovenfor
@@ -182,7 +184,7 @@ CREATE TABLE hormone_log (
     round_id     INT NOT NULL REFERENCES round(id) ON DELETE CASCADE,
     date_time    TIMESTAMP NOT NULL,
     hormone_type_id INT NOT NULL REFERENCES hormone_type(id),
-    value        NUMERIC(10,2) NOT NULL,
+    value        NUMERIC(10,2) NOT NULL CHECK (value >= 0),   -- en hormonværdi kan ikke være negativ
     unit         VARCHAR(10) NOT NULL
 );
 
@@ -227,6 +229,6 @@ CREATE TABLE medication_log (
     round_id            INT NOT NULL REFERENCES round(id) ON DELETE CASCADE,
     medication_id       INT NOT NULL REFERENCES medication(id) ON DELETE RESTRICT,
     scheduled_date_time TIMESTAMP NOT NULL,
-    dose                NUMERIC(10,2) NOT NULL,
+    dose                NUMERIC(10,2) NOT NULL CHECK (dose > 0),   -- en dosis skal være større end 0
     taken               BOOLEAN NOT NULL DEFAULT FALSE
 );

@@ -53,10 +53,10 @@
       <form action="/min-profil" method="post">
         <!-- th:value: felterne er forudfyldt med det nuværende navn fra databasen -->
         <label for="firstName">Fornavn</label>
-        <input type="text" id="firstName" name="firstName" th:value="${patient.firstName}" placeholder="Dit fornavn" autocomplete="given-name" required>
+        <input type="text" id="firstName" name="firstName" th:value="${patient.firstName}" placeholder="Dit fornavn" autocomplete="given-name" maxlength="50" required>
 
         <label for="lastName">Efternavn</label>
-        <input type="text" id="lastName" name="lastName" th:value="${patient.lastName}" placeholder="Dit efternavn" autocomplete="family-name" required>
+        <input type="text" id="lastName" name="lastName" th:value="${patient.lastName}" placeholder="Dit efternavn" autocomplete="family-name" maxlength="50" required>
 
         <!-- fødselsdato kan rettes (US6b AC1) – ProfileService.updateProfile tjekker, at datoen er gyldig og ikke i fremtiden -->
         <label for="dateOfBirth">Fødselsdato</label>

@@ -65,18 +65,6 @@ public class EventMapper {
         }
     }
 
-    // sletter ét trin ud fra dets id
-    public void delete(int id) {
-        String sql = "DELETE FROM event WHERE id = ?";
-        try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, id);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Could not delete event " + id, e);
-        }
-    }
-
     // én række fra databasen -> ét Event-objekt
     private Event mapRow(ResultSet rs) throws SQLException {
         return new Event(

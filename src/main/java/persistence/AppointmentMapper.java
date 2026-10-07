@@ -68,19 +68,6 @@ public class AppointmentMapper {
         }
     }
 
-    // sletter én aftale ud fra dens id
-    public void delete(int id) {
-        String sql = "DELETE FROM appointment WHERE id = ?";
-        try (Connection connection = connectionPool.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setInt(1, id);
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new DatabaseException("Could not delete appointment " + id, e);
-        }
-    }
-
     // én række fra databasen -> ét Appointment-objekt
     private Appointment mapRow(ResultSet rs) throws SQLException {
         return new Appointment(

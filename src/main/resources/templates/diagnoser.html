@@ -15,7 +15,7 @@
 
   <!-- javascript: defer = vent med at køre til hele siden er læst. common.js først, så sidens egen fil -->
   <script src="/js/common.js" defer></script>
-  <script src="/js/diagnoser.js" defer></script>
+  <script src="/js/common.js" defer></script>
 </head>
 <body class="dashboard">
 
@@ -56,7 +56,7 @@
       <form action="/diagnoser" method="post">
         <!-- for og id skal være ens, så label og felt hører sammen -->
         <label for="diagnosis">Diagnose</label>
-        <input type="text" id="diagnosis" name="diagnosis" placeholder="Fx PCOS" required>
+        <input type="text" id="diagnosis" name="diagnosis" placeholder="Fx PCOS" maxlength="100" required>
 
         <!-- textarea = stort tekstfelt. ingen required = beskrivelsen er valgfri -->
         <label for="description">Beskrivelse <span class="optional">(valgfrit)</span></label>
@@ -78,6 +78,11 @@
         <li th:each="d : ${diagnoses}">
           <strong th:text="${d.name}">PCOS</strong>
           <span th:if="${d.description}" th:text="${d.description}">beskrivelse</span>
+          <!-- slet: en lille formular med diagnosens id i et skjult felt -> POST /diagnoser/slet (common.js spørger først) -->
+          <form action="/diagnoser/slet" method="post" class="delete-form">
+            <input type="hidden" name="id" th:value="${d.id}">
+            <button type="submit" class="muted-link">Slet</button>
+          </form>
         </li>
       </ul>
       <p class="muted">

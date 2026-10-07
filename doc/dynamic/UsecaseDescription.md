@@ -1,9 +1,8 @@
 # Use case-beskrivelser
 
-*Forudsætning for UC3–UC15: patienten er logget ind (UC1). Forudsætning for UC8–UC15: patienten har et forløb med status ACTIVE.
+*Forudsætning for UC3–UC15: patienten er logget ind (UC1). Forudsætning for UC8–UC15: patienten har et forløb med status ACTIVE.*
 
-*Opdateret 7. okt 2026 (aften), så beskrivelserne passer til koden og sekvensdiagrammerne – inkl. UC15 EndJourney.* Hver use case dækker én eller flere user stories (angivet i parentes).*
-- Note på en aftale (fx "husk fastende") – valgt fra af scope-hensyn: kræver kolonne, entity, mapper og service
+*Opdateret 7. okt 2026 (aften), så beskrivelserne passer til koden og sekvensdiagrammerne – inkl. UC15 EndJourney. Hver use case dækker én eller flere user stories (angivet i parentes).*
 
 ## UC1: LogIn (US5)
 Systemet starter og viser en login-skærm.
@@ -49,9 +48,10 @@ Regnvejrsdag:
 Systemet viser en skærm med patientens registrerede diagnoser.
 Brugeren klikker Tilføj Diagnose og udfylder navn og beskrivelse.
 Brugeren klikker Gem. Systemet gemmer diagnosen i databasen, tilknyttet patienten, og opdaterer listen.
+Brugeren kan slette en diagnose. Systemet spørger først, om brugeren er sikker, og sletter kun patientens egne diagnoser.
 
 Regnvejrsdag:
-- Navn er tomt: Systemet viser en fejlbesked og gemmer ikke.
+- Navn er tomt eller længere end 100 tegn: Systemet viser en fejlbesked og gemmer ikke.
 
 
 ## UC5: ManageAppointments (US3)
@@ -71,9 +71,10 @@ Regnvejrsdag:
 Systemet viser en skærm med patientens tidligere dagbogsnoter.
 Brugeren klikker Ny note og udfylder dato, titel og indhold.
 Brugeren klikker Gem. Systemet gemmer noten i databasen, tilknyttet patienten, og opdaterer listen.
+Brugeren kan slette en note. Systemet spørger først, om brugeren er sikker, og sletter kun patientens egne noter.
 
 Regnvejrsdag:
-- Titel er tom: Systemet viser en fejlbesked og gemmer ikke.
+- Titel er tom eller længere end 100 tegn: Systemet viser en fejlbesked og gemmer ikke.
 - Indhold er tomt: Systemet viser en fejlbesked og gemmer ikke.
 - Dato er ikke valgt: Systemet viser en fejlbesked og gemmer ikke.
 
@@ -105,9 +106,11 @@ Systemet viser en skærm med hormonværdier for den aktive runde, med den senest
 Brugeren klikker Tilføj Værdi og udfylder hormontype (FSH, LH, østradiol, progesteron, AMH), værdi, enhed og dato. Enheden gemmes pr. måling, fordi den afhænger af laboratoriet (udenlandske laboratorier bruger andre enheder).
 Kurven over et hormon bruger enheden fra den nyeste måling. Målinger i en anden enhed kan ikke tegnes på samme akse, så de vises kun i listen, og siden skriver, hvor mange der ikke er med på kurven.
 Brugeren klikker Gem. Systemet gemmer hormonværdien i databasen, tilknyttet runden, og opdaterer listen.
+Brugeren kan slette en måling, fx hvis den er tastet forkert. Systemet spørger først, om brugeren er sikker, og sletter kun patientens egne målinger.
 
 Regnvejrsdag:
-- Værdien er ikke et tal: Systemet viser en fejlbesked og gemmer ikke.
+- Værdien er ikke et tal, er negativ eller for stor: Systemet viser en fejlbesked og gemmer ikke.
+- Enheden er ikke en af dem i listen: Systemet viser en fejlbesked og gemmer ikke.
 
 
 ## UC10: LogMedication (US8)

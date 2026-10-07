@@ -31,6 +31,10 @@ public class ProfileService {
         if (isBlank(firstName) || isBlank(lastName) || isBlank(dateOfBirth)) {
             return ServiceResult.INVALID_INPUT;
         }
+        // navnene skal kunne være i kolonnerne (VARCHAR(50))
+        if (isTooLong(firstName, 50) || isTooLong(lastName, 50)) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
         // 2. fødselsdatoen skal være en rigtig dato – og ikke i fremtiden
         LocalDate dob;
@@ -101,5 +105,10 @@ public class ProfileService {
     // hjælper: null eller kun mellemrum tæller som tomt (samme som i de andre services)
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
+    private boolean isTooLong(String s, int max) {
+        return s != null && s.length() > max;
     }
 }

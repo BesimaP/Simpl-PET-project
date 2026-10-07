@@ -19,7 +19,7 @@ hide circle
 title Klassediagram 4a — model og enums (Simpl v2)
 
 ' Gettere/settere og setId() er udeladt for læsbarhed.
-' Kun metoder med egen logik vises (endRound, markTaken, markRead, getDoseText, getValueText).
+' Kun metoder med egen logik vises (getDoseText, getValueText, addPoint, getPolyline …).
 ' Streger til enums er udeladt — koblingen fremgår af felttyperne
 
 package "entities" {
@@ -56,7 +56,6 @@ package "entities" {
     - LocalDate endDate
     - RoundStatus status
     - Result result
-    + void endRound(Result result, LocalDate endDate)
   }
 
   class Appointment {
@@ -98,7 +97,6 @@ package "entities" {
     - double dose
     - String unit
     - boolean taken
-    + void markTaken()
     + String getDoseText()
   }
 
@@ -109,6 +107,30 @@ package "entities" {
     - HormoneType hormoneType
     - double value
     - String unit
+    + String getValueText()
+  }
+
+  ' Ikke en tabel i databasen – laves af HormoneService til kurven på hormoner-siden
+  class HormoneCurve {
+    - HormoneType type
+    - String unit
+    - double max
+    - double average
+    - double averageY
+    - int skipped
+    - List<Point> points
+    + void addPoint(Point p)
+    + void setAverage(double average, double averageY)
+    + String getMaxText()
+    + String getAverageText()
+    + String getPolyline()
+  }
+
+  class "HormoneCurve.Point" as Point {
+    - double x
+    - double y
+    - double value
+    - String dateLabel
     + String getValueText()
   }
 
@@ -129,7 +151,6 @@ package "entities" {
     - String title
     - String message
     - boolean read
-    + void markRead()
   }
 
 }
@@ -212,6 +233,8 @@ Round "1" *-- "0..*" Event
 Round "1" *-- "0..*" HormoneLog
 Round "1" *-- "0..*" MedicationLog
 Medication "1" -- "0..*" MedicationLog
+
+HormoneCurve "1" *-- "0..*" Point
 
 @enduml
 

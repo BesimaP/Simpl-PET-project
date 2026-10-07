@@ -60,4 +60,21 @@ else Name filled
   j --> u : GET /diagnoser again: updated list with "Gemt"
 end
 
+== Delete diagnosis ==
+u -> v : Clicks "Slet" on a diagnosis and confirms
+v -> j : POST /diagnoser/slet (id)
+j -> c : deleteDiagnosis(ctx)
+c -> s : deleteDiagnosis(patientId, diagnosisId)
+s -> s : getDiagnoses(patientId) (SELECT as above)
+alt Diagnosis belongs to the patient
+  s -> dm : delete(diagnosisId)
+  dm -> cp : getConnection()
+  cp --> dm : Connection
+  dm -> db : DELETE FROM diagnosis WHERE id = ?
+  s --> c : OK
+  c --> j : ctx.redirect("/diagnoser?gemt=slettet")
+else Not found / not hers, or id not a number
+  c --> j : ctx.redirect("/diagnoser?fejl=ukendt")
+end
+
 @enduml

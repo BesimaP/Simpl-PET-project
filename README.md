@@ -84,7 +84,7 @@ Databasen er **PostgreSQL** (databasen hedder `Simpl`). Schema og testdata ligge
 - `patient` — login og persondata i én tabel (brugernavn, kodeord-hash, navn, fødselsdato)
 - `diagnosis` — patientens diagnoser
 - `fertility_journey` — patientens overordnede forløb (kun ét aktivt ad gangen)
-- `round` — én behandlingsrunde i et forløb (IVF/ICSI/IUI/FET, status, resultat)
+- `round` — én behandlingsrunde i et forløb (IVF/ICSI/IUI/FET, start- og slutdato, resultat)
 - `appointment` — aftaler på forløbet
 - `diary_entry` — patientens dagbogsnoter (hører til patienten, ikke forløbet, så man kan skrive før og efter et forløb)
 - `event` — trin i en runde (vises på tidslinjen)
@@ -108,10 +108,17 @@ Navnene i typetabellerne matcher enum-klasserne i `enums` og `value` i HTML-drop
 
 ### Kør projektet
 
-1. Kør `doc/database/schema_postgres.sql` og derefter `data_postgres.sql` i pgAdmin på databasen `Simpl`.
-2. Åbn projektet i IntelliJ og lad Maven hente afhængighederne (Javalin, Thymeleaf, HikariCP, postgresql, jBCrypt).
-3. Kør `Main`. Konsollen skriver, at Javalin lytter på port 7070.
-4. Åbn `http://localhost:7070` i browseren – du lander på login-siden. Log ind med en testbruger (alle har kodeordet `test1234`, fx `mette1990` / `test1234`), eller opret en ny via "Opret profil".
+1. Start PostgreSQL. Har du ikke en database kørende, kan den startes i Docker:
+   ```
+   docker run --name db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e TZ=Europe/Copenhagen -p 5432:5432 -d postgres:16
+   ```
+2. Opret databasen `Simpl` i pgAdmin (højreklik på Databases → Create → Database…). Navnet skal staves med stort S.
+3. Kør `doc/database/schema_postgres.sql` og derefter `data_postgres.sql` i pgAdmin på databasen `Simpl`.
+4. Åbn projektet i IntelliJ og lad Maven hente afhængighederne (Javalin, Thymeleaf, HikariCP, postgresql, jBCrypt).
+5. Kør `Main`. Konsollen skriver, at Javalin lytter på port 7070.
+6. Åbn `http://localhost:7070` i browseren – du lander på login-siden. Log ind med en testbruger (alle har kodeordet `test1234`, fx `mette1990` / `test1234`), eller opret en ny via "Opret profil".
+
+Uploadede dokumenter gemmes i mappen `uploads/` i projektmappen. Den oprettes ved første upload og er ikke med i git. Testdokumenterne i `data_postgres.sql` peger derfor på filer, der ikke findes – de vises i listen, men kan ikke åbnes, før man selv uploader et dokument.
 
 ### Kør testene
 

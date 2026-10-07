@@ -19,7 +19,7 @@
 - [x]  Lav layout til tidslinjevisningen for en runde *(Thymeleaf: GET /tidslinje, th:each over events)*
 - [x]  Opret et Event, når der gemmes noget på runden *(TimelineService.addEvent: start runde → STIMULATION_START; aftale af typen ægudtagning/oplægning/graviditetstest → tilsvarende event, hvis en runde er i gang, 25. sep)*
 - [x]  Hent og sortér hændelser (Event) efter dato fra databasen *(EventDAO.findByRound ORDER BY date_time, TimelineService.getEvents)*
-- [x]  Sørg for at tidslinjen opdateres automatisk, når en ny hændelse tilføjes *(siden renderes fra databasen ved hver visning)*
+- [x]  Sørg for at tidslinjen opdateres automatisk, når en ny hændelse tilføjes *(siden renderes fra databasen ved hver visning – AC2 er omformuleret til "næste gang tidslinjen åbnes", 7. okt aften)*
 - [x]  Test sorteringen og oprettelsen *(TimelineServiceTest, AppointmentServiceTest)*
 
 ## User story 3 – Aftaler (Journey)
@@ -63,11 +63,11 @@
 - [x]  Lav layout til at registrere en ny diagnose (navn, beskrivelse) *(HTML/CSS lavet)*
 - [x]  Gem diagnosen i databasen, tilknyttet patienten *(POST /diagnoser → DiagnosisService.addDiagnosis)*
 - [x]  Lav layout til at vise alle patientens registrerede diagnoser *(Thymeleaf: GET /diagnoser, th:each)*
-- [x]  JavaScript: ny diagnose tilføjes til listen med det samme, tæller opdateres *(js/diagnoser.js)*
+- [x]  Slet en diagnose (POST /diagnoser/slet → DiagnosisService.deleteDiagnosis – kun egne, med bekræftelse) *(7. okt aften – js/diagnoser.js er slettet: den fandt ikke sit felt, og antallet skrives allerede af Thymeleaf)*
 - [x]  Test at flere diagnoser kan registreres og vises samtidig *(DiagnosisServiceTest)*
 
 ## User story 8 – Medicin
-- [x]  Opret Medication-stamdata (navn, beskrivelse) som kan genbruges på tværs af registreringer *(INSERT i schema.sql)*
+- [x]  Opret Medication-stamdata (navn, beskrivelse) som kan genbruges på tværs af registreringer *(INSERT i schema_postgres.sql)*
 - [x]  Lav layout til at registrere medicinindtag (vælg medicin, dosis, tidspunkt) på en aktiv runde *(HTML/CSS lavet – medicin.html)*
 - [x]  Gem registreringen i databasen, med reference til den valgte Medication *(POST /medicin → MedicationService.logDose)*
 - [x]  Lav layout til medicinlisten, der viser tidligere registreringer *(Thymeleaf: GET /medicin, i dag/tidligere fra databasen)*
@@ -88,7 +88,7 @@
 ## User story 10a – Start og afslut runde
 - [x]  Lav layout til at starte en ny runde (rundenummer, behandlingstype som dropdown: IVF, ICSI, IUI, FET) *(HTML/CSS lavet)*
 - [x]  JavaScript: dagens dato sættes automatisk i startdato-feltet *(js/start-runde.js, fælles funktion i common.js)*
-- [x]  Lav layout til at afslutte en runde med et resultat (POSITIVE / NEGATIVE) *(HTML/CSS lavet)*
+- [x]  Lav layout til at afslutte en runde med et resultat (Positiv / Negativ / Ikke afgjort endnu) *(HTML/CSS lavet)*
 - [x]  Gem resultatet på den specifikke Round, når den afsluttes *(POST /afslut-runde → RoundService.endRound → RoundDAO.endRound)*
 - [x]  "Afslut runde" virker også uden JavaScript *(knappen er et link til bekræft-siden GET /afslut-runde; med JavaScript åbner dialogen som før, 7. okt)*
 - [x]  Test start og afslutning *(RoundServiceTest)*
@@ -100,7 +100,7 @@
 
 ## User story 11 – Dokumenter
 - [x]  Lav layout til dokumentlisten (titel, type) *(HTML/CSS lavet)*
-- [x]  Lav layout til at tilføje et dokument (titel, dokumenttype som dropdown: Blodprøvesvar, Behandlingsplan, Andet, filvalg) *(HTML/CSS lavet)*
+- [x]  Lav layout til at tilføje et dokument (titel, dokumenttype som dropdown: Henvisning, Blodprøvesvar, Behandlingsplan, Andet, filvalg) *(HTML/CSS lavet)*
 - [x]  JavaScript: filtype (PDF/JPG/PNG) og størrelse (maks 10 MB) tjekkes, når filen vælges; forkert fil afvises med fejlbesked; "Fjern fil"-knap *(js/dokumenter.js)*
 - [x]  Implementér gemning af dokumenter med filePath *(POST /dokumenter → DocumentService.uploadDocument, filen gemmes i uploads/, stien i databasen – Louise, 25. sep)*
 - [x]  Lav layout til at åbne og vise et valgt dokument *(GET /dokumenter/{id} sender filen til browseren – kun patientens egne, 25. sep)*
@@ -116,7 +116,7 @@
 - [x]  Test at notifikationer genereres korrekt og kan markeres som læst *(NotificationServiceTest, 9 tests)*
 
 ## Tekniske krav fra undervisningen (24. sep 2026)
-- [x]  Thymeleaf: templates + GET-ruter med `ctx.render` på siderne, der viser data *(25. sep: alle 11 sider – login, diagnoser, dagbog, aftaler, hormoner, medicin, rundehistorik, min-profil, dashboard, tidslinje, notifikationer)*
+- [x]  Thymeleaf: templates + GET-ruter med `ctx.render` på siderne, der viser data *(25. sep: alle 11 sider – login, diagnoser, dagbog, aftaler, hormoner, medicin, rundehistorik, min-profil, dashboard, tidslinje, notifikationer. Nu 16 templates i alt)*
 - [x]  Sessionsscope: `ctx.sessionAttribute("patientId", …)` og `patientName` sættes ved login (accountId fjernet, uge 41: UserAccount er samlet ind i Patient); alle controllere læser fra sessionen og sender til /login, hvis den er tom
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
@@ -130,7 +130,7 @@
 - [x]  `LocalDate.parse(dateOfBirth)` kaster exception ved tom/ugyldig dato → skal give INVALID_INPUT i stedet for 500-fejl *(try/catch i createProfile, 22. sep – forløbs-startdato tages, når "forløb ved oprettelse" laves)*
 - [x]  Kodeord gemmes i klartekst → BCrypt-hash inden aflevering (AuthService.login/createProfile, ProfileService.changePassword) *(jbcrypt 0.4 i pom; hashpw ved opret profil og skift kodeord, checkpw ved login og skift kodeord; ProfileServiceTest tjekker, at kodeordet ikke står i klartekst – 5. okt)*
 - [x]  `enums/Result.java` ser ud til at være en rest ved siden af `ServiceResult` → slet eller forklar *(ikke en rest: `Result` = rundens resultat POSITIVE/NEGATIVE, bruges i RoundDAO.endRound. `ServiceResult` = svaret fra service til controller. To forskellige ting)*
-- [ ]  Thymeleaf/OGNL: skriv aldrig ét enkelt tegn i enkelte anførselstegn (`'d'`) – det bliver en `char`. Brug `#temporals.day(...)` eller `'dd'` *(fundet 25. sep)*
+- [x]  Thymeleaf/OGNL: skriv aldrig ét enkelt tegn i enkelte anførselstegn (`'d'`) – det bliver en `char`. Brug `#temporals.day(...)` eller `'dd'` *(fundet 25. sep – en huskeregel, ikke en opgave)*
 - [x]  `/logout`-rute: "Log ud" sletter sessionen (LoginController.logout) *(25. sep)*
 
 ## Rettelser og oprydning (7. okt 2026)
@@ -145,3 +145,14 @@
 - [x]  3NF: `unit` flyttet fra `medication_log` til `medication` – enheden er fast pr. præparat (svar fra fertilitetsklinik). 17 præparater i stamdata (IU / mg / µg); dropdownen på /medicin hentes fra databasen med `th:each`. `hormone_log.unit` bliver, fordi enheden afhænger af laboratoriet
 - [x]  Hormonkurven tegner kun målinger i samme enhed som den nyeste – målinger i en anden enhed (fx fra et udenlandsk laboratorie) står i listen, og siden skriver "X målinger i en anden enhed … er ikke med på kurven" (HormoneService.getCurve, HormoneServiceTest)
 - [x]  Afsluttede forløb kan ses: rundehistorik viser alle forløb med deres runder (FertilityJourneyMapper.findByPatient, RoundService.getRoundsPerJourney); aftaler kan vises for et valgt forløb (`/aftaler?forloeb=id`) og tidslinjen for en valgt runde (`/tidslinje?runde=id`) – kun patientens egne (RoundServiceTest, AppointmentServiceTest, TimelineServiceTest)
+
+## Rettelser efter gennemgang (7. okt 2026, aften)
+- [x]  Én aktiv runde pr. forløb håndhæves i databasen (`one_active_round_per_journey`) og CHECK-regler på `round` (rundenummer > 0, slutdato ≥ startdato), `hormone_log.value` (≥ 0) og `medication_log.dose` (> 0)
+- [x]  Længdetjek i services (navne 50 tegn, titler/steder 100 tegn) og `maxlength` i formularerne – for lang tekst giver en fejlbesked i stedet for en 500-fejl
+- [x]  Hormonværdi og dosis skal være et rigtigt tal (ikke "NaN"/"Infinity") og kunne være i NUMERIC(10,2); hormonenheden skal være en af dropdownens
+- [x]  Bekræftelse før sletning (common.js spørger på alle slet-formularer); "Afslut runde"-dialogen lover ikke længere, at man kan fortryde
+- [x]  Mobil: avataren vises også på mobil, så Min profil, Diagnoser, Dokumenter og Log ud kan nås
+- [x]  Aftaler uden forløb viser "Intet forløb" i stedet for en formular, der altid fejler
+- [x]  JavaScript: `setTodayIn` bruger den lokale dato (ikke UTC) og tåler et manglende felt; medicin.js sætter dagens dato; dokumenter.js tåler "Annullér" i filvælgeren
+- [x]  Død kode fjernet: ubrugte mapper-metoder (`AppointmentMapper/EventMapper/NotificationMapper.delete`, `MedicationMapper.save`) og entitet-metoder, der aldrig blev kaldt
+- [x]  Dokumentation: README (opsætning af database), UC4/UC6/UC9 (slet), US2 AC2, US1 AC3, US7 AC3, klassediagrammer og domænemodel i sort/hvid

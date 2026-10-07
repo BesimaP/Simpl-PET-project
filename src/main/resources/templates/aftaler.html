@@ -83,7 +83,7 @@
 
           <!-- hedder location i databasen (appointment.location) -->
           <label for="location">Klinik</label>
-          <input type="text" id="location" name="location" placeholder="Fx Vitanova" required>
+          <input type="text" id="location" name="location" placeholder="Fx Vitanova" maxlength="100" required>
 
           <!-- type date = kalender -->
           <label for="date">Dato</label>
@@ -101,8 +101,15 @@
         <p class="link-line"><a href="/dashboard">Annullér</a></p>
       </section>
 
+      <!-- i stedet for formularen, når patienten slet ikke har et forløb (en aftale skal høre til et forløb) -->
+      <section class="card form-card" th:if="${shown == null}">
+        <h2>Intet forløb</h2>
+        <p class="subtitle">En aftale hører til et forløb. Start dit forløb på forsiden, så kan du tilføje aftaler.</p>
+        <p class="link-line"><a href="/dashboard">Til forsiden</a></p>
+      </section>
+
       <!-- i stedet for formularen, når man kigger på et afsluttet forløb -->
-      <section class="card form-card" th:unless="${canAdd}">
+      <section class="card form-card" th:if="${!canAdd and shown != null}">
         <h2>Afsluttet forløb</h2>
         <p class="subtitle" th:text="'Du kigger på aftalerne fra forløbet, der startede ' + ${#temporals.format(shown.startDate, 'd. MMMM yyyy')} + '. Nye aftaler kan kun tilføjes til forløbet, der er i gang.'">Du kigger på et afsluttet forløb.</p>
         <p class="link-line"><a href="/aftaler">Tilbage til forløbet, der er i gang</a></p>

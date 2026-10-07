@@ -5,14 +5,20 @@
 // dateField (i parentesen) = feltet, som den side der kalder opskriften har fundet med getElementById
 function setTodayIn(dateField) {
 
+    // findes feltet ikke på siden (fx ingen formular på et afsluttet forløb), så gør ingenting – ellers kommer der en fejl
+    if (dateField === null) {
+        return;
+    }
+
     // spørg computeren: hvad er dato og klokkeslæt lige nu?
     const now = new Date();
 
-    // lav det om til tekst, fx "2026-09-10T13:45:00.000Z"
-    const text = now.toISOString();
-
-    // behold kun de første 10 tegn: "2026-09-10" (formatet et datofelt forstår)
-    const today = text.slice(0, 10);
+    // byg "2026-09-10" af den LOKALE dato. (toISOString giver UTC-tid, og så er datoen gårsdagens mellem kl. 00 og 02 i Danmark)
+    // getMonth() starter på 0, derfor + 1. padStart(2, "0") = "9" bliver til "09"
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    const today = year + "-" + month + "-" + day;
 
     // skriv datoen i feltet
     dateField.value = today;

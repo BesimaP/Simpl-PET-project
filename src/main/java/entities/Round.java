@@ -68,10 +68,4 @@ public class Round {
         return result;
     }
 
-    // Afslut runde (UC14): sætter alle tre felter på én gang, så objektet aldrig er halvt afsluttet
-    public void endRound(Result result, LocalDate endDate) {
-        this.result = result;
-        this.endDate = endDate;
-        this.status = RoundStatus.COMPLETED;
-    }
 }

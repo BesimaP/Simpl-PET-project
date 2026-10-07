@@ -50,6 +50,11 @@ public class AuthService {
             return ServiceResult.INVALID_INPUT;
         }
 
+        // 0a. regel: teksten skal kunne være i kolonnerne (VARCHAR(50) – se schema_postgres.sql)
+        if (isTooLong(firstName, 50) || isTooLong(lastName, 50) || isTooLong(username, 50)) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // 0b. regel: fødselsdatoen skal være en rigtig dato (ellers crasher LocalDate.parse længere nede)
         LocalDate dob;
         try {
@@ -111,5 +116,10 @@ public class AuthService {
     // hjælper: null eller kun mellemrum tæller som tomt (samme som i de andre services)
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
+    private boolean isTooLong(String s, int max) {
+        return s != null && s.length() > max;
     }
 }

@@ -75,7 +75,6 @@ package "persistence" {
     + countUnread(patientId : int) : int
     + markRead(id : int) : void
     + markAllRead(patientId : int) : void
-    + delete(id : int) : void
     - mapRow(rs : ResultSet) : Notification
   }
 
@@ -93,7 +92,6 @@ package "persistence" {
     + AppointmentMapper(connectionPool : ConnectionPool)
     + save(appointment : Appointment) : int
     + findByJourney(fertilityJourneyId : int) : List<Appointment>
-    + delete(id : int) : void
     - mapRow(rs : ResultSet) : Appointment
   }
 
@@ -112,7 +110,6 @@ package "persistence" {
     + EventMapper(connectionPool : ConnectionPool)
     + save(event : Event) : int
     + findByRound(roundId : int) : List<Event>
-    + delete(id : int) : void
     - mapRow(rs : ResultSet) : Event
   }
 
@@ -128,7 +125,6 @@ package "persistence" {
   class MedicationMapper {
     - connectionPool : ConnectionPool
     + MedicationMapper(connectionPool : ConnectionPool)
-    + save(medication : Medication) : int
     + findAll() : List<Medication>
     + findByName(name : String) : Medication
     - mapRow(rs : ResultSet) : Medication

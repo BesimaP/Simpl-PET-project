@@ -57,7 +57,7 @@ public class AppointmentController {
         ctx.attribute("journeys", dashboardService.getJourneys(patientId));   // requestscope -> links til de andre forløb
         ctx.attribute("shown", shown);                                       // det forløb, siden viser (kan være null)
         // formularen "Ny aftale" vises kun på det aktive forløb – man kan ikke tilføje aftaler til et afsluttet
-        ctx.attribute("canAdd", shown == null || (active != null && shown.getId() == active.getId()));
+        ctx.attribute("canAdd", active != null && shown != null && shown.getId() == active.getId());   // intet aktivt forløb = ingen formular
         if (shown == null) {
             ctx.attribute("upcoming", new java.util.ArrayList<>());
             ctx.attribute("past", new java.util.ArrayList<>());

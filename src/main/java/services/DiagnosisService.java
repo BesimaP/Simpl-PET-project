@@ -20,6 +20,10 @@ public class DiagnosisService {
         if (isBlank(name)) {
             return ServiceResult.INVALID_INPUT;
         }
+        // navnet skal kunne være i kolonnen (VARCHAR(100))
+        if (isTooLong(name, 100)) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
         // 2. beskrivelsen er valgfri – tom tekst gemmes som null, så databasen ikke fyldes med ""
         String desc = isBlank(description) ? null : description;
@@ -36,8 +40,25 @@ public class DiagnosisService {
         return diagnosisMapper.findByPatient(patientId);
     }
 
+    // Sletter én diagnose – men kun hvis den er patientens egen (id'et skal findes i hendes liste).
+    // Svar: OK · NOT_FOUND = findes ikke / ikke hendes. Samme mønster som DiaryService.deleteEntry
+    public ServiceResult deleteDiagnosis(int patientId, int diagnosisId) {
+        for (Diagnosis d : getDiagnoses(patientId)) {
+            if (d.getId() == diagnosisId) {
+                diagnosisMapper.delete(diagnosisId);
+                return ServiceResult.OK;
+            }
+        }
+        return ServiceResult.NOT_FOUND;
+    }
+
     // lille hjælper: null eller kun mellemrum tæller som tomt
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
+    private boolean isTooLong(String s, int max) {
+        return s != null && s.length() > max;
     }
 }

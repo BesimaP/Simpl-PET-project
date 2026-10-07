@@ -76,14 +76,14 @@
         <form action="/dokumenter" method="post" enctype="multipart/form-data">
           <!-- type file = åbner fil-vælgeren på computeren -->
           <label for="file">Vælg fil</label>
-          <input type="file" id="file" name="file" required>
+          <input type="file" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
           <p id="file-error" class="field-error"></p>
           <!-- type="button" = sender IKKE formularen. Knappen tømmer fil-feltet (se js/dokumenter.js) -->
           <button type="button" id="remove-file" class="muted-link">Fjern fil</button>
 
           <!-- title er påkrævet i document-tabellen -->
           <label for="title">Titel</label>
-          <input type="text" id="title" name="title" placeholder="Fx Behandlingsplan" required>
+          <input type="text" id="title" name="title" placeholder="Fx Behandlingsplan" maxlength="100" required>
 
           <!-- value = databasens navn (tabellen document_type i schema_postgres.sql), teksten er dansk -->
           <label for="documentType">Type</label>

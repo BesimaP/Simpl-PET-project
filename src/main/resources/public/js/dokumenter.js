@@ -15,6 +15,11 @@ fileInput.addEventListener("change", function () {
     // tag den valgte fil (.files er en liste, [0] = den første)
     const file = fileInput.files[0];
 
+    // HVIS man trykkede Annullér i filvælgeren, er der ingen fil – så er der intet at tjekke
+    if (!file) {
+        return;
+    }
+
     // HVIS filen hverken er pdf, jpeg eller png:
     // (file.type er fx "application/pdf" - eller "text/html" for en forkert fil. !== = "er ikke", && = "og")
     if (file.type !== "application/pdf" && file.type !== "image/jpeg" && file.type !== "image/png") {
@@ -24,6 +29,7 @@ fileInput.addEventListener("change", function () {
 
         // tøm feltet, så den forkerte fil ikke bliver uploadet
         fileInput.value = "";
+        return;   // stop her, så næste tjek ikke overskriver fejlbeskeden
     }
 
     // 10 MB regnet om til bytes (det er bytes, file.size er i)

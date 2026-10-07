@@ -15,7 +15,7 @@ Som patient vil jeg kunne se en tidslinje over hændelser i en runde, så jeg ve
 
 **Acceptkriterier:**
 - Acceptkriterie 1: "Givet en runde med registrerede hændelser, når patienten åbner tidslinjen, så vises hændelserne sorteret efter dato" → tester at sorteringen er korrekt
-- Acceptkriterie 2: "Givet en ny hændelse registreres, når den gemmes, så vises hændelsen på tidslinjen i korrekt kronologisk rækkefølge, uden at patienten skal genindlæse siden" → tester at tidslinjen reagerer live, uden manuel genindlæsning
+- Acceptkriterie 2: "Givet en ny hændelse registreres, når den gemmes, så vises hændelsen på tidslinjen i korrekt kronologisk rækkefølge, næste gang tidslinjen åbnes" → tester at systemet selv tilføjer hændelsen, uden at patienten skal skrive den ind
 
 ### User story 3
 Som patient vil jeg kunne se mine kommende aftaler, så jeg ikke overser vigtige tider i mit forløb.
@@ -63,6 +63,7 @@ Som patient vil jeg kunne registrere mine diagnoser, så min behandler og jeg se
 **Acceptkriterier:**
 - Acceptkriterie 1: "Givet en logget-ind patient, når en ny diagnose med navn og beskrivelse registreres, så gemmes diagnosen på patientens profil" → tester at oprettelsen lykkes
 - Acceptkriterie 2: "Givet flere registrerede diagnoser, når profilen ses, så vises alle patientens diagnoser" → tester at en patient kan have flere diagnoser samtidig
+- Acceptkriterie 3: "Givet en registreret diagnose, når patienten sletter den og bekræfter, så fjernes den fra listen" → tester at en forkert diagnose kan fjernes igen
 
 ### User story 8
 Som patient vil jeg kunne registrere mit medicinindtag, så jeg kan holde styr på, om jeg har taget min medicin som planlagt.

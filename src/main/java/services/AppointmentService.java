@@ -39,6 +39,10 @@ public class AppointmentService {
         if (isBlank(type) || isBlank(location) || isBlank(date) || isBlank(time)) {
             return ServiceResult.INVALID_INPUT;
         }
+        // stedet skal kunne være i kolonnen (VARCHAR(100))
+        if (isTooLong(location, 100)) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
         // 2. tekst fra formularen -> rigtige typer. Ugyldigt input giver INVALID_INPUT i stedet for et crash
         AppointmentType appointmentType;
@@ -150,5 +154,10 @@ public class AppointmentService {
     // lille hjælper: null eller kun mellemrum tæller som tomt
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
+    private boolean isTooLong(String s, int max) {
+        return s != null && s.length() > max;
     }
 }

@@ -41,7 +41,4 @@ public class FertilityJourney {
         return status;
     }
 
-    public void setStatus(JourneyStatus status) {
-        this.status = status;
-    }
 }

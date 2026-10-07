@@ -20,6 +20,9 @@ import java.util.List;
 // Forretningslogik for hormonmålinger (US9). Kender IKKE Javalin – controlleren kalder saveLog med felterne.
 // Svarer med ServiceResult: OK = ok, ellers hvad der gik galt (controlleren vælger side ud fra det).
 public class HormoneService {
+    // de enheder, dropdownen i hormoner.html tilbyder – alt andet afvises
+    private static final List<String> UNITS = List.of("pmol/L", "IU/L", "nmol/L", "pg/mL", "ng/mL", "mIU/mL");
+    private static final double MAX_VALUE = 100_000_000;   // NUMERIC(10,2) = højst 8 cifre før kommaet
     private HormoneLogMapper hormoneLogMapper;
     private RoundService roundService;
 
@@ -58,6 +61,17 @@ public class HormoneService {
             hormoneType = HormoneType.valueOf(hormone);
             numericValue = Double.parseDouble(value);
         } catch (DateTimeParseException | IllegalArgumentException e) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
+        // 3b. regel: værdien skal være et rigtigt tal (ikke "NaN"/"Infinity", som parseDouble ellers accepterer),
+        //     ikke negativ, og kunne være i kolonnen NUMERIC(10,2) (højst 8 cifre før kommaet)
+        if (!Double.isFinite(numericValue) || numericValue < 0 || numericValue >= MAX_VALUE) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
+        // 3c. regel: enheden skal være en af dropdownens værdier i hormoner.html
+        if (!UNITS.contains(unit)) {
             return ServiceResult.INVALID_INPUT;
         }
 

@@ -57,14 +57,4 @@ public class Patient {
         return dateOfBirth;
     }
 
-    // Redigér profil (UC2 / US6b): navn og fødselsdato kan ændres
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
 }

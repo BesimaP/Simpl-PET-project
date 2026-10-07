@@ -85,4 +85,21 @@ else INVALID_INPUT / NO_ACTIVE_JOURNEY / NO_ACTIVE_ROUND
   j --> u : "Udfyld alle felter ..." / "Start et forløb først." / "Start en runde først."
 end
 
+== Delete measurement ==
+u -> v : Clicks "Slet" on a measurement and confirms
+v -> j : POST /hormoner/slet (id)
+j -> c : deleteLog(ctx)
+c -> s : deleteLog(patientId, logId)
+s -> s : getLogs(patientId) (SELECT as above)
+alt Measurement belongs to the patient
+  s -> hm : delete(logId)
+  hm -> cp : getConnection()
+  cp --> hm : Connection
+  hm -> db : DELETE FROM hormone_log WHERE id = ?
+  s --> c : OK
+  c --> j : ctx.redirect("/hormoner?gemt=slettet")
+else Not found / not hers, or id not a number
+  c --> j : ctx.redirect("/hormoner?fejl=ukendt")
+end
+
 @enduml

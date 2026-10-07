@@ -50,11 +50,11 @@
                 <!-- for og id skal være ens, så label og felt hører sammen -->
                 <label for="firstName">Fornavn</label>
                 <input type="text" id="firstName" name="firstName"
-                       placeholder="Dit fornavn" autocomplete="given-name" required>
+                       placeholder="Dit fornavn" autocomplete="given-name" maxlength="50" required>
 
                 <label for="lastName">Efternavn</label>
                 <input type="text" id="lastName" name="lastName"
-                       placeholder="Dit efternavn" autocomplete="family-name" required>
+                       placeholder="Dit efternavn" autocomplete="family-name" maxlength="50" required>
 
                 <!-- type date = browseren viser en kalender -->
                 <label for="dateOfBirth">Fødselsdato</label>
@@ -62,7 +62,7 @@
 
                 <label for="username">Brugernavn</label>
                 <input type="text" id="username" name="username"
-                       placeholder="Vælg et brugernavn" autocomplete="username" required>
+                       placeholder="Vælg et brugernavn" autocomplete="username" maxlength="50" required>
 
                 <!-- minlength 8 = koden skal være mindst 8 tegn, required = feltet skal udfyldes -->
                 <label for="password">Adgangskode</label>

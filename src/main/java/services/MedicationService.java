@@ -51,8 +51,9 @@ public class MedicationService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 3. regel: dosis skal være større end 0
-        if (doseValue <= 0) {
+        // 3. regel: dosis skal være et rigtigt tal (ikke "NaN"/"Infinity"), større end 0
+        //    og kunne være i kolonnen NUMERIC(10,2) (højst 8 cifre før kommaet)
+        if (!Double.isFinite(doseValue) || doseValue <= 0 || doseValue >= 100_000_000) {
             return ServiceResult.INVALID_INPUT;
         }
 

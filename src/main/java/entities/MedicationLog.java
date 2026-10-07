@@ -64,8 +64,4 @@ public class MedicationLog {
         return taken;
     }
 
-    // Markér som taget (US8 AC3)
-    public void markTaken() {
-        this.taken = true;
-    }
 }

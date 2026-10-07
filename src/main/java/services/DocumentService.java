@@ -35,6 +35,10 @@ public class DocumentService {
         if (isBlank(title) || isBlank(type) || isBlank(originalFileName) || fileContent == null) {
             return ServiceResult.INVALID_INPUT;
         }
+        // titlen skal kunne være i kolonnen (VARCHAR(100))
+        if (isTooLong(title, 100)) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
         // 2. typen skal matche en af dropdownens værdier
         DocumentType documentType;
@@ -119,5 +123,10 @@ public class DocumentService {
 
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
+    private boolean isTooLong(String s, int max) {
+        return s != null && s.length() > max;
     }
 }

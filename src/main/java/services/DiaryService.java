@@ -26,6 +26,10 @@ public class DiaryService {
         if (isBlank(date) || isBlank(title) || isBlank(note)) {
             return ServiceResult.INVALID_INPUT;
         }
+        // titlen skal kunne være i kolonnen (VARCHAR(100))
+        if (isTooLong(title, 100)) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
         // 1. "2026-09-21" -> LocalDateTime (kl. 00:00). try/catch: ugyldig dato giver INVALID_INPUT i stedet for et crash
         LocalDateTime dateTime;
@@ -62,5 +66,10 @@ public class DiaryService {
     // lille hjælper: null eller kun mellemrum tæller som tomt
     private boolean isBlank(String s) {
         return s == null || s.isBlank();
+    }
+
+    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
+    private boolean isTooLong(String s, int max) {
+        return s != null && s.length() > max;
     }
 }

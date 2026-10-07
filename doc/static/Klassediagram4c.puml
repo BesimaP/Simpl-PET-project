@@ -128,6 +128,7 @@ package "controllers" {
     + setRoutes(config : JavalinConfig) : void
     - showDiagnoses(ctx : Context) : void
     - addDiagnosis(ctx : Context) : void
+    - deleteDiagnosis(ctx : Context) : void
   }
 
   class DocumentController {
@@ -262,6 +263,7 @@ package "services" {
     + DiagnosisService(connectionPool : ConnectionPool)
     + addDiagnosis(patientId : int, name : String, description : String) : ServiceResult
     + getDiagnoses(patientId : int) : List<Diagnosis>
+    + deleteDiagnosis(patientId : int, diagnosisId : int) : ServiceResult
   }
 
   class DocumentService {

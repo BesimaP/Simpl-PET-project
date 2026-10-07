@@ -20,6 +20,7 @@ public class DiagnosisController {
         // "når der kommer POST til /diagnoser (formularen på diagnoser.html), så kald addDiagnosis med den ctx, Javalin rækker os"
         config.routes.post("/diagnoser", ctx -> addDiagnosis(ctx));
         config.routes.get("/diagnoser", ctx -> showDiagnoses(ctx));
+        config.routes.post("/diagnoser/slet", ctx -> deleteDiagnosis(ctx));   // "Slet" på én diagnose
     }
 
     // GET /diagnoser – hent listen og fyld skabelonen
@@ -62,5 +63,23 @@ public class DiagnosisController {
             case INVALID_INPUT -> ctx.redirect("/diagnoser?fejl=felter"); // navnet var tomt
             default -> ctx.redirect("/diagnoser?fejl=ukendt");
         }
+    }
+
+    // POST /diagnoser/slet – slet én diagnose (id i et skjult felt). Service tjekker, at diagnosen er patientens egen
+    private void deleteDiagnosis(Context ctx) {
+        Integer patientId = ctx.sessionAttribute("patientId");
+        if (patientId == null) {
+            ctx.redirect("/login");
+            return;
+        }
+        int diagnosisId;
+        try {
+            diagnosisId = Integer.parseInt(ctx.formParam("id"));
+        } catch (NumberFormatException e) {
+            ctx.redirect("/diagnoser?fejl=ukendt");
+            return;
+        }
+        ServiceResult result = diagnosisService.deleteDiagnosis(patientId, diagnosisId);
+        ctx.redirect(result == ServiceResult.OK ? "/diagnoser?gemt=slettet" : "/diagnoser?fejl=ukendt");
     }
 }
