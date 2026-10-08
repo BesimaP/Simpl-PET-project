@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="da" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--
+  Fragment = topbaren (overskrift + klokke + avatar), som er ens på alle sider med menu. Hentes ind i en side sådan:
+  <header th:replace="~{fragments/topbar :: topbar('Medicin')}"></header>
+  Parameteren title (ligesom en parameter i en metode) er sidens overskrift.
+  Dashboardet har sin egen topbar (hilsen + dato, og klokken åbner en pop-op), så den bruger ikke fragmentet.
+-->
+<header class="topbar" th:fragment="topbar(title)">
+  <div>
+    <h1 th:text="${title}">Overskrift</h1>
+  </div>
+  <div class="topbar__actions">
+    <a href="/notifikationer" class="iconbtn" aria-label="Notifikationer">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+      <!-- th:if: rød prik ved ulæste påmindelser. ${unread} sættes for alle sider i RouteConfig (before-handler) -->
+      <span class="dot" th:if="${unread != null and unread > 0}"></span>
+    </a>
+    <!-- første bogstav i patientens fornavn (gemt i sessionen ved login) -->
+    <a href="/min-profil" class="avatar" aria-label="Min profil"
+       th:text="${#strings.toUpperCase(#strings.substring(session.patientName, 0, 1))}">A</a>
+  </div>
+</header>
+
+</body>
+</html>
