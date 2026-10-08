@@ -223,12 +223,14 @@ body.dashboard {
     .sidenav__footer button[type=submit] {
         display: inline;
         width: auto;
+        min-height: 0;          /* base.css giver submit-knapper 50 px – ikke her */
         margin: 0;
         padding: 0;
         background: none;
         border: none;
         color: inherit;
         font: inherit;
+        font-weight: 400;       /* samme som linket "Min profil" */
         cursor: pointer;
     }
 

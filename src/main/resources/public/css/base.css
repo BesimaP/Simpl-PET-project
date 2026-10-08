@@ -171,9 +171,8 @@ form input[aria-invalid="true"] {
     color: var(--error);
 }
 
-/* Knapper — fuld bredde, 50 px høj (Fitts' lov) */
-/* både <button type=submit> og <a class=btn-primary> ser ens ud (se min-profil) */
-.btn-primary,
+/* Knapper — fuld bredde, 50 px høj (Fitts' lov). Gælder alle <button type=submit> i formularer.
+   Små knapper (fx "Start dit forløb", Annullér i pop-op'er) bruger i stedet .btn + .btn--primary/--light/… i components.css */
 button[type="submit"] {
     display: block;
     width: 100%;
@@ -191,12 +190,10 @@ button[type="submit"] {
 }
 
 /* lidt mørkere brun når musen er over */
-.btn-primary:hover,
 button[type="submit"]:hover {
     background: #2b2318;
 }
 
-.btn-primary:focus-visible,
 button[type="submit"]:focus-visible {
     outline: 3px solid var(--on-brand-muted);
     outline-offset: 2px;   /* lidt luft mellem knappen og fokus-rammen */

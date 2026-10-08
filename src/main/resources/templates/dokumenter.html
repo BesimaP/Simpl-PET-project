@@ -25,21 +25,8 @@
   <!-- selve siden -->
   <main class="content">
 
-    <!-- overskrift + klokke og avatar øverst -->
-    <header class="topbar">
-      <div>
-        <h1>Dokumenter</h1>
-      </div>
-      <div class="topbar__actions">
-        <a href="/notifikationer" class="iconbtn" aria-label="Notifikationer">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
-          <!-- th:if: rød prik ved ulæste påmindelser. ${unread} sættes for alle sider i RouteConfig (before-handler) -->
-          <span class="dot" th:if="${unread != null and unread > 0}"></span>
-        </a>
-        <a href="/min-profil" class="avatar" aria-label="Min profil"
-           th:text="${#strings.toUpperCase(#strings.substring(session.patientName, 0, 1))}">A</a>
-      </div>
-    </header>
+    <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
+    <header th:replace="~{fragments/topbar :: topbar('Dokumenter')}"></header>
 
     <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>

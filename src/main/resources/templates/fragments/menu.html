@@ -45,11 +45,12 @@
     </ul>
 
     <!-- nederst i menuen -->
-    <p class="sidenav__footer desktop-only">
+    <!-- div (ikke p): en <form> må ikke ligge inde i en <p> – så lukker browseren p'en for tidligt -->
+    <div class="sidenav__footer desktop-only">
         <a href="/min-profil">Min profil</a> ·
         <!-- log ud er en POST-formular med en knap, der ligner et link -->
         <form action="/logout" method="post" class="inline-form"><button type="submit">Log ud</button></form>
-    </p>
+    </div>
 </nav>
 
 </body>

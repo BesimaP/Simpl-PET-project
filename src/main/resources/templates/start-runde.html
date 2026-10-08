@@ -25,16 +25,8 @@
 <!-- selve siden -->
 <main class="content">
 
-    <!-- overskrift + avatar øverst -->
-    <header class="topbar">
-        <div>
-            <h1>Start runde</h1>
-        </div>
-        <div class="topbar__actions">
-            <a href="/min-profil" class="avatar" aria-label="Min profil"
-               th:text="${#strings.toUpperCase(#strings.substring(session.patientName, 0, 1))}">A</a>
-        </div>
-    </header>
+    <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
+    <header th:replace="~{fragments/topbar :: topbar('Start runde')}"></header>
 
     <!-- besked fra controlleren: fx en fejl, hvis et felt mangler. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>
