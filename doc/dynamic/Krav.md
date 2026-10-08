@@ -28,7 +28,7 @@
 2. **Dataintegritet** – Sletning af en konto skal automatisk fjerne alt patientens data (forløb, runder, logs, dokumenter og notifikationer)
 3. **Ydeevne** – Oversigtssiden skal indlæses på under 2 sekunder ved normal brug
 4. **Brugervenlighed** – En patient skal kunne registrere en dagbogsnote på maks. 3 klik fra dashboardet
-5. **Udvidelighed** – Nye typer (fx en ny aftaletype eller hormontype) skal kunne tilføjes ved at udvide den relevante enum, uden at ændre eksisterende logik
+5. **Udvidelighed** – Nye typer (fx en ny aftaletype eller hormontype) skal kunne tilføjes ved at tilføje en værdi i den relevante enum og en række i typetabellen i databasen, uden at ændre eksisterende logik – dropdownerne på siderne bygges af enum'ens værdier
 
 ## Tekniske krav fra undervisningen (24. sep 2026)
 

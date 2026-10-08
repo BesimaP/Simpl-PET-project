@@ -98,6 +98,7 @@ Dashboardet vises med den nye runde.
 
 Regnvejrsdag:
 - Type eller startdato mangler: Systemet viser en fejlbesked og opretter ikke en ny runde.
+- Startdatoen ligger før forløbets startdato eller i fremtiden: Systemet viser en fejlbesked og opretter ikke en ny runde.
 - Patienten har intet aktivt forløb: Dashboardet viser "Start dit forløb" (UC3).
 - Der er allerede en runde i gang: Systemet viser en besked om, at den igangværende runde skal afsluttes først (UC14).
 
@@ -139,15 +140,16 @@ Regnvejrsdag:
 ## UC12: ManageDocuments (US11)
 Systemet viser en skærm med patientens dokumenter med titel, type og upload-dato.
 Brugeren klikker Tilføj Dokument, udfylder titel, vælger dokumenttype (henvisning, blodprøvesvar, behandlingsplan, andet) og vælger en fil.
-Brugeren klikker Gem. Systemet gemmer dokumentets titel, type og filsti i databasen og opdaterer listen.
+Brugeren klikker Gem. Systemet gemmer filen i uploads/ under et unikt navn (UUID + endelse), gemmer dokumentets titel, type og filsti i databasen og opdaterer listen.
 Brugeren kan vælge et dokument for at åbne det via den gemte filePath.
-Brugeren kan slette et dokument. Systemet sletter både rækken i databasen og filen på disken.
+Brugeren kan slette et dokument. Systemet sletter først rækken i databasen og derefter filen på disken.
 
 Regnvejrsdag:
 - Patienten har ingen dokumenter: Systemet viser en besked om, at listen er tom.
 - Filen kan ikke findes/åbnes, eller dokumentet tilhører en anden patient: Systemet svarer med 404 (ikke fundet).
 - Filen er ikke PDF/JPG/PNG eller er større end 10 MB: Systemet viser en fejlbesked og gemmer ikke.
 - Titel eller fil mangler ved tilføjelse: Systemet viser en fejlbesked og gemmer ikke.
+- Filen kan ikke gemmes på disken, eller rækken kan ikke gemmes i databasen: Systemet viser fejlsiden; en fil, der allerede er gemt, slettes igen.
 
 
 ## UC13: ViewRoundHistory (US10b)

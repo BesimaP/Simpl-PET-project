@@ -156,3 +156,11 @@
 - [x]  JavaScript: `setTodayIn` bruger den lokale dato (ikke UTC) og tåler et manglende felt; medicin.js sætter dagens dato; dokumenter.js tåler "Annullér" i filvælgeren
 - [x]  Død kode fjernet: ubrugte mapper-metoder (`AppointmentMapper/EventMapper/NotificationMapper.delete`, `MedicationMapper.save`) og entitet-metoder, der aldrig blev kaldt
 - [x]  Dokumentation: README (opsætning af database), UC4/UC6/UC9 (slet), US2 AC2, US1 AC3, US7 AC3, klassediagrammer og domænemodel i sort/hvid
+- [x]  Slet note/diagnose/dokument og "markér som læst" tjekker ejeren i SQL'en (`WHERE id = ? AND patient_id = ?`) – mapperen svarer true/false, så services ikke længere løber patientens liste igennem
+- [x]  Dokumenter: filen gemmes som UUID + endelse; `FileStorageException` (ny, i `exceptions`) i stedet for RuntimeException; fejler INSERT, slettes filen igen; ved sletning slettes rækken før filen; slet konto henter dokumenterne → sletter patienten → sletter filerne (`DocumentService.deleteFiles`)
+- [x]  "Åbn" dokument virker, selvom `probeContentType` giver null (typen tages fra endelsen); upload-fejl giver beskeden om fil (`?fejl=fil`)
+- [x]  Log ud er nu en knap (POST /logout) i stedet for et link (GET); ved forkert login står brugernavnet der stadig
+- [x]  Start runde: startdatoen må ikke ligge før forløbets start eller i fremtiden (INVALID_INPUT)
+- [x]  Dropdowns på aftaler, dokumenter, hormoner og start-runde bygges med `th:each` af enum-værdierne (`TreatmentType` har fået `getLabel()`) – ny type = enum-værdi + række i typetabellen (NFR5)
+- [x]  Medicinnavn falder tilbage til `name`, når `description` er tom; RouteConfig laver kun én NotificationService og springer /css, /js og /img over
+- [x]  Dokumentation opdateret: klassediagram 4a/4b/4c, UC2/UC4/UC6/UC7/UC8/UC12, UsecaseDescription (UC8, UC12), Krav NFR5, README

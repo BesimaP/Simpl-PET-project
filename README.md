@@ -61,7 +61,7 @@ src/main/java/
 ├── services/              # Forretningslogik: regler og mapper-kald, uden Javalin (én per emne) – svarer med ServiceResult
 ├── entities/              # Model: dataklasser, én per tabel
 ├── persistence/           # ConnectionPool + mappers: al SQL (én mapper per tabel)
-├── exceptions/            # DatabaseException, NoActiveJourneyException, NoActiveRoundException, UserNotFoundException
+├── exceptions/            # DatabaseException, FileStorageException, NoActiveJourneyException, NoActiveRoundException, UserNotFoundException
 └── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …) – matcher navnene i typetabellerne
 
 src/main/resources/

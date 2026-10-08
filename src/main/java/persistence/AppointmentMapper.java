@@ -28,7 +28,7 @@ public class AppointmentMapper {
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             statement.setInt(1, appointment.getFertilityJourneyId());
-            statement.setObject(2, appointment.getDateTime());          // LocalDateTime direkte
+            statement.setObject(2, appointment.getDateTime());                      // LocalDateTime direkte
             statement.setString(3, appointment.getAppointmentType().name());       // ordet, fx "SCANNING" (matcher option value i aftaler.html) -> databasen finder selv id'et
             statement.setString(4, appointment.getLocation());                     // fx "Vitanova"
             statement.executeUpdate();
