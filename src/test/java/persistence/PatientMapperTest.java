@@ -13,57 +13,39 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PatientMapperTest {
-
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "postgres";
-    private static final String URL =
-            "jdbc:postgresql://localhost:5432/Simpl?currentSchema=test";
+// Integrationstest af PatientMapper: mapperen taler med en RIGTIG PostgreSQL-database.
+// Testene bruger schemaet "test" i databasen Simpl (se TestDatabase), så de aldrig rører de rigtige data i "public".
+// Opskrift fra undervisningen: @BeforeAll laver tabellerne, @BeforeEach lægger frisk, kendt testdata i.
+class PatientMapperTest {
 
     private static ConnectionPool connectionPool;
     private static PatientMapper patientMapper;
 
+    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
-        connectionPool = ConnectionPool.getInstance(USER, PASSWORD, URL, "");
+        connectionPool = TestDatabase.pool();
         patientMapper = new PatientMapper(connectionPool);
-
-        try (Connection connection = connectionPool.getConnection();
-             Statement stmt = connection.createStatement()) {
-
-            // Ryd op efter tidligere kørsler (kun i test!)
-            stmt.execute("DROP TABLE IF EXISTS test.patient CASCADE");
-
-            // Kopiér tabelstrukturen fra public (uden data).
-            // LIKE ... INCLUDING ALL tager også primærnøgle, UNIQUE og GENERATED ... AS IDENTITY med,
-            // så vi ikke selv skal lave en sekvens til id
-            stmt.execute("CREATE TABLE test.patient (LIKE public.patient INCLUDING ALL)");
-
-        } catch (SQLException e) {
-            fail("Database setup failed: " + e.getMessage());
-        }
+        TestDatabase.createTables();
     }
 
+    // Køres før HVER test: tøm tabellerne og indsæt de samme 2 patienter, så vi altid ved, hvad der ligger der
     @BeforeEach
     void setUp() {
+        TestDatabase.clearData();   // tom + id starter forfra på 1
+
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
 
-            // Tøm test-tabellen
-            stmt.execute("DELETE FROM test.patient");
-
-            // Nulstil id'er, så første patient altid får id 1
-            stmt.execute("ALTER TABLE test.patient ALTER COLUMN id RESTART WITH 1");
-
-            // Patienter
+            // Patienter (id 1 = Anna, id 2 = Bo). password_hash er bare tekst her – mapperen hasher ikke selv
             stmt.execute("""
-                INSERT INTO test.patient (username, password_hash, first_name, last_name, date_of_birth) VALUES
-                ('mette1990', 'hash1', 'Mette', 'Jensen', '1990-05-12'),
-                ('sara1988', 'hash2', 'Sara', 'Hansen', '1988-11-03')
-                """);
+            INSERT INTO test.patient (username, password_hash, first_name, last_name, date_of_birth) VALUES
+            ('anna', 'hash1', 'Anna', 'Jensen', '1990-05-01'),
+            ('bo', 'hash2', 'Bo', 'Hansen', '1988-11-20')
+            """);
 
         } catch (SQLException e) {
-            fail("Database setup failed: " + e.getMessage());
+            fail("Test data setup failed: " + e.getMessage());
         }
     }
 
@@ -74,66 +56,69 @@ public class PatientMapperTest {
 
     @Test
     void findByUsername() {
-        Patient patient = patientMapper.findByUsername("mette1990");
-
+        Patient patient = patientMapper.findByUsername("anna");
         assertNotNull(patient);
         assertEquals(1, patient.getId());
-        assertEquals("Mette", patient.getFirstName());
-        assertEquals(LocalDate.of(1990, 5, 12), patient.getDateOfBirth());
+        assertEquals("Anna", patient.getFirstName());
+        assertEquals("Jensen", patient.getLastName());
+        assertEquals(LocalDate.of(1990, 5, 1), patient.getDateOfBirth());
     }
 
     @Test
-    void findByUsernameNotFound() {
+    void findByUsernameUnknownReturnsNull() {
         assertNull(patientMapper.findByUsername("findesikke"));
     }
 
     @Test
     void findById() {
         Patient patient = patientMapper.findById(2);
-
         assertNotNull(patient);
-        assertEquals("sara1988", patient.getUsername());
+        assertEquals("bo", patient.getUsername());
+    }
+
+    @Test
+    void findByIdUnknownReturnsNull() {
+        assertNull(patientMapper.findById(99));
     }
 
     @Test
     void save() {
-        Patient newPatient = new Patient(0, "lise1995", "hash3", "Lise", "Nielsen", LocalDate.of(1995, 1, 20));
+        Patient patient = new Patient(0, "carl", "hash3", "Carl", "Nielsen", LocalDate.of(1995, 1, 15));
+        int id = patientMapper.save(patient);
 
-        int id = patientMapper.save(newPatient);
-
-        assertEquals(3, id);
-        assertEquals("Lise", patientMapper.findById(3).getFirstName());
+        assertEquals(3, id); // der ligger 2 i forvejen, så den nye får id 3
+        assertEquals("Carl", patientMapper.findById(3).getFirstName());
     }
 
     @Test
-    void saveDuplicateUsername() {
-        Patient duplicate = new Patient(0, "mette1990", "hash3", "Mette", "Andersen", LocalDate.of(1992, 2, 2));
-
-        // username er UNIQUE, så databasen afviser den, og mapperen kaster DatabaseException
-        assertThrows(DatabaseException.class, () -> patientMapper.save(duplicate));
+    void saveDuplicateUsernameThrowsDatabaseException() {
+        // "anna" findes allerede, og username er UNIQUE
+        Patient patient = new Patient(0, "anna", "hash3", "Anden", "Anna", LocalDate.of(2000, 1, 1));
+        assertThrows(DatabaseException.class, () -> patientMapper.save(patient));
     }
 
     @Test
     void updateProfile() {
-        patientMapper.updateProfile(1, "Mette", "Larsen", LocalDate.of(1990, 6, 1));
+        patientMapper.updateProfile(1, "Annette", "Larsen", LocalDate.of(1991, 6, 2));
 
         Patient patient = patientMapper.findById(1);
+        assertEquals("Annette", patient.getFirstName());
         assertEquals("Larsen", patient.getLastName());
-        assertEquals(LocalDate.of(1990, 6, 1), patient.getDateOfBirth());
+        assertEquals(LocalDate.of(1991, 6, 2), patient.getDateOfBirth());
+        assertEquals("anna", patient.getUsername()); // brugernavnet må ikke ændre sig
     }
 
     @Test
     void updatePassword() {
-        patientMapper.updatePassword(1, "nytHash");
-
-        assertEquals("nytHash", patientMapper.findById(1).getPasswordHash());
+        patientMapper.updatePassword(2, "nythash");
+        assertEquals("nythash", patientMapper.findById(2).getPasswordHash());
+        assertEquals("hash1", patientMapper.findById(1).getPasswordHash()); // de andre er urørte (WHERE virker)
     }
 
     @Test
     void delete() {
         patientMapper.delete(1);
-
         assertNull(patientMapper.findById(1));
-        assertNotNull(patientMapper.findById(2));
+        assertNotNull(patientMapper.findById(2)); // kun den ene er væk
     }
 }

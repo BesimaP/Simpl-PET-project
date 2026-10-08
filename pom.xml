@@ -65,7 +65,7 @@
     <build>
         <plugins>
             <!-- Surefire = det plugin, der kører JUnit-testene (mvn test). En nyere version er nødvendig for JUnit 5.
-                 Testene kører mod databasen Simpl_test i PostgreSQL – se src/test/java/services/TestData.java -->
+                 Testene kører mod schemaet test i databasen Simpl – se src/test/java/persistence/TestDatabase.java og services/TestData.java -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

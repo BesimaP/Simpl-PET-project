@@ -1,0 +1,146 @@
+package services;
+
+import enums.ServiceResult;
+import entities.HormoneCurve;
+import enums.HormoneType;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+// Unit tests af HormoneService (hormonlog, US9)
+class HormoneServiceTest {
+
+    @BeforeAll
+    static void setup() {
+        TestData.freshDatabase();
+    }
+
+    @Test
+    void saveLogWithBlankFieldReturnsInvalidInput() {
+        int patientId = TestData.newPatientWithRound();
+        assertEquals(ServiceResult.INVALID_INPUT, new HormoneService(TestData.pool()).saveLog(patientId, "FSH", "", "IU/L", "2026-09-12"));
+    }
+
+    @Test
+    void saveLogWithoutJourneyReturnsNoActiveJourney() {
+        int patientId = TestData.newPatient();
+        assertEquals(ServiceResult.NO_ACTIVE_JOURNEY, new HormoneService(TestData.pool()).saveLog(patientId, "FSH", "7.5", "IU/L", "2026-09-12"));
+    }
+
+    @Test
+    void saveLogWithoutRoundReturnsNoActiveRound() {
+        int patientId = TestData.newPatientWithJourney();
+        assertEquals(ServiceResult.NO_ACTIVE_ROUND, new HormoneService(TestData.pool()).saveLog(patientId, "FSH", "7.5", "IU/L", "2026-09-12"));
+    }
+
+    @Test
+    void saveLogWithTextAsValueReturnsInvalidInput() {
+        int patientId = TestData.newPatientWithRound();
+        // "abc" kan ikke blive til et tal
+        assertEquals(ServiceResult.INVALID_INPUT, new HormoneService(TestData.pool()).saveLog(patientId, "FSH", "abc", "IU/L", "2026-09-12"));
+    }
+
+    @Test
+    void saveLogWithUnknownHormoneReturnsInvalidInput() {
+        int patientId = TestData.newPatientWithRound();
+        assertEquals(ServiceResult.INVALID_INPUT, new HormoneService(TestData.pool()).saveLog(patientId, "KAFFE", "7.5", "IU/L", "2026-09-12"));
+    }
+
+    @Test
+    void saveLogReturnsOk() {
+        int patientId = TestData.newPatientWithRound();
+        assertEquals(ServiceResult.OK, new HormoneService(TestData.pool()).saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12"));
+    }
+
+    @Test
+    void getLogsWithoutRoundReturnsEmptyList() {
+        int patientId = TestData.newPatientWithJourney();
+        assertTrue(new HormoneService(TestData.pool()).getLogs(patientId).isEmpty());
+    }
+
+    @Test
+    void savedLogKeepsValueAndType() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService(TestData.pool()).saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12");
+        assertEquals(1, new HormoneService(TestData.pool()).getLogs(patientId).size());
+        assertEquals(450.0, new HormoneService(TestData.pool()).getLogs(patientId).get(0).getValue());
+        assertEquals(HormoneType.E2_OESTRADIOL, new HormoneService(TestData.pool()).getLogs(patientId).get(0).getHormoneType());
+    }
+
+    @Test
+    void hormoneTypeLabelIsDanish() {
+        // labels bruges i Thymeleaf: ${h.hormoneType.label}
+        assertEquals("Østradiol", HormoneType.E2_OESTRADIOL.getLabel());
+        assertEquals("Progesteron", HormoneType.PROGESTERONE.getLabel());
+    }
+
+    @Test
+    void getCurveWithoutLogsIsEmptyNotNull() {
+        int patientId = TestData.newPatientWithRound();
+        HormoneCurve curve = new HormoneService(TestData.pool()).getCurve(patientId, null);
+        assertNotNull(curve);
+        assertTrue(curve.getPoints().isEmpty());
+    }
+
+    @Test
+    void getCurveUsesNewestHormoneWhenNoneChosen() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService(TestData.pool()).saveLog(patientId, "LH", "5", "IU/L", "2026-09-11");
+        new HormoneService(TestData.pool()).saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12");
+        assertEquals(HormoneType.E2_OESTRADIOL, new HormoneService(TestData.pool()).getCurve(patientId, null).getType());
+    }
+
+    @Test
+    void getCurveHasOldestFirstAndMaxAtTop() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService(TestData.pool()).saveLog(patientId, "E2_OESTRADIOL", "200", "pmol/L", "2026-09-11");
+        new HormoneService(TestData.pool()).saveLog(patientId, "E2_OESTRADIOL", "800", "pmol/L", "2026-09-13");
+        new HormoneService(TestData.pool()).saveLog(patientId, "LH", "5", "IU/L", "2026-09-12");   // andet hormon – skal ikke med
+        HormoneCurve curve = new HormoneService(TestData.pool()).getCurve(patientId, HormoneType.E2_OESTRADIOL);
+        assertEquals(2, curve.getPoints().size());
+        assertEquals(800.0, curve.getMax());
+        assertEquals(200.0, curve.getPoints().get(0).getValue());   // ældste først
+        assertEquals("13/9", curve.getPoints().get(1).getDateLabel());
+        // største værdi ligger øverst (y = PADDING = 20), og x vokser mod højre
+        assertEquals(20.0, curve.getPoints().get(1).getY());
+        assertTrue(curve.getPoints().get(0).getX() < curve.getPoints().get(1).getX());
+        assertEquals("20.0,95.0 300.0,20.0", curve.getPolyline());
+        // gennemsnit af 200 og 800 = 500 -> 500/800 = 62,5 % op: y = 120 - 62,5 = 57,5 -> afrundet 58
+        assertEquals(500.0, curve.getAverage());
+        assertEquals(58.0, curve.getAverageY());   // 200 af 800 = 25 % op ad de 100 px: y = 120 - 25 = 95
+    }
+
+    @Test
+    void deleteLogRemovesOwnLog() {
+        int patientId = TestData.newPatientWithRound();
+        new HormoneService(TestData.pool()).saveLog(patientId, "LH", "5", "IU/L", "2026-09-12");
+        int id = new HormoneService(TestData.pool()).getLogs(patientId).get(0).getId();
+        assertEquals(ServiceResult.OK, new HormoneService(TestData.pool()).deleteLog(patientId, id));
+        assertTrue(new HormoneService(TestData.pool()).getLogs(patientId).isEmpty());
+    }
+
+    @Test
+    void deleteLogOfAnotherPatientReturnsNotFound() {
+        int anna = TestData.newPatientWithRound();
+        int maria = TestData.newPatientWithRound();
+        new HormoneService(TestData.pool()).saveLog(anna, "LH", "5", "IU/L", "2026-09-12");
+        int id = new HormoneService(TestData.pool()).getLogs(anna).get(0).getId();
+        assertEquals(ServiceResult.NOT_FOUND, new HormoneService(TestData.pool()).deleteLog(maria, id));
+        assertEquals(1, new HormoneService(TestData.pool()).getLogs(anna).size());
+    }
+
+    @Test
+    void curveSkipsMeasurementsInAnotherUnit() {
+        int patientId = TestData.newPatientWithRound();
+        HormoneService service = new HormoneService(TestData.pool());
+        service.saveLog(patientId, "E2_OESTRADIOL", "300", "pg/mL", "2026-09-11");   // ældste – fx fra et udenlandsk laboratorie
+        service.saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12");
+        service.saveLog(patientId, "E2_OESTRADIOL", "900", "pmol/L", "2026-09-13");  // nyeste bestemmer enheden
+        var curve = service.getCurve(patientId, enums.HormoneType.E2_OESTRADIOL);
+        assertEquals("pmol/L", curve.getUnit());
+        assertEquals(2, curve.getPoints().size());   // kun de to i pmol/L
+        assertEquals(1, curve.getSkipped());         // den i pg/mL er sprunget over
+        assertEquals(3, service.getLogs(patientId).size());   // men alle tre står stadig i listen
+    }
+}
