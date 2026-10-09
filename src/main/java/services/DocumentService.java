@@ -76,7 +76,7 @@ public class DocumentService {
         // 6. gem rækken i databasen – kun stien til filen og dagens dato.
         //    Fejler databasen, slettes filen igen, så der ikke ligger en fil på disken uden en række
         try {
-            documentMapper.save(new Document(0, patientId, LocalDate.now(), title, documentType, target.toString()));
+            documentMapper.save(new Document(0, patientId, LocalDate.now(), title.trim(), documentType, target.toString()));
         } catch (DatabaseException e) {
             deleteFile(target.toString());
             throw e;   // videre til ExceptionConfig -> fejlsiden

@@ -64,7 +64,8 @@ public class AppointmentService {
         }
 
         // 4. byg kortet (id 0 = databasen giver et) og læg det i skuffen appointment
-        appointmentMapper.save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
+        //    trim = mellemrum før/efter stedet fjernes
+        appointmentMapper.save(new Appointment(0, journey.getId(), dateTime, appointmentType, location.trim()));
 
         // 5. de store trin (ægudtagning, oplægning, graviditetstest) skal også på tidslinjen (US2) – men kun hvis en runde er i gang
         //    og aftalen ikke ligger før runden startede (ellers hører den ikke til denne runde)
@@ -73,7 +74,7 @@ public class AppointmentService {
             try {
                 Round round = roundService.findActiveRound(patientId);
                 if (!dateTime.toLocalDate().isBefore(round.getStartDate())) {
-                    timelineService.addEvent(round.getId(), dateTime, eventType, location);
+                    timelineService.addEvent(round.getId(), dateTime, eventType, location.trim());
                 }
             } catch (NoActiveJourneyException | NoActiveRoundException e) {
                 // ingen runde i gang = aftalen gemmes, men kommer ikke på tidslinjen. Ikke en fejl

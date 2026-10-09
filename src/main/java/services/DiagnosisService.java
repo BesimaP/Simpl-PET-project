@@ -26,10 +26,10 @@ public class DiagnosisService {
         }
 
         // 2. beskrivelsen er valgfri – tom tekst gemmes som null, så databasen ikke fyldes med ""
-        String desc = isBlank(description) ? null : description;
+        String desc = isBlank(description) ? null : description.trim();
 
-        // 3. byg kortet og gem – diagnosen hænger direkte på patienten (patient_id)
-        Diagnosis diagnosis = new Diagnosis(0, patientId, name, desc);
+        // 3. byg kortet og gem – diagnosen hænger direkte på patienten (patient_id). trim = mellemrum før/efter fjernes
+        Diagnosis diagnosis = new Diagnosis(0, patientId, name.trim(), desc);
         diagnosisMapper.save(diagnosis);
 
         return ServiceResult.OK;

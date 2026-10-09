@@ -39,8 +39,8 @@ public class DiaryService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. byg kortet af felterne og læg det i skuffen diary_entry
-        DiaryEntry entry = new DiaryEntry(0, patientId, dateTime, title, note);
+        // 2. byg kortet af felterne og læg det i skuffen diary_entry. trim = mellemrum før/efter titlen fjernes
+        DiaryEntry entry = new DiaryEntry(0, patientId, dateTime, title.trim(), note);
         diaryEntryMapper.save(entry);
 
         return ServiceResult.OK;

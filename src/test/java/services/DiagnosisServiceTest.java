@@ -51,4 +51,12 @@ class DiagnosisServiceTest {
         new DiagnosisService(TestData.pool()).addDiagnosis(patientId, "PCOS", "Konstateret ved første konsultation");
         assertEquals("PCOS", new DiagnosisService(TestData.pool()).getDiagnoses(patientId).get(0).getName());
     }
+
+    @Test
+    void nameIsSavedWithoutSpacesBeforeAndAfter() {
+        int patientId = TestData.newPatient();
+        DiagnosisService service = new DiagnosisService(TestData.pool());
+        service.addDiagnosis(patientId, "  PCOS  ", "");
+        assertEquals("PCOS", service.getDiagnoses(patientId).get(0).getName());
+    }
 }
