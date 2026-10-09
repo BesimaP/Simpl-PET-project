@@ -51,7 +51,10 @@ class PatientMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        assertNotNull(connectionPool.getConnection());
+        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
+        try (Connection connection = connectionPool.getConnection()) {
+            assertNotNull(connection);
+        }
     }
 
     @Test

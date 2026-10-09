@@ -59,6 +59,14 @@ class FertilityJourneyMapperTest {
     }
 
     @Test
+    void testConnection() throws SQLException {
+        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
+        try (Connection connection = connectionPool.getConnection()) {
+            assertNotNull(connection);
+        }
+    }
+
+    @Test
     void findActiveByPatient() {
         FertilityJourney journey = journeyMapper.findActiveByPatient(1);
 
@@ -85,6 +93,11 @@ class FertilityJourneyMapperTest {
     }
 
     @Test
+    void findByPatientWithoutJourneysReturnsEmptyList() {
+        assertTrue(journeyMapper.findByPatient(2).isEmpty()); // Bo har ingen forløb -> tom liste, ikke null
+    }
+
+    @Test
     void save() {
         FertilityJourney journey = new FertilityJourney(0, 2, LocalDate.of(2026, 10, 1), JourneyStatus.ACTIVE);
         int id = journeyMapper.save(journey);
@@ -106,5 +119,18 @@ class FertilityJourneyMapperTest {
 
         assertNull(journeyMapper.findActiveByPatient(1)); // Anna har nu intet aktivt forløb
         assertEquals(JourneyStatus.COMPLETED, journeyMapper.findByPatient(1).get(0).getStatus());
+    }
+
+    @Test
+    void saveNewActiveJourneyAfterEndJourney() {
+        journeyMapper.endJourney(2);   // Annas aktive forløb afsluttes
+
+        // nu må hun gerne få et nyt aktivt forløb: indekset gælder kun ACTIVE-forløb
+        FertilityJourney journey = new FertilityJourney(0, 1, LocalDate.of(2026, 10, 1), JourneyStatus.ACTIVE);
+        int id = journeyMapper.save(journey);
+
+        assertEquals(3, id);
+        assertEquals(3, journeyMapper.findActiveByPatient(1).getId());
+        assertEquals(3, journeyMapper.findByPatient(1).size()); // de gamle forløb er der stadig
     }
 }
