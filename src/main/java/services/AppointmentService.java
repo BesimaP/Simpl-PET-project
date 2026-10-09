@@ -67,11 +67,14 @@ public class AppointmentService {
         appointmentMapper.save(new Appointment(0, journey.getId(), dateTime, appointmentType, location));
 
         // 5. de store trin (ægudtagning, oplægning, graviditetstest) skal også på tidslinjen (US2) – men kun hvis en runde er i gang
+        //    og aftalen ikke ligger før runden startede (ellers hører den ikke til denne runde)
         EventType eventType = toEventType(appointmentType);
         if (eventType != null) {
             try {
                 Round round = roundService.findActiveRound(patientId);
-                timelineService.addEvent(round.getId(), dateTime, eventType, location);
+                if (!dateTime.toLocalDate().isBefore(round.getStartDate())) {
+                    timelineService.addEvent(round.getId(), dateTime, eventType, location);
+                }
             } catch (NoActiveJourneyException | NoActiveRoundException e) {
                 // ingen runde i gang = aftalen gemmes, men kommer ikke på tidslinjen. Ikke en fejl
             }

@@ -115,6 +115,16 @@ public class RoundService {
         return round;
     }
 
+    // Startdatoen på den runde, der er i gang – eller null, hvis der ingen runde er.
+    // Bruges som min på datofelterne i hormoner.html og medicin.html (man kan ikke vælge en dag før runden)
+    public LocalDate getActiveRoundStart(int patientId) {
+        try {
+            return findActiveRound(patientId).getStartDate();
+        } catch (NoActiveJourneyException | NoActiveRoundException e) {
+            return null;
+        }
+    }
+
     // Runderne for ALLE patientens forløb: forløbets id -> dets runder (ældste først).
     // LinkedHashMap husker rækkefølgen, så forløbene står nyeste først, ligesom getJourneys
     public Map<Integer, List<Round>> getRoundsPerJourney(int patientId) {

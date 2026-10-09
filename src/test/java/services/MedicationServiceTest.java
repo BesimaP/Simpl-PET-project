@@ -137,4 +137,10 @@ class MedicationServiceTest {
         assertEquals(ServiceResult.NOT_FOUND, service.deleteDose(maria, id));
         assertEquals(1, service.getTodayLogs(anna).size());   // stadig der
     }
+
+    @Test
+    void logDoseBeforeRoundStartReturnsInvalidInput() {
+        int patientId = TestData.newPatientWithRound(); // runden startede 2026-09-10
+        assertEquals(ServiceResult.INVALID_INPUT, new MedicationService(TestData.pool()).logDose(patientId, "GONAL_F", "150", "2026-09-01", "08:00", false));
+    }
 }

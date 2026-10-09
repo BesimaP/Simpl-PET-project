@@ -137,7 +137,8 @@ public class DashboardController {
 
         // dashboard viser selv "start dit forløb"-delen, hvis der stadig intet forløb er
         switch (result) {
-            case OK, ALREADY_EXISTS -> ctx.redirect("/dashboard?gemt=forloeb");   // der findes nu et aktivt forløb
+            case OK -> ctx.redirect("/dashboard?gemt=forloeb");
+            case ALREADY_EXISTS -> ctx.redirect("/dashboard?fejl=forloeb-findes");   // intet nyt oprettet – dashboard viser det forløb, der findes
             case INVALID_INPUT -> ctx.redirect("/dashboard?fejl=dato");
             default -> ctx.redirect("/dashboard?fejl=ukendt");
         }

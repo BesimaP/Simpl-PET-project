@@ -70,7 +70,7 @@
 
         <!-- type date = kalender -->
         <label for="date">Dato</label>
-        <input type="date" id="date" name="date" required>
+        <input type="date" id="date" name="date" th:attr="min=${roundStart}" required>
 
         <!-- knappen sender formularen -->
         <button type="submit">Gem måling</button>

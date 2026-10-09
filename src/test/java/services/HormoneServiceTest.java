@@ -143,4 +143,10 @@ class HormoneServiceTest {
         assertEquals(1, curve.getSkipped());         // den i pg/mL er sprunget over
         assertEquals(3, service.getLogs(patientId).size());   // men alle tre står stadig i listen
     }
+
+    @Test
+    void saveLogBeforeRoundStartReturnsInvalidInput() {
+        int patientId = TestData.newPatientWithRound(); // runden startede 2026-09-10
+        assertEquals(ServiceResult.INVALID_INPUT, new HormoneService(TestData.pool()).saveLog(patientId, "FSH", "7.5", "IU/L", "2026-09-01"));
+    }
 }

@@ -119,7 +119,7 @@ class RoundServiceTest {
         DashboardService journeys = new DashboardService(TestData.pool());
         rounds.endRound(patientId, null);
         journeys.endJourney(patientId);                          // forløb 1 afsluttet
-        journeys.createJourney(patientId, "2026-11-01");         // forløb 2 (aktivt, ingen runder)
+        journeys.createJourney(patientId, java.time.LocalDate.now().toString());   // forløb 2 (aktivt, ingen runder)
         var perJourney = rounds.getRoundsPerJourney(patientId);
         assertEquals(2, perJourney.size());                      // begge forløb er med
         int total = 0;
@@ -137,5 +137,14 @@ class RoundServiceTest {
         int annasRound = rounds.getRounds(anna).get(0).getId();
         assertNotNull(rounds.findRound(anna, annasRound));
         assertNull(rounds.findRound(maria, annasRound));         // Maria må ikke se Annas runde
+    }
+
+    @Test
+    void getActiveRoundStartReturnsStartDateOrNull() {
+        int withRound = TestData.newPatientWithRound();       // runden startede 2026-09-10
+        int withoutRound = TestData.newPatientWithJourney();
+        RoundService service = new RoundService(TestData.pool());
+        assertEquals(java.time.LocalDate.of(2026, 9, 10), service.getActiveRoundStart(withRound));
+        assertNull(service.getActiveRoundStart(withoutRound));
     }
 }

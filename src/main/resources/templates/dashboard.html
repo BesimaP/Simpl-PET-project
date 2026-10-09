@@ -58,7 +58,7 @@
             <form action="/opret-forloeb" method="post">
                 <label for="startDate">Startdato</label>
                 <!-- th:value: dags dato er udfyldt på forhånd (US1 AC2) – kan ændres, hvis forløbet startede tidligere -->
-                <input type="date" id="startDate" name="startDate" th:value="${today}" required>
+                <input type="date" id="startDate" name="startDate" th:value="${today}" th:attr="max=${today}" required>
                 <button type="submit" class="btn btn--light">Start dit forløb</button>
             </form>
         </section>

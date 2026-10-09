@@ -88,6 +88,14 @@ class AppointmentServiceTest {
     }
 
     @Test
+    void eggRetrievalBeforeRoundStartDoesNotCreateTimelineEvent() {
+        int patientId = TestData.newPatientWithRound(); // runden startede 2026-09-10
+        new AppointmentService(TestData.pool()).addAppointment(patientId, "EGG_RETRIEVAL", "Vitanova", "2026-09-01", "08:00");
+        // aftalen ligger før runden -> den gemmes, men kommer ikke på rundens tidslinje
+        assertEquals(1, new TimelineService(TestData.pool()).getEvents(patientId).size());
+    }
+
+    @Test
     void scanningAppointmentDoesNotCreateTimelineEvent() {
         int patientId = TestData.newPatientWithRound();
         new AppointmentService(TestData.pool()).addAppointment(patientId, "SCANNING", "Vitanova", "2026-10-05", "08:00");
@@ -111,7 +119,7 @@ class AppointmentServiceTest {
         appointments.addAppointment(patientId, "CONSULTATION", "Vitanova", "2026-09-05", "09:00");
         int oldJourneyId = journeys.getJourneys(patientId).get(0).getId();
         journeys.endJourney(patientId);
-        journeys.createJourney(patientId, "2026-11-01");
+        journeys.createJourney(patientId, java.time.LocalDate.now().toString());
         assertTrue(appointments.getPast(patientId).isEmpty());                    // det nye forløb har ingen aftaler
         assertEquals(1, appointments.getPast(patientId, oldJourneyId).size());   // men det gamle har stadig sin
     }

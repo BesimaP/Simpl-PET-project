@@ -36,7 +36,10 @@ public class DashboardService {
         } catch (DateTimeParseException e) {
             return ServiceResult.INVALID_INPUT;
         }
-
+        // et forløb kan ikke starte i fremtiden – ellers kan der ikke startes en runde før den dato
+        if (start.isAfter(LocalDate.now())) {
+            return ServiceResult.INVALID_INPUT;
+        }
 
         // 2. regel: har patienten allerede et aktivt forløb, må der ikke oprettes et nyt
         if (journeyMapper.findActiveByPatient(patientId) != null) {

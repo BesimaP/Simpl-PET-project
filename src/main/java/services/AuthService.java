@@ -79,9 +79,14 @@ public class AuthService {
             if (isBlank(journeyStart)) {
                 return ServiceResult.INVALID_INPUT;
             }
+            LocalDate start;
             try {
-                LocalDate.parse(journeyStart);
+                start = LocalDate.parse(journeyStart);
             } catch (DateTimeParseException e) {
+                return ServiceResult.INVALID_INPUT;
+            }
+            // forløbet kan ikke starte i fremtiden (samme regel som i DashboardService)
+            if (start.isAfter(LocalDate.now())) {
                 return ServiceResult.INVALID_INPUT;
             }
         }

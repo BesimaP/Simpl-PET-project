@@ -81,7 +81,7 @@
                 <div id="journey-fields">
                     <label for="journeyStart">Forløbet startede (kun hvis du svarede Ja)</label>
                     <!-- ikke required her: js/opretprofil.js sætter required, når "Ja" er valgt – og AuthService tjekker igen -->
-                    <input type="date" id="journeyStart" name="journeyStart">
+                    <input type="date" id="journeyStart" name="journeyStart" th:attr="max=${today}">
                 </div>
 
                 <!-- knappen sender formularen -->

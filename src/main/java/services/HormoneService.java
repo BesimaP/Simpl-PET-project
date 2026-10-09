@@ -70,6 +70,11 @@ public class HormoneService {
             return ServiceResult.INVALID_INPUT;
         }
 
+        // 3b2. regel: målingen kan ikke ligge før runden startede (ellers kommer den med på en forkert kurve)
+        if (dateTime.toLocalDate().isBefore(round.getStartDate())) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // 3c. regel: enheden skal være en af dropdownens værdier i hormoner.html
         if (!UNITS.contains(unit)) {
             return ServiceResult.INVALID_INPUT;

@@ -74,6 +74,11 @@ public class MedicationService {
             return ServiceResult.NO_ACTIVE_ROUND;
         }
 
+        // 5b. regel: dosen kan ikke ligge før runden startede (den hører så ikke til denne runde)
+        if (scheduled.toLocalDate().isBefore(round.getStartDate())) {
+            return ServiceResult.INVALID_INPUT;
+        }
+
         // 6. gem – taken = true betyder "allerede taget", false betyder "planlagt"
         medicationLogMapper.
                 save(new MedicationLog(0, round.getId(), medication.getId(), scheduled, doseValue, medication.getUnit(), taken));

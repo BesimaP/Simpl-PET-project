@@ -28,6 +28,13 @@ class DashboardServiceTest {
     }
 
     @Test
+    void createJourneyInTheFutureReturnsInvalidInput() {
+        int patientId = TestData.newPatient();
+        String tomorrow = java.time.LocalDate.now().plusDays(1).toString();
+        assertEquals(ServiceResult.INVALID_INPUT, new DashboardService(TestData.pool()).createJourney(patientId, tomorrow));
+    }
+
+    @Test
     void createJourneyReturnsOkAndJourneyIsActive() throws NoActiveJourneyException {
         int patientId = TestData.newPatient();
         DashboardService service = new DashboardService(TestData.pool());
@@ -57,7 +64,7 @@ class DashboardServiceTest {
         assertEquals(ServiceResult.OK, service.endJourney(patientId));
         assertThrows(NoActiveJourneyException.class, () -> service.findActiveJourney(patientId));
         // US1: en patient kan have flere forløb over tid
-        assertEquals(ServiceResult.OK, service.createJourney(patientId, "2026-11-01"));
+        assertEquals(ServiceResult.OK, service.createJourney(patientId, "2026-10-01"));
     }
 
     @Test

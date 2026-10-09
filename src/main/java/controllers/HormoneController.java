@@ -6,14 +6,17 @@ import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import persistence.ConnectionPool;
 import services.HormoneService;
+import services.RoundService;
 
 // Koordinatoren for hormoner.html (US9). Læser formularen, kalder HormoneService og sender brugeren videre.
 // Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
 public class HormoneController {
     private HormoneService hormoneService; // "den der bestemmer" for hormoner
+    private RoundService roundService;     // kun til rundens startdato (min på datofeltet)
 
     public HormoneController(ConnectionPool connectionPool) {
         this.hormoneService = new HormoneService(connectionPool);
+        this.roundService = new RoundService(connectionPool);
     }
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new HormoneController(connectionPool).setRoutes(config)
@@ -45,6 +48,7 @@ public class HormoneController {
         }
         ctx.attribute("curve", hormoneService.getCurve(patientId, chosen));   // requestscope -> ${curve}
         ctx.attribute("hormoneTypes", HormoneType.values());           // requestscope -> ${hormoneTypes} (knapperne)
+        ctx.attribute("roundStart", roundService.getActiveRoundStart(patientId)); // min på datofeltet (null = ingen runde)
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));

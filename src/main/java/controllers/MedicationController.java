@@ -5,15 +5,18 @@ import io.javalin.config.JavalinConfig;
 import io.javalin.http.Context;
 import persistence.ConnectionPool;
 import services.MedicationService;
+import services.RoundService;
 
 // Koordinatoren for medicin.html (US8). Læser formularen, kalder MedicationService og sender brugeren videre.
 // Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
 public class MedicationController {
 
     private MedicationService medicationService;
+    private RoundService roundService;     // kun til rundens startdato (min på datofeltet)
 
     public MedicationController(ConnectionPool connectionPool){
         this.medicationService = new MedicationService(connectionPool);
+        this.roundService = new RoundService(connectionPool);
     }
 
     // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new MedicationController(connectionPool).setRoutes(config)
@@ -39,6 +42,7 @@ public class MedicationController {
         ctx.attribute("past", medicationService.getPastLogs(patientId));     // requestscope -> ${past}
         ctx.attribute("names", medicationService.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
         ctx.attribute("medications", medicationService.getMedications());    // requestscope -> dropdownen (th:each)
+        ctx.attribute("roundStart", roundService.getActiveRoundStart(patientId)); // min på datofeltet (null = ingen runde)
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));

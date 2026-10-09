@@ -11,7 +11,7 @@
 -- Normaliseret til 3NF: ingen gentagne grupper, ingen afledte kolonner, stamdata (medication og typerne) i egne tabeller.
 -- =========================================================
 
--- Slet eksisterende tabeller, så scriptet kan køres igen
+-- Slet eksisterende tabeller, så scriptet kan køres igen (CASCADE sletter også views, der bygger på dem, fx round_overview)
 DROP TABLE IF EXISTS medication_log, medication, event, hormone_log, document,
     round, appointment, diary_entry, notification, fertility_journey,
     diagnosis, patient,
@@ -157,6 +157,21 @@ CREATE TABLE round (
 CREATE UNIQUE INDEX one_active_round_per_journey
     ON round(fertility_journey_id)
     WHERE end_date IS NULL;   -- NULL = runden er i gang
+
+-- VIEW round_overview — en gemt SELECT med et navn. Indeholder ingen data selv, men kører forespørgslen hver gang.
+-- Samler runden med navnene på behandlingstype og resultat, så RoundMapper ikke skal gentage joinet.
+-- JOIN treatment_type: altid udfyldt (NOT NULL). LEFT JOIN result: NULL, mens runden er i gang – ellers forsvandt de runder.
+CREATE VIEW round_overview AS
+SELECT round.id,
+       round.fertility_journey_id,
+       round.round_number,
+       treatment_type.name AS treatment_type,
+       round.start_date,
+       round.end_date,
+       result.name AS result
+FROM round
+JOIN treatment_type ON round.treatment_type_id = treatment_type.id
+LEFT JOIN result ON round.result_id = result.id;
 
 -- Appointment — ligger på forløbet (første konsultation sker før nogen runde).
 CREATE TABLE appointment (
