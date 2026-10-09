@@ -73,6 +73,14 @@ class HormoneLogMapperTest {
     }
 
     @Test
+    void testConnection() throws SQLException {
+        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
+        try (Connection connection = connectionPool.getConnection()) {
+            assertNotNull(connection);
+        }
+    }
+
+    @Test
     void findByRound() {
         List<HormoneLog> logs = hormoneLogMapper.findByRound(2);
         assertEquals(2, logs.size());                                    // kun runde 2's målinger, ikke den i runde 1
@@ -122,4 +130,13 @@ class HormoneLogMapperTest {
         assertThrows(DatabaseException.class, () -> hormoneLogMapper.save(log));
     }
 
+    @Test
+    void saveZeroValueIsAllowed() {
+        // grænseværdi: CHECK (value >= 0) – 0 er lige på grænsen og skal accepteres (modsat dosis, hvor 0 afvises)
+        HormoneLog log = new HormoneLog(0, 2, LocalDateTime.of(2026, 4, 7, 8, 0), HormoneType.LH, 0, "IU/L");
+        int id = hormoneLogMapper.save(log);
+
+        assertEquals(4, id);
+        assertEquals(0, hormoneLogMapper.findByRound(2).get(0).getValue());
+    }
 }
