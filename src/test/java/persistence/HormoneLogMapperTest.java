@@ -121,4 +121,5 @@ class HormoneLogMapperTest {
         HormoneLog log = new HormoneLog(0, 99, LocalDateTime.of(2026, 4, 7, 8, 0), HormoneType.FSH, 8.0, "IU/L");
         assertThrows(DatabaseException.class, () -> hormoneLogMapper.save(log));
     }
+
 }
