@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af AppointmentService (aftaler, US3)
+// Integrationstests af AppointmentService (aftaler, US3)
 class AppointmentServiceTest {
 
     @BeforeAll

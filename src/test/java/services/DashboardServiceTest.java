@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af DashboardService (forløb, US1)
+// Integrationstests af DashboardService (forløb, US1)
 class DashboardServiceTest {
 
     @BeforeAll

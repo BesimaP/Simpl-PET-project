@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af DiaryService (dagbog, US4)
+// Integrationstests af DiaryService (dagbog, US4)
 class DiaryServiceTest {
 
     @BeforeAll

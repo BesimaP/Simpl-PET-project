@@ -35,7 +35,7 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 - Backend: alle sider virker mod PostgreSQL via controller → service → mapper, med én fælles `ConnectionPool` (HikariCP), der gives videre gennem konstruktørerne
 - Kodeord gemmes som BCrypt-hash (mindst 8 tegn)
 - Fejl, ingen controller fanger, vises på en fælles fejlside (`fejl.html`)
-- Tests: JUnit-tests af alle services i `src/test/java`, sat op mod testdatabasen `Simpl_test` i PostgreSQL (kører fra uge 41)
+- Tests: JUnit-integrationstests af alle mappere (`src/test/java/persistence`) og services (`src/test/java/services`) mod schemaet `test` i databasen `Simpl`, plus unit tests af entiteterne (`src/test/java/entities`)
 
 ## Tech stack
 
@@ -69,7 +69,9 @@ src/main/resources/
 └── templates/             # View: alle sider som Thymeleaf-skabeloner (login, dashboard, medicin …)
     └── fragments/         # genbrugte stykker: menu.html (menuen) og besked.html (Gemt ✓ / fejl)
 
-src/test/java/services/    # JUnit-tests af services – kører mod databasen Simpl_test (se TestData.java)
+src/test/java/persistence/ # integrationstests af mapperne – kører mod schemaet test i databasen Simpl (se TestDatabase.java)
+src/test/java/services/    # integrationstests af services – kører mod schemaet test i databasen Simpl (se TestData.java)
+src/test/java/entities/    # unit tests af entiteterne (ingen database)
 ```
 
 Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST) → Javalin finder ruten → `HormoneController` læser felterne og kalder `HormoneService.saveLog()` → service tjekker regler (tomme felter, findes forløb/runde), bygger en `HormoneLog` og kalder `HormoneLogMapper.save()` → service svarer med `ServiceResult` (OK eller en fejl) → controlleren vælger side ud fra svaret.
@@ -122,8 +124,8 @@ Uploadede dokumenter gemmes i mappen `uploads/` i projektmappen. Den oprettes ve
 
 ### Kør testene
 
-1. Opret en tom database i pgAdmin, der hedder `Simpl_test` (højreklik på Databases → Create → Database…).
-2. Kør testene i `src/test/java` fra IntelliJ (højreklik → Run 'All Tests') eller med `mvn test`. Testene laver selv tabellerne ved at køre `schema_postgres.sql` – de rører aldrig databasen `Simpl`.
+1. Databasen `Simpl` skal findes i PostgreSQL (se ovenfor). Testene bruger schemaet `test` i den og opretter det selv, hvis det mangler.
+2. Kør testene i `src/test/java` fra IntelliJ (højreklik → Run 'All Tests') eller med `mvn test`. Testene laver selv tabellerne i `test` ved at køre `schema_postgres.sql` og tømmer dem undervejs – de rører aldrig de rigtige data i schemaet `public`.
 
 ## Dokumentation
 

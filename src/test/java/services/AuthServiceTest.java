@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af AuthService – uden Javalin og uden browser. Kører mod en tom database i hukommelsen, ikke simpl.db
+// Integrationstests af AuthService – uden Javalin og uden browser. Kører mod schemaet "test" i databasen Simpl (se TestData), ikke de rigtige data i "public"
 class AuthServiceTest {
 
     // kører ÉN gang, før alle tests i klassen

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af HormoneService (hormonlog, US9)
+// Integrationstests af HormoneService (hormonlog, US9)
 class HormoneServiceTest {
 
     @BeforeAll

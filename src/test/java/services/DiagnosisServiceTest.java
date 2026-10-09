@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af DiagnosisService (diagnoser, US7)
+// Integrationstests af DiagnosisService (diagnoser, US7)
 class DiagnosisServiceTest {
 
     @BeforeAll

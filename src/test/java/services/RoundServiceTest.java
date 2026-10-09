@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af RoundService (start/afslut runde, US10a/10b)
+// Integrationstests af RoundService (start/afslut runde, US10a/10b)
 class RoundServiceTest {
 
     @BeforeAll

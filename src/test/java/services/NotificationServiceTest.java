@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af NotificationService (notifikationer, US12)
+// Integrationstests af NotificationService (notifikationer, US12)
 class NotificationServiceTest {
 
     @BeforeAll

@@ -9,7 +9,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af ProfileService (min profil, US6b)
+// Integrationstests af ProfileService (min profil, US6b)
 class ProfileServiceTest {
 
     @BeforeAll

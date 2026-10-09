@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af TimelineService (tidslinje, US2)
+// Integrationstests af TimelineService (tidslinje, US2)
 class TimelineServiceTest {
 
     @BeforeAll

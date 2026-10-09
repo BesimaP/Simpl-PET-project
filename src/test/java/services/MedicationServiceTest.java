@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af MedicationService (medicin, US8). Medicin-stamdata (GONAL_F …) kommer fra INSERT i schema.sql
+// Integrationstests af MedicationService (medicin, US8). Medicin-stamdata (GONAL_F …) kommer fra INSERT i schema_postgres.sql
 class MedicationServiceTest {
 
     @BeforeAll
@@ -87,7 +87,7 @@ class MedicationServiceTest {
 
     @Test
     void getMedicationNamesContainsSeededMedications() {
-        // schema.sql lægger de faste præparater ind – opslaget id -> navn bruges af medicin.html
+        // schema_postgres.sql lægger de faste præparater ind – opslaget id -> navn bruges af medicin.html
         assertTrue(new MedicationService(TestData.pool()).getMedicationNames().containsValue("Gonal-F"));
         assertTrue(new MedicationService(TestData.pool()).getMedicationNames().size() >= 4);
     }

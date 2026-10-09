@@ -16,7 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Unit tests af DocumentService (dokumenter, US11)
+// Integrationstests af DocumentService (dokumenter, US11)
 class DocumentServiceTest {
 
     private static List<Integer> patients = new ArrayList<>(); // alle patienter, testene har uploadet for – til oprydning
