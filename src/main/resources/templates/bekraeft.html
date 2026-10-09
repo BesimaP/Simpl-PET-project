@@ -42,8 +42,8 @@
                     <label for="result">Resultat</label>
                     <select id="result" name="result">
                         <option value="">Ikke afgjort endnu</option>
-                        <option value="POSITIVE">Positiv</option>
-                        <option value="NEGATIVE">Negativ</option>
+                        <!-- én option per værdi i enum Result (${results} fra controlleren) -->
+                        <option th:each="r : ${results}" th:value="${r.name()}" th:text="${r.label}">Positiv</option>
                     </select>
                 </div>
 

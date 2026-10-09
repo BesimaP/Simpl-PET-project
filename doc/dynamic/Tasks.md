@@ -1,12 +1,12 @@
 # Tasks per user story
 
-*Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 245 JUnit-tests (mappers, services og entiteter) mod schemaet `test` i databasen `Simpl`, alle grønne.*
+*Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 250 JUnit-tests (mappers, services og entiteter) mod schemaet `test` i databasen `Simpl`, alle grønne.*
 
 *Opdateret 7. okt 2026 (aften): rettelser efter kodegennemgang – afslut forløb, ret fødselsdato, slet dokument, aftalepåmindelser, kommende medicin, sider der virker uden JavaScript, fælles fejlside og menu som Thymeleaf-fragment. Testene er flyttet til `src/test/java` og sat op mod PostgreSQL (se "Tekniske krav").*
 
 *Opdateret 7. okt 2026: hele appen kører nu på PostgreSQL. DAO-klasserne er omdøbt til mappers i `persistence`, og alle får en fælles `ConnectionPool` gennem konstruktøren (Main → RouteConfig → Controller → Service → Mapper). Henvisninger til `…DAO` nedenfor svarer nu til `…Mapper`.*
 
-*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services – i dag 245 tests, se noten øverst).*
+*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services – i dag 250 tests, se noten øverst).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
 
@@ -98,7 +98,7 @@
 ## User story 10b – Rundehistorik
 - [x]  Lav layout til rundehistorik, der viser alle Rounds tilknyttet forløbet *(Thymeleaf: GET /rundehistorik)*
 - [x]  Vis detaljer for en valgt runde *(Thymeleaf: GET /rundehistorik viser nummer, type, datoer, status og resultat per runde)*
-- [x]  Test historikvisning *(RoundServiceTest.getRounds…)*
+- [x]  Test historikvisning *(RoundServiceTest: getRoundsPerJourney, roundsFromEndedJourneyAreStillInHistory)*
 
 ## User story 11 – Dokumenter
 - [x]  Lav layout til dokumentlisten (titel, type) *(HTML/CSS lavet)*
@@ -123,7 +123,7 @@
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
 - [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep – SQLite er udskiftet, se næste punkt)*
-- [x]  Integrationstests mod en testdatabase i PostgreSQL *(8.–9. okt: testene kører mod schemaet `test` i databasen `Simpl`. `TestDatabase` (mappers) og `TestData` (services) kører `schema_postgres.sql` ind i `test`, så de rigtige data i `public` aldrig røres. 245 tests: 98 mapper-, 134 service- og 13 entitetstests – alle grønne)*
+- [x]  Integrationstests mod en testdatabase i PostgreSQL *(8.–9. okt: testene kører mod schemaet `test` i databasen `Simpl`. `TestDatabase` (mappers) og `TestData` (services) kører `schema_postgres.sql` ind i `test`, så de rigtige data i `public` aldrig røres. 250 tests: 98 mapper-, 139 service- og 13 entitetstests – alle grønne)*
 - [x]  Skift fra SQLite til PostgreSQL: `ConnectionPool` (HikariCP), mappers i `persistence`, try-with-resources, typetabeller med `SELECT id … WHERE name = ?` og `JOIN` *(7. okt)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
@@ -142,11 +142,18 @@
 - [x]  Sider virker uden JavaScript: afslut runde, afslut forløb og slet konto har en bekræft-side (`templates/bekraeft.html`); klokken linker til /notifikationer; opret profil er en Thymeleaf-template med fejlbesked fra serveren
 - [x]  Menuen er ét Thymeleaf-fragment (`fragments/menu.html`) med det aktive menupunkt som parameter – `menu('medicin')`
 - [x]  Dashboard: dag-ringen får sin procent (`progressPercent`); hormonværdier og doser vises uden ".0"
-- [x]  Klassediagrammer opdateret: 4a (entities/enums), 4b (mappers) og nyt 4c (controllers + services) + 4c-oversigt – i sort/hvid
+- [x]  Klassediagrammer opdateret: 4a (entities/enums), 4b (mappers) og nyt 4c (controllers + services, delt i 4c-1, 4c-2 og 4c-3) + 4c-oversigt – i sort/hvid
 - [x]  Use cases og sekvensdiagrammer opdateret: UC2 (fødselsdato, slet filer), UC3 (forudfyldt dato), UC7 (aftalepåmindelser), UC10 (kommende doser), UC12 (slet dokument), UC14 (bekræft-side) og ny UC15 EndJourney – alle i sort/hvid
 - [x]  3NF: `unit` flyttet fra `medication_log` til `medication` – enheden er fast pr. præparat (svar fra fertilitetsklinik). 17 præparater i stamdata (IU / mg / µg); dropdownen på /medicin hentes fra databasen med `th:each`. `hormone_log.unit` bliver, fordi enheden afhænger af laboratoriet
 - [x]  Hormonkurven tegner kun målinger i samme enhed som den nyeste – målinger i en anden enhed (fx fra et udenlandsk laboratorie) står i listen, og siden skriver "X målinger i en anden enhed … er ikke med på kurven" (HormoneService.getCurve, HormoneServiceTest)
 - [x]  Afsluttede forløb kan ses: rundehistorik viser alle forløb med deres runder (FertilityJourneyMapper.findByPatient, RoundService.getRoundsPerJourney); aftaler kan vises for et valgt forløb (`/aftaler?forloeb=id`) og tidslinjen for en valgt runde (`/tidslinje?runde=id`) – kun patientens egne (RoundServiceTest, AppointmentServiceTest, TimelineServiceTest)
+
+## Rettelser efter gennemgang (9. okt 2026)
+- [x]  Findes der allerede et aktivt forløb, viser dashboardet "Du har allerede et aktivt forløb" i stedet for "Dit forløb er oprettet ✓" (DashboardController, besked.html)
+- [x]  Et forløb kan ikke starte i fremtiden – hverken på dashboardet eller ved opret profil (DashboardService, AuthService, `max` på datofeltet, DashboardServiceTest)
+- [x]  Ægudtagning, oplægning og graviditetstest kommer kun på rundens tidslinje, hvis aftalen ligger på eller efter rundens startdato (AppointmentService, AppointmentServiceTest)
+- [x]  Hormonmålinger og doser kan ikke ligge før rundens startdato (HormoneService, MedicationService, `min` på datofeltet via RoundService.getActiveRoundStart, tests)
+- [x]  View `round_overview` i `schema_postgres.sql` (runde + behandlingstype + resultat) – RoundMapper læser fra viewet, så joinet kun står ét sted
 
 ## Rettelser efter gennemgang (7. okt 2026, aften)
 - [x]  Én aktiv runde pr. forløb håndhæves i databasen (`one_active_round_per_journey`) og CHECK-regler på `round` (rundenummer > 0, slutdato ≥ startdato), `hormone_log.value` (≥ 0) og `medication_log.dose` (> 0)
@@ -156,7 +163,7 @@
 - [x]  Mobil: avataren vises også på mobil, så Min profil, Diagnoser, Dokumenter og Log ud kan nås
 - [x]  Aftaler uden forløb viser "Intet forløb" i stedet for en formular, der altid fejler
 - [x]  JavaScript: `setTodayIn` bruger den lokale dato (ikke UTC) og tåler et manglende felt; medicin.js sætter dagens dato; dokumenter.js tåler "Annullér" i filvælgeren
-- [x]  Død kode fjernet: ubrugte mapper-metoder (`AppointmentMapper/EventMapper/NotificationMapper.delete`, `MedicationMapper.save`) og entitet-metoder, der aldrig blev kaldt
+- [x]  Død kode fjernet: ubrugte mapper-metoder (`AppointmentMapper/EventMapper/NotificationMapper.delete`, `MedicationMapper.save`) og entitet-metoder, der aldrig blev kaldt. `RoundService.getRounds`, `TimelineService.getEvents(int)` og `AppointmentService.getPast(int)` er bevaret, fordi testene bruger dem til at tjekke den aktive runde/det aktive forløb
 - [x]  Dokumentation: README (opsætning af database), UC4/UC6/UC9 (slet), US2 AC2, US1 AC3, US7 AC3, klassediagrammer og domænemodel i sort/hvid
 - [x]  Slet note/diagnose/dokument og "markér som læst" tjekker ejeren i SQL'en (`WHERE id = ? AND patient_id = ?`) – mapperen svarer true/false, så services ikke længere løber patientens liste igennem
 - [x]  Dokumenter: filen gemmes som UUID + endelse; `FileStorageException` (ny, i `exceptions`) i stedet for RuntimeException; fejler INSERT, slettes filen igen; ved sletning slettes rækken før filen; slet konto henter dokumenterne → sletter patienten → sletter filerne (`DocumentService.deleteFiles`)

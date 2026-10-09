@@ -31,9 +31,10 @@ public class EventMapper {
             statement.setString(4, event.getDescription());             // må være null
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                event.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    event.setId(keys.getInt(1));
+                }
             }
             return event.getId();
 
@@ -53,12 +54,12 @@ public class EventMapper {
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, roundId);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                events.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    events.add(mapRow(rs));
+                }
+                return events;
             }
-            return events;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find events for round " + roundId, e);

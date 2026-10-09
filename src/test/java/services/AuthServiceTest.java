@@ -66,6 +66,14 @@ class AuthServiceTest {
     }
 
     @Test
+    void createProfileWithTooLongPasswordReturnsInvalidInput() {
+        // BCrypt bruger kun de første 72 bytes – længere kodeord afvises i stedet for at blive skåret af i det skjulte
+        String longPassword = "a".repeat(73);
+        ServiceResult result = new AuthService(TestData.pool()).createProfile("Test", "Bruger", "1996-01-01", "auth8", longPassword, "no", "");
+        assertEquals(ServiceResult.INVALID_INPUT, result);
+    }
+
+    @Test
     void createProfileWithJourneyCreatesActiveJourney() throws Exception {
         AuthService authService = new AuthService(TestData.pool());
         assertEquals(ServiceResult.OK, authService.createProfile("Test", "Bruger", "1996-01-01", "auth7", "hemmelig1", "yes", "2026-09-01"));

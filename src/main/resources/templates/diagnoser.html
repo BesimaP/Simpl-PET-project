@@ -68,7 +68,7 @@
           <!-- slet: en lille formular med diagnosens id i et skjult felt -> POST /diagnoser/slet (common.js spørger først) -->
           <form action="/diagnoser/slet" method="post" class="delete-form">
             <input type="hidden" name="id" th:value="${d.id}">
-            <button type="submit" class="muted-link">Slet</button>
+            <button type="submit" class="muted-link" th:attr="aria-label='Slet ' + ${d.name}">Slet</button>
           </form>
         </li>
       </ul>

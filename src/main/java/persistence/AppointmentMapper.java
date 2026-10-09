@@ -33,9 +33,10 @@ public class AppointmentMapper {
             statement.setString(4, appointment.getLocation());                     // fx "Vitanova"
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                appointment.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    appointment.setId(keys.getInt(1));
+                }
             }
             return appointment.getId();
 
@@ -56,12 +57,12 @@ public class AppointmentMapper {
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, fertilityJourneyId);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                appointments.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    appointments.add(mapRow(rs));
+                }
+                return appointments;
             }
-            return appointments;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find appointments for journey " + fertilityJourneyId, e);

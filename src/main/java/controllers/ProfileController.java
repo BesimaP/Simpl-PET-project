@@ -118,7 +118,11 @@ public class ProfileController {
         }
 
         // bed service slette kontoen = patienten (alt under den ryger med via CASCADE)
-        profileService.deleteAccount(patientId);
+        ServiceResult result = profileService.deleteAccount(patientId);
+        if (result != ServiceResult.OK) {
+            ctx.redirect("/min-profil?fejl=ukendt");   // kontoen er ikke slettet – bliv logget ind
+            return;
+        }
 
         // kontoen findes ikke mere: glem sessionen, og tilbage til login
         ctx.req().getSession().invalidate();

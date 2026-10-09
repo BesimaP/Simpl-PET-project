@@ -41,9 +41,10 @@ public class HormoneLogMapper {
             statement.executeUpdate();
 
             // hent det id, databasen lige har givet rækken, og læg det på objektet
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                log.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    log.setId(keys.getInt(1));
+                }
             }
             return log.getId();
 
@@ -67,26 +68,33 @@ public class HormoneLogMapper {
             statement.setInt(1, roundId);
 
             // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
-            ResultSet rs = statement.executeQuery();
-
-            // rs.next() hopper til næste række – false når der ikke er flere
-            while (rs.next()) {
-                logs.add(mapRow(rs)); // lav rækken om til et objekt og læg det i listen
+            try (ResultSet rs = statement.executeQuery()) {
+                // rs.next() hopper til næste række – false når der ikke er flere
+                while (rs.next()) {
+                    logs.add(mapRow(rs)); // lav rækken om til et objekt og læg det i listen
+                }
+                return logs;
             }
-            return logs;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find hormone logs for round " + roundId, e);
         }
     }
 
-    // sletter én måling ud fra dens id
-    public void delete(int id) {
-        String sql = "DELETE FROM hormone_log WHERE id = ?";
+    // runderne, der tilhører patienten: round -> fertility_journey -> patient_id.
+    // Sættes bag "WHERE id = ? AND", så databasen selv sikrer, at man kun rammer sine egne rækker
+    private static final String OWN_ROUNDS = "round_id IN (SELECT round.id FROM round "
+            + "JOIN fertility_journey ON fertility_journey.id = round.fertility_journey_id "
+            + "WHERE fertility_journey.patient_id = ?)";
+
+    // sletter én måling – men kun hvis den ligger i en af patientens egne runder. true = slettet
+    public boolean delete(int id, int patientId) {
+        String sql = "DELETE FROM hormone_log WHERE id = ? AND " + OWN_ROUNDS;
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
-            statement.executeUpdate();
+            statement.setInt(2, patientId);
+            return statement.executeUpdate() > 0;   // antal rækker, der blev ramt: 0 = ikke fundet / ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not delete hormone log " + id, e);
         }

@@ -98,6 +98,7 @@ public class DashboardController {
         List<HormoneLog> logs = hormoneService.getLogs(patientId);
         ctx.attribute("latestHormone", logs.isEmpty() ? null : logs.get(0));             // nyeste først
         ctx.attribute("noteCount", diaryService.getEntries(patientId).size());
+        ctx.attribute("results", Result.values());   // dropdownen i "Afslut runde"-dialogen bygges af enum'en
 
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
@@ -203,6 +204,7 @@ public class DashboardController {
         ctx.attribute("button", "Afslut runde");
         ctx.attribute("cancel", "/dashboard");
         ctx.attribute("showResult", true);   // kun her: vælg resultat (Positiv/Negativ/Ikke afgjort)
+        ctx.attribute("results", Result.values());   // dropdownen bygges af enum'en
         ctx.render("bekraeft");
     }
 

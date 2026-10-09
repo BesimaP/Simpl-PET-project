@@ -24,12 +24,12 @@ public class MedicationMapper {
         List<Medication> medications = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                medications.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    medications.add(mapRow(rs));
+                }
+                return medications;
             }
-            return medications;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find medications", e);
@@ -42,13 +42,13 @@ public class MedicationMapper {
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name);
-            ResultSet rs = statement.executeQuery();
-
-            // if i stedet for while: der kan højst være én række, fordi name er UNIQUE
-            if (rs.next()) {
-                return mapRow(rs);
+            try (ResultSet rs = statement.executeQuery()) {
+                // if i stedet for while: der kan højst være én række, fordi name er UNIQUE
+                if (rs.next()) {
+                    return mapRow(rs);
+                }
+                return null;
             }
-            return null;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find medication " + name, e);

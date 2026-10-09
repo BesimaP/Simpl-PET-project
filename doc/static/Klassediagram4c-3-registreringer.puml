@@ -1,0 +1,139 @@
+@startuml
+!pragma layout smetana
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+hide circle
+
+title Klassediagram 4c-3 — registreringer: hormoner, medicin, dagbog og påmindelser\n(controller -> service; mappers står i 4b)
+
+' Små private hjælpere (isBlank, getAll, alreadyExists …) er udeladt.
+' Services svarer controlleren med enum ServiceResult (OK, INVALID_INPUT, NOT_FOUND …) – se 4a.
+' Bokse uden indhold er services fra et andet område (<<4c-2>> = diagrammet med metoderne).
+hide <<4c-2>> members
+
+package "controllers" {
+  class HormoneController {
+    - hormoneService : HormoneService
+    - roundService : RoundService
+    + HormoneController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    + showLogs(ctx : Context) : void
+    + saveLog(ctx : Context) : void
+    - deleteLog(ctx : Context) : void
+  }
+
+  class MedicationController {
+    - medicationService : MedicationService
+    - roundService : RoundService
+    + MedicationController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showLogs(ctx : Context) : void
+    - markTaken(ctx : Context) : void
+    - deleteDose(ctx : Context) : void
+    - markNotTaken(ctx : Context) : void
+    - logDose(ctx : Context) : void
+  }
+
+  class DiaryController {
+    - diaryService : DiaryService
+    + DiaryController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    + showEntries(ctx : Context) : void
+    + saveEntry(ctx : Context) : void
+    - deleteEntry(ctx : Context) : void
+  }
+
+  class NotificationController {
+    - notificationService : NotificationService
+    + NotificationController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showNotifications(ctx : Context) : void
+    - markAllRead(ctx : Context) : void
+    - markRead(ctx : Context) : void
+  }
+}
+
+package "services" {
+  class HormoneService {
+    + {static} UNITS : List<String>
+    - {static} MAX_VALUE : double = 100 000 000
+    + {static} CHART_WIDTH : int = 320
+    + {static} CHART_HEIGHT : int = 140
+    - {static} PADDING : int = 20
+    - hormoneLogMapper : HormoneLogMapper
+    - roundService : RoundService
+    + HormoneService(connectionPool : ConnectionPool)
+    + saveLog(patientId : int, hormone : String, value : String,\n    unit : String, date : String) : ServiceResult
+    + getLogs(patientId : int) : List<HormoneLog>
+    + deleteLog(patientId : int, logId : int) : ServiceResult
+    + getCurve(patientId : int, type : HormoneType) : HormoneCurve
+  }
+
+  class MedicationService {
+    - medicationMapper : MedicationMapper
+    - medicationLogMapper : MedicationLogMapper
+    - roundService : RoundService
+    + MedicationService(connectionPool : ConnectionPool)
+    + logDose(patientId : int, medicationName : String, dose : String,\n    date : String, time : String, taken : boolean) : ServiceResult
+    + getTodayLogs(patientId : int) : List<MedicationLog>
+    + getPastLogs(patientId : int) : List<MedicationLog>
+    + getUpcomingLogs(patientId : int) : List<MedicationLog>
+    + getMedications() : List<Medication>
+    + getMedicationNames() : Map<Integer, String>
+    + markTaken(patientId : int, logId : int) : ServiceResult
+    + markNotTaken(patientId : int, logId : int) : ServiceResult
+    + deleteDose(patientId : int, logId : int) : ServiceResult
+  }
+
+  class DiaryService {
+    - diaryEntryMapper : DiaryEntryMapper
+    + DiaryService(connectionPool : ConnectionPool)
+    + saveEntry(patientId : int, date : String,\n    title : String, note : String) : ServiceResult
+    + getEntries(patientId : int) : List<DiaryEntry>
+    + deleteEntry(patientId : int, entryId : int) : ServiceResult
+  }
+
+  class NotificationService {
+    - notificationMapper : NotificationMapper
+    - medicationService : MedicationService
+    - appointmentService : AppointmentService
+    + NotificationService(connectionPool : ConnectionPool)
+    + getNotifications(patientId : int) : List<Notification>
+    + countUnread(patientId : int) : int
+    + createMedicationReminders(patientId : int) : int
+    + createAppointmentReminders(patientId : int) : int
+    + markAllRead(patientId : int) : ServiceResult
+    + markRead(patientId : int, notificationId : int) : ServiceResult
+  }
+
+  class RoundService <<4c-2>>
+  class AppointmentService <<4c-2>>
+}
+
+' ---------- controller -> service ----------
+HormoneController --> HormoneService
+HormoneController --> RoundService : kun rundens\nstartdato
+MedicationController --> MedicationService
+MedicationController --> RoundService : kun rundens\nstartdato
+DiaryController --> DiaryService
+NotificationController --> NotificationService
+
+' ---------- service -> service ----------
+HormoneService --> RoundService
+MedicationService --> RoundService
+NotificationService --> MedicationService : dagens doser
+NotificationService --> AppointmentService : næste aftaler
+
+@enduml

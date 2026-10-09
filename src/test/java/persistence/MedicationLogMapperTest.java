@@ -104,23 +104,32 @@ class MedicationLogMapperTest {
 
     @Test
     void markTaken() {
-        medicationLogMapper.markTaken(2);
+        assertTrue(medicationLogMapper.markTaken(2, 1));
         assertTrue(medicationLogMapper.findByRound(1).get(1).isTaken());
     }
 
     @Test
     void markNotTaken() {
-        medicationLogMapper.markNotTaken(1);
+        assertTrue(medicationLogMapper.markNotTaken(1, 1));
         assertFalse(medicationLogMapper.findByRound(1).get(0).isTaken());
     }
 
     @Test
     void delete() {
-        medicationLogMapper.delete(1);
+        assertTrue(medicationLogMapper.delete(1, 1));
 
         List<MedicationLog> logs = medicationLogMapper.findByRound(1);
         assertEquals(1, logs.size());
         assertEquals(2, logs.get(0).getId());                        // kun den anden dosis er tilbage
+    }
+
+    @Test
+    void otherPatientCannotChangeDose() {
+        // patient 2 ejer ikke runden -> 0 rækker ramt, dosen er urørt
+        assertFalse(medicationLogMapper.markTaken(2, 2));
+        assertFalse(medicationLogMapper.delete(1, 2));
+        assertEquals(2, medicationLogMapper.findByRound(1).size());
+        assertFalse(medicationLogMapper.findByRound(1).get(1).isTaken());
     }
 
     // ---------- regler, der ligger i DATABASEN ----------

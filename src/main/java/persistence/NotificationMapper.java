@@ -36,9 +36,10 @@ public class NotificationMapper {
             statement.setBoolean(6, notification.isRead());                         // boolean -> TRUE/FALSE i PostgreSQL
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                notification.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    notification.setId(keys.getInt(1));
+                }
             }
             return notification.getId();
 
@@ -59,12 +60,12 @@ public class NotificationMapper {
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, patientId);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                notifications.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    notifications.add(mapRow(rs));
+                }
+                return notifications;
             }
-            return notifications;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find notifications for patient " + patientId, e);
@@ -78,9 +79,10 @@ public class NotificationMapper {
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, patientId);
-            ResultSet rs = statement.executeQuery();
-            rs.next();               // COUNT giver altid præcis én række
-            return rs.getInt(1);     // første (og eneste) kolonne = tallet
+            try (ResultSet rs = statement.executeQuery()) {
+                rs.next();               // COUNT giver altid præcis én række
+                return rs.getInt(1);     // første (og eneste) kolonne = tallet
+            }
         } catch (SQLException e) {
             throw new DatabaseException("Could not count unread notifications for patient " + patientId, e);
         }

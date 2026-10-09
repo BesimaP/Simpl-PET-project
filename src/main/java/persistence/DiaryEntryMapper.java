@@ -32,9 +32,10 @@ public class DiaryEntryMapper {
             statement.setString(4, entry.getContent());
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                entry.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    entry.setId(keys.getInt(1));
+                }
             }
             return entry.getId();
 
@@ -51,13 +52,13 @@ public class DiaryEntryMapper {
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, patientId);
-            ResultSet rs = statement.executeQuery();
-
-            // én runde i løkken = én række i databasen
-            while (rs.next()) {
-                entries.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                // én runde i løkken = én række i databasen
+                while (rs.next()) {
+                    entries.add(mapRow(rs));
+                }
+                return entries;
             }
-            return entries;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find diary entries for patient " + patientId, e);

@@ -30,9 +30,10 @@ public class FertilityJourneyMapper {
             statement.setString(3, journey.getStatus().name()); // ordet, fx "ACTIVE" -> databasen finder selv id'et
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                journey.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    journey.setId(keys.getInt(1));
+                }
             }
             return journey.getId();
 
@@ -58,18 +59,18 @@ public class FertilityJourneyMapper {
             statement.setInt(1, patientId);
 
             // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
-            ResultSet rs = statement.executeQuery();
-
-            // if, ikke while: der kan højst være ét aktivt forløb per patient (regel fra US1)
-            if (rs.next()) {
-                // rækken -> et FertilityJourney-objekt (kortet). Status er altid ACTIVE her (det spurgte vi efter)
-                return new FertilityJourney(
-                        rs.getInt("id"),
-                        rs.getInt("patient_id"),
-                        rs.getObject("start_date", LocalDate.class),   // PostgreSQL giver selv en LocalDate
-                        JourneyStatus.ACTIVE);
+            try (ResultSet rs = statement.executeQuery()) {
+                // if, ikke while: der kan højst være ét aktivt forløb per patient (regel fra US1)
+                if (rs.next()) {
+                    // rækken -> et FertilityJourney-objekt (kortet). Status er altid ACTIVE her (det spurgte vi efter)
+                    return new FertilityJourney(
+                            rs.getInt("id"),
+                            rs.getInt("patient_id"),
+                            rs.getObject("start_date", LocalDate.class),   // PostgreSQL giver selv en LocalDate
+                            JourneyStatus.ACTIVE);
+                }
+                return null; // ingen række = patienten har intet aktivt forløb
             }
-            return null; // ingen række = patienten har intet aktivt forløb
 
         } catch (SQLException e) {
             // e sendes med, så den rigtige databasefejl kan ses bagved vores egen besked
@@ -89,17 +90,17 @@ public class FertilityJourneyMapper {
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, patientId);
-            ResultSet rs = statement.executeQuery();
-
-            // while: en patient kan have mange forløb over tid
-            while (rs.next()) {
-                journeys.add(new FertilityJourney(
-                        rs.getInt("id"),
-                        rs.getInt("patient_id"),
-                        rs.getObject("start_date", LocalDate.class),
-                        JourneyStatus.valueOf(rs.getString("journey_status"))));   // "COMPLETED" -> enum
+            try (ResultSet rs = statement.executeQuery()) {
+                // while: en patient kan have mange forløb over tid
+                while (rs.next()) {
+                    journeys.add(new FertilityJourney(
+                            rs.getInt("id"),
+                            rs.getInt("patient_id"),
+                            rs.getObject("start_date", LocalDate.class),
+                            JourneyStatus.valueOf(rs.getString("journey_status"))));   // "COMPLETED" -> enum
+                }
+                return journeys;
             }
-            return journeys;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find journeys for patient " + patientId, e);

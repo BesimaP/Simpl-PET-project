@@ -49,7 +49,7 @@
             <!-- slet: en lille formular med dokumentets id i et skjult felt -> POST /dokumenter/slet (sletter også filen) -->
             <form action="/dokumenter/slet" method="post" class="delete-form">
               <input type="hidden" name="id" th:value="${d.id}">
-              <button type="submit" class="muted-link">Slet</button>
+              <button type="submit" class="muted-link" th:attr="aria-label='Slet ' + ${d.title}">Slet</button>
             </form>
           </li>
         </ul>

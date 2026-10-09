@@ -1,6 +1,21 @@
 @startuml
 !pragma layout smetana
 
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+hide circle
+
 package "model" {
   abstract class Journey {
     - LocalDate startDate

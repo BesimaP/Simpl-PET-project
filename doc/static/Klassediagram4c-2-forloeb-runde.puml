@@ -1,0 +1,149 @@
+@startuml
+!pragma layout smetana
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+hide circle
+
+title Klassediagram 4c-2 — forløb, runde, tidslinje og aftaler\n(controller -> service; mappers står i 4b)
+
+' Små private hjælpere (isBlank, isTooLong, getAll, toEventType …) er udeladt.
+' Services svarer controlleren med enum ServiceResult (OK, INVALID_INPUT, NOT_FOUND …) – se 4a.
+' findActiveJourney kaster NoActiveJourneyException; findActiveRound kaster også NoActiveRoundException (se 4a).
+' Bokse uden indhold er services fra et andet område (<<4c-1>> / <<4c-3>> = diagrammet med metoderne).
+hide <<4c-1>> members
+hide <<4c-3>> members
+
+package "controllers" {
+  class DashboardController {
+    - profileService : ProfileService
+    - notificationService : NotificationService
+    - dashboardService : DashboardService
+    - diaryService : DiaryService
+    - roundService : RoundService
+    - medicationService : MedicationService
+    - hormoneService : HormoneService
+    - appointmentService : AppointmentService
+    + DashboardController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showDashboard(ctx : Context) : void
+    - showRounds(ctx : Context) : void
+    - createJourney(ctx : Context) : void
+    - showStartRound(ctx : Context) : void
+    - startRound(ctx : Context) : void
+    - showEndRound(ctx : Context) : void
+    - showEndJourney(ctx : Context) : void
+    - endJourney(ctx : Context) : void
+    - endRound(ctx : Context) : void
+  }
+
+  class TimelineController {
+    - profileService : ProfileService
+    - timelineService : TimelineService
+    - roundService : RoundService
+    + TimelineController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showTimeline(ctx : Context) : void
+  }
+
+  class AppointmentController {
+    - appointmentService : AppointmentService
+    - dashboardService : DashboardService
+    + AppointmentController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showAppointments(ctx : Context) : void
+    - addAppointment(ctx : Context) : void
+  }
+}
+
+package "services" {
+  class DashboardService {
+    - journeyMapper : FertilityJourneyMapper
+    - roundMapper : RoundMapper
+    + DashboardService(connectionPool : ConnectionPool)
+    + createJourney(patientId : int, startDate : String) : ServiceResult
+    + endJourney(patientId : int) : ServiceResult
+    + getJourneys(patientId : int) : List<FertilityJourney>
+    + findJourney(patientId : int, journeyId : int) : FertilityJourney
+    + findActiveJourney(patientId : int) : FertilityJourney
+  }
+
+  class RoundService {
+    - roundMapper : RoundMapper
+    - dashboardService : DashboardService
+    - timelineService : TimelineService
+    + RoundService(connectionPool : ConnectionPool)
+    + startRound(patientId : int, type : String, startDate : String) : ServiceResult
+    + endRound(patientId : int, result : Result) : ServiceResult
+    + findActiveRound(patientId : int) : Round
+    + getActiveRoundStart(patientId : int) : LocalDate
+    + getRoundsPerJourney(patientId : int) : Map<Integer, List<Round>>
+    + findRound(patientId : int, roundId : int) : Round
+    + getRounds(patientId : int) : List<Round>
+  }
+
+  class TimelineService {
+    - eventMapper : EventMapper
+    - connectionPool : ConnectionPool
+    + TimelineService(connectionPool : ConnectionPool)
+    + addEvent(roundId : int, dateTime : LocalDateTime,\n    type : EventType, description : String) : void
+    + getEvents(patientId : int, roundId : int) : List<Event>
+    + getEvents(patientId : int) : List<Event>
+  }
+
+  class AppointmentService {
+    - appointmentMapper : AppointmentMapper
+    - dashboardService : DashboardService
+    - roundService : RoundService
+    - timelineService : TimelineService
+    + AppointmentService(connectionPool : ConnectionPool)
+    + addAppointment(patientId : int, type : String, location : String,\n    date : String, time : String) : ServiceResult
+    + getUpcoming(patientId : int) : List<Appointment>
+    + getPast(patientId : int) : List<Appointment>
+    + getUpcoming(patientId : int, journeyId : int) : List<Appointment>
+    + getPast(patientId : int, journeyId : int) : List<Appointment>
+  }
+
+  class ProfileService <<4c-1>>
+  class NotificationService <<4c-3>>
+  class MedicationService <<4c-3>>
+  class HormoneService <<4c-3>>
+  class DiaryService <<4c-3>>
+}
+
+' ---------- controller -> service ----------
+DashboardController --> DashboardService
+DashboardController --> RoundService
+DashboardController --> AppointmentService
+DashboardController --> ProfileService
+DashboardController --> NotificationService
+DashboardController --> MedicationService
+DashboardController --> HormoneService
+DashboardController --> DiaryService
+TimelineController --> TimelineService
+TimelineController --> RoundService
+TimelineController --> ProfileService
+AppointmentController --> AppointmentService
+AppointmentController --> DashboardService
+
+' ---------- service -> service ----------
+RoundService --> DashboardService
+RoundService --> TimelineService
+' stiplet: TimelineService laver først en RoundService, når den skal bruges (ellers ville de lave hinanden i ring)
+TimelineService ..> RoundService : new RoundService(...)\nved behov
+AppointmentService --> DashboardService
+AppointmentService --> RoundService
+AppointmentService --> TimelineService
+
+@enduml

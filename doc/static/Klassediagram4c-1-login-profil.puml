@@ -1,0 +1,126 @@
+@startuml
+!pragma layout smetana
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+hide circle
+
+title Klassediagram 4c-1 — login, profil, diagnoser og dokumenter\n(controller -> service; mappers står i 4b)
+
+' Små private hjælpere (isBlank, isTooLong, deleteFile …) er udeladt.
+' Services svarer controlleren med enum ServiceResult (OK, INVALID_INPUT, NOT_FOUND …) – se 4a.
+' AuthService.login() kaster UserNotFoundException (se 4a).
+' Bokse uden indhold <<andet diagram>> er services fra et andet område (metoderne står der).
+hide <<4c-2>> members
+
+package "controllers" {
+  class LoginController {
+    - authService : AuthService
+    + LoginController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showCreateProfile(ctx : Context) : void
+    - logout(ctx : Context) : void
+    - login(ctx : Context) : void
+    - createProfile(ctx : Context) : void
+  }
+
+  class ProfileController {
+    - profileService : ProfileService
+    + ProfileController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showProfile(ctx : Context) : void
+    - showDeleteAccount(ctx : Context) : void
+    - updateProfile(ctx : Context) : void
+    - changePassword(ctx : Context) : void
+    - deleteAccount(ctx : Context) : void
+  }
+
+  class DiagnosisController {
+    - diagnosisService : DiagnosisService
+    + DiagnosisController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - showDiagnoses(ctx : Context) : void
+    - addDiagnosis(ctx : Context) : void
+    - deleteDiagnosis(ctx : Context) : void
+  }
+
+  class DocumentController {
+    - documentService : DocumentService
+    + DocumentController(connectionPool : ConnectionPool)
+    + setRoutes(config : JavalinConfig) : void
+    - deleteDocument(ctx : Context) : void
+    - openDocument(ctx : Context) : void
+    - showDocuments(ctx : Context) : void
+    - uploadDocument(ctx : Context) : void
+  }
+}
+
+package "services" {
+  class AuthService {
+    + {static} MIN_PASSWORD_LENGTH : int = 8
+    + {static} MAX_PASSWORD_LENGTH : int = 72
+    - patientMapper : PatientMapper
+    - dashboardService : DashboardService
+    + AuthService(connectionPool : ConnectionPool)
+    + login(username : String, password : String) : Patient
+    + createProfile(firstName : String, lastName : String,\n    dateOfBirth : String, username : String, password : String,\n    hasJourney : String, journeyStart : String) : ServiceResult
+    + {static} passwordMatches(password : String, hash : String) : boolean
+  }
+
+  class ProfileService {
+    - patientMapper : PatientMapper
+    - documentService : DocumentService
+    + ProfileService(connectionPool : ConnectionPool)
+    + getPatient(patientId : int) : Patient
+    + updateProfile(patientId : int, firstName : String,\n    lastName : String, dateOfBirth : String) : ServiceResult
+    + changePassword(patientId : int, currentPassword : String,\n    newPassword : String, repeat : String) : ServiceResult
+    + deleteAccount(patientId : int) : ServiceResult
+  }
+
+  class DiagnosisService {
+    - diagnosisMapper : DiagnosisMapper
+    + DiagnosisService(connectionPool : ConnectionPool)
+    + addDiagnosis(patientId : int, name : String, description : String) : ServiceResult
+    + getDiagnoses(patientId : int) : List<Diagnosis>
+    + deleteDiagnosis(patientId : int, diagnosisId : int) : ServiceResult
+  }
+
+  class DocumentService {
+    - {static} UPLOAD_DIR : String = "uploads"
+    - {static} MAX_SIZE_BYTES : long = 10 MB
+    - documentMapper : DocumentMapper
+    + DocumentService(connectionPool : ConnectionPool)
+    + uploadDocument(patientId : int, title : String, type : String,\n    originalFileName : String, fileContent : InputStream, fileSize : long) : ServiceResult
+    + getDocuments(patientId : int) : List<Document>
+    + findDocument(patientId : int, documentId : int) : Document
+    + deleteDocument(patientId : int, documentId : int) : ServiceResult
+    + deleteAllFiles(patientId : int) : void
+    + deleteFiles(documents : List<Document>) : void
+  }
+
+  class DashboardService <<4c-2>>
+}
+
+' ---------- controller -> service ----------
+LoginController --> AuthService
+ProfileController --> ProfileService
+DiagnosisController --> DiagnosisService
+DocumentController --> DocumentService
+
+' ---------- service -> service ----------
+AuthService --> DashboardService : opretter forløb\nved opret profil
+ProfileService --> DocumentService : sletter filer\nved slet konto
+
+
+@enduml

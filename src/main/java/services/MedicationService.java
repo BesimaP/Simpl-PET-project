@@ -137,40 +137,19 @@ public class MedicationService {
     }
 
     // Markér én dosis som taget (US8 AC3) – kun patientens egen dosis. Svar: OK · NOT_FOUND
+    // Ejerskabet tjekkes i SQL'en (AND round_id IN patientens runder): 0 rækker ramt = ikke hendes / findes ikke
     public ServiceResult markTaken(int patientId, int logId) {
-        if (!isOwnDose(patientId, logId)) {
-            return ServiceResult.NOT_FOUND;
-        }
-        medicationLogMapper.markTaken(logId);
-        return ServiceResult.OK;
+        return medicationLogMapper.markTaken(logId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
     // Fortryd "markér som taget" (sæt dosen tilbage til planlagt) – kun patientens egen dosis. Svar: OK · NOT_FOUND
     public ServiceResult markNotTaken(int patientId, int logId) {
-        if (!isOwnDose(patientId, logId)) {
-            return ServiceResult.NOT_FOUND;
-        }
-        medicationLogMapper.markNotTaken(logId);
-        return ServiceResult.OK;
+        return medicationLogMapper.markNotTaken(logId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
     // Sletter én dosis (fx en fejlindtastning) – kun patientens egen dosis. Svar: OK · NOT_FOUND
     public ServiceResult deleteDose(int patientId, int logId) {
-        if (!isOwnDose(patientId, logId)) {
-            return ServiceResult.NOT_FOUND;
-        }
-        medicationLogMapper.delete(logId);
-        return ServiceResult.OK;
-    }
-
-    // hjælper: findes dosen i patientens egen runde? Så man ikke kan ændre andres ved at rette id'et i det skjulte felt
-    private boolean isOwnDose(int patientId, int logId) {
-        for (MedicationLog log : getAll(patientId)) {
-            if (log.getId() == logId) {
-                return true;
-            }
-        }
-        return false;
+        return medicationLogMapper.delete(logId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
     // hjælper: alle doser i den runde, der er i gang. Intet forløb eller ingen runde er ikke en fejl her -> tom liste

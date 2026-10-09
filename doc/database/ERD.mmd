@@ -140,3 +140,7 @@ erDiagram
     int id PK "GENERATED ALWAYS AS IDENTITY"
     varchar name UK
   }
+
+  %% VIEW round_overview (schema_postgres.sql) – ikke en tabel, men en gemt SELECT:
+  %% round JOIN treatment_type LEFT JOIN result -> id, fertility_journey_id, round_number,
+  %% treatment_type (navn), start_date, end_date, result (navn). Bruges af RoundMapper.

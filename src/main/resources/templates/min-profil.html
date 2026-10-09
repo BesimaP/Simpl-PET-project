@@ -69,7 +69,7 @@
 
         <!-- minlength 8 = koden skal være mindst 8 tegn -->
         <label for="new-password">Ny adgangskode</label>
-        <input type="password" id="new-password" name="new-password" autocomplete="new-password" placeholder="Mindst 8 tegn" required minlength="8">
+        <input type="password" id="new-password" name="new-password" autocomplete="new-password" placeholder="Mindst 8 tegn" required minlength="8" maxlength="72">
 
         <label for="repeat-password">Gentag ny adgangskode</label>
         <input type="password" id="repeat-password" name="repeat-password" autocomplete="new-password" required>
@@ -101,10 +101,10 @@
 
 <!-- Bekræftelse før sletning (Nielsen #5: forebyg fejl). Skjult indtil js/min-profil.js åbner den.
      Uden JavaScript bruges bekræft-siden /slet-konto (templates/bekraeft.html) i stedet -->
-<dialog id="confirm-delete" class="confirm">
+<dialog id="confirm-delete" class="confirm" aria-labelledby="confirm-delete-title">
   <!-- method dialog = knapperne lukker bare vinduet, sender ikke noget. Slet-knappen sender til serveren via formaction -->
   <form method="dialog">
-    <h2>Slet din konto?</h2>
+    <h2 id="confirm-delete-title">Slet din konto?</h2>
     <p class="muted">Alle dine data – forløb, runder, noter og dokumenter – slettes og kan ikke gendannes.</p>
     <div class="confirm__actions">
       <button type="submit" value="cancel" class="btn btn--outline">Annullér</button>

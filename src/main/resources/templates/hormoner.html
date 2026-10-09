@@ -58,14 +58,9 @@
         <label for="unit">Enhed</label>
         <select id="unit" name="unit" required>
           <option value="">Vælg…</option>
-          <!-- danske laboratorier -->
-          <option value="pmol/L">pmol/L</option>
-          <option value="IU/L">IU/L</option>
-          <option value="nmol/L">nmol/L</option>
-          <!-- udenlandske laboratorier bruger andre enheder (svar fra fertilitetsklinik) – kurven tegner kun målinger i samme enhed -->
-          <option value="pg/mL">pg/mL</option>
-          <option value="ng/mL">ng/mL</option>
-          <option value="mIU/mL">mIU/mL</option>
+          <!-- listen kommer fra HormoneService.UNITS (${units}), så formularen og tjekket i service altid er ens.
+               Først danske laboratoriers enheder, så udenlandske (svar fra fertilitetsklinik) – kurven tegner kun målinger i samme enhed -->
+          <option th:each="u : ${units}" th:value="${u}" th:text="${u}">pmol/L</option>
         </select>
 
         <!-- type date = kalender -->
@@ -91,7 +86,7 @@
           <!-- slet: en lille formular med målingens id i et skjult felt -> POST /hormoner/slet -->
           <form action="/hormoner/slet" method="post" class="delete-form">
             <input type="hidden" name="id" th:value="${h.id}">
-            <button type="submit" class="muted-link">Slet</button>
+            <button type="submit" class="muted-link" th:attr="aria-label='Slet måling ' + ${h.hormoneType.label} + ' ' + ${#temporals.format(h.dateTime, 'd. MMM yyyy')}">Slet</button>
           </form>
         </li>
       </ul>

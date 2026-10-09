@@ -71,15 +71,19 @@ INSERT INTO notification_type (name) VALUES ('MEDICATION_REMINDER'), ('APPOINTME
 -- ---------- Patient ----------
 
 -- Patient — login og persondata i én tabel (UserAccount og Patient er samlet: de var 1-til-1 og oprettes altid sammen).
--- username UNIQUE = "brugernavn er taget" håndhæves af databasen.
+-- "brugernavn er taget" håndhæves af databasen med et unikt indeks på LOWER(username) lige under tabellen.
 CREATE TABLE patient (
     id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    username      VARCHAR(50)  NOT NULL UNIQUE,
+    username      VARCHAR(50)  NOT NULL,
     password_hash VARCHAR(255) NOT NULL,         -- gem et hash (BCrypt), aldrig klartekst
     first_name    VARCHAR(50)  NOT NULL,
     last_name     VARCHAR(50)  NOT NULL,
     date_of_birth DATE NOT NULL
 );
+
+-- Unikt på LOWER(username) i stedet for UNIQUE på kolonnen: så kan "Anna" og "anna" ikke begge oprettes.
+-- PatientMapper.findByUsername sammenligner også med LOWER, så login er ligeglad med store/små bogstaver
+CREATE UNIQUE INDEX patient_username_unique ON patient (LOWER(username));
 
 -- ---------- Tilknyttet patienten (alt om PERSONEN) ----------
 
@@ -201,6 +205,7 @@ CREATE TABLE hormone_log (
     hormone_type_id INT NOT NULL REFERENCES hormone_type(id),
     value        NUMERIC(10,2) NOT NULL CHECK (value >= 0),   -- en hormonværdi kan ikke være negativ
     unit         VARCHAR(10) NOT NULL
+        CHECK (unit IN ('pmol/L', 'IU/L', 'nmol/L', 'pg/mL', 'ng/mL', 'mIU/mL'))   -- samme liste som UNITS i HormoneService
 );
 
 -- ---------- Medicin ----------
@@ -247,3 +252,19 @@ CREATE TABLE medication_log (
     dose                NUMERIC(10,2) NOT NULL CHECK (dose > 0),   -- en dosis skal være større end 0
     taken               BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- ---------- Indekser på fremmednøgler ----------
+-- Et indeks er ligesom stikordsregistret bag i en bog: databasen kan slå direkte op i det
+-- i stedet for at læse hele tabellen igennem. PostgreSQL laver selv indeks på PRIMARY KEY og UNIQUE,
+-- men IKKE på fremmednøgler. Vores mappers søger næsten altid på fremmednøglen (WHERE patient_id = ?,
+-- WHERE round_id = ?), og ON DELETE CASCADE skal også finde rækkerne – derfor et indeks på hver af dem.
+-- round.fertility_journey_id mangler med vilje: UNIQUE (fertility_journey_id, round_number) giver allerede et indeks, der starter med den.
+CREATE INDEX fertility_journey_patient_id_idx ON fertility_journey (patient_id);   -- det partielle indeks dækker kun ACTIVE forløb
+CREATE INDEX diagnosis_patient_id_idx         ON diagnosis (patient_id);
+CREATE INDEX diary_entry_patient_id_idx       ON diary_entry (patient_id);
+CREATE INDEX document_patient_id_idx          ON document (patient_id);
+CREATE INDEX notification_patient_id_idx      ON notification (patient_id);
+CREATE INDEX appointment_journey_id_idx       ON appointment (fertility_journey_id);
+CREATE INDEX event_round_id_idx               ON event (round_id);
+CREATE INDEX hormone_log_round_id_idx         ON hormone_log (round_id);
+CREATE INDEX medication_log_round_id_idx      ON medication_log (round_id);

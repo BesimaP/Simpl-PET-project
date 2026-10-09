@@ -82,6 +82,8 @@ Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST
 
 Databasen er **PostgreSQL** (databasen hedder `Simpl`). Schema og testdata ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.). ERD: `doc/database/ERD.mmd`.
 
+**View:** `round_overview` samler `round` med navnene fra `treatment_type` og `result` (JOIN + LEFT JOIN, fordi resultatet er tomt, mens runden er i gang). `RoundMapper` læser runder fra viewet i stedet for at skrive joinet selv.
+
 **Tabeller (12 + 8 typetabeller):**
 - `patient` — login og persondata i én tabel (brugernavn, kodeord-hash, navn, fødselsdato)
 - `diagnosis` — patientens diagnoser
@@ -117,8 +119,10 @@ Navnene i typetabellerne matcher enum-klasserne i `enums` og `value` i HTML-drop
 2. Opret databasen `Simpl` i pgAdmin (højreklik på Databases → Create → Database…). Navnet skal staves med stort S.
 3. Kør `doc/database/schema_postgres.sql` og derefter `data_postgres.sql` i pgAdmin på databasen `Simpl`.
 4. Åbn projektet i IntelliJ og lad Maven hente afhængighederne (Javalin, Thymeleaf, HikariCP, postgresql, jBCrypt).
-5. Kør `Main`. Konsollen skriver, at Javalin lytter på port 7070.
+5. Kør `Main` i IntelliJ (pom.xml har intet exec-/shade-plugin, så appen startes ikke med Maven). Konsollen skriver, at Javalin lytter på port 7070.
 6. Åbn `http://localhost:7070` i browseren – du lander på login-siden. Log ind med en testbruger (alle har kodeordet `test1234`, fx `mette1990` / `test1234`), eller opret en ny via "Opret profil".
+
+Forbindelsen til databasen står i `Main` (`postgres`/`postgres` på `localhost:5432/Simpl`). Er miljøvariablen `DEPLOYED` sat, læser `ConnectionPool` i stedet `JDBC_USER`, `JDBC_PASSWORD`, `JDBC_CONNECTION_STRING` og `JDBC_DB` – så skal alle fire være sat.
 
 Uploadede dokumenter gemmes i mappen `uploads/` i projektmappen. Den oprettes ved første upload og er ikke med i git. Testdokumenterne i `data_postgres.sql` peger derfor på filer, der ikke findes – de vises i listen, men kan ikke åbnes, før man selv uploader et dokument.
 
@@ -131,8 +135,10 @@ Uploadede dokumenter gemmes i mappen `uploads/` i projektmappen. Den oprettes ve
 
 Dokumentationen findes i `doc/`-mappen:
 
+- **Prototype (Figma):** https://www.figma.com/design/wGXeM5LlHTKdwRZigeKyDh/Simpl – skitserne, som HTML/CSS-siderne er bygget ud fra. Eksporteret til `doc/prototype/`: login og dashboard på desktop (1440 × 1024) og mobil (iPhone 17)
+
 - `doc/dynamic/` — idébeskrivelse, VPC, krav, entiteter, user stories med acceptkriterier, tasks, use case-beskrivelser, use case-diagram (`Usecase.puml`), navigationsdiagram (`Navigation.puml`) og sekvensdiagrammer for UC1–UC15 (`UC1 - LogIn.puml` … `UC15 - EndJourney.puml`)
-- `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` entities/enums, `Klassediagram4b` persistence-laget med ConnectionPool og mappers, `Klassediagram4c` controllers og services + `Klassediagram4c-oversigt` uden metoder) og gruppekontrakt
+- `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` entities/enums/exceptions, `Klassediagram4b` persistence-laget med ConnectionPool og mappers, `Klassediagram4c-1-login-profil`, `Klassediagram4c-2-forloeb-runde` og `Klassediagram4c-3-registreringer` controllers og services + `Klassediagram4c-oversigt` uden metoder) og gruppekontrakt
 - `doc/database/` — ERD (`ERD.mmd`/`ERD.png`), PostgreSQL-schema (`schema_postgres.sql`) og testdata (`data_postgres.sql`)
 
 Sekvensdiagrammerne (UC1–UC15) er opdateret i oktober 2026, så de følger koden: side → Javalin → Controller → Service → Mapper → ConnectionPool → PostgreSQL.
@@ -159,6 +165,6 @@ Normaliseret database (3NF) afledt af domænemodellen. Kragetæer viser kardinal
 
 ### Klassediagram – hvem kalder hvem
 
-Controller → Service → Mapper, én række per emne. Metoderne står i `Klassediagram4c` (controllers og services) og `Klassediagram4b` (mappers).
+Controller → Service → Mapper, oppefra og ned. Metoderne står i `Klassediagram4c-1-login-profil`, `Klassediagram4c-2-forloeb-runde` og `Klassediagram4c-3-registreringer` (controllers og services) og `Klassediagram4b` (mappers).
 
 ![Klassediagram 4c oversigt](doc/static/Klassediagram4c-oversigt.png)

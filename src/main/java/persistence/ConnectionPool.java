@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.logging.Level;
 
 public class ConnectionPool {
 
@@ -36,8 +35,6 @@ public class ConnectionPool {
     }
 
     private static HikariDataSource createHikariConnectionPool(String user, String password, String url, String db) {
-        //   LOGGER.log(Level.INFO, "Initializing Connection Pool for database: {0}", db);
-
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.postgresql.Driver");
         config.setJdbcUrl(String.format(url, db));

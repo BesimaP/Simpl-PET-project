@@ -55,6 +55,9 @@ public class TimelineController {
         ctx.attribute("events", round == null ? new java.util.ArrayList<>() : timelineService.getEvents(patientId, round.getId()));
         ctx.attribute("today", java.time.LocalDate.now());                      // skabelonen sammenligner: sket eller kommende?
         ctx.attribute("patient", profileService.getPatient(patientId));   // forbogstav i avataren
+        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("gemt", ctx.queryParam("gemt"));
+        ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("tidslinje");
     }
 }

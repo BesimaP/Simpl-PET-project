@@ -12,8 +12,10 @@
     <h1 th:text="${title}">Overskrift</h1>
   </div>
   <div class="topbar__actions">
-    <a href="/notifikationer" class="iconbtn" aria-label="Notifikationer">
+    <a href="/notifikationer" class="iconbtn" aria-label="Notifikationer"
+       th:attr="aria-label=${unread != null and unread > 0} ? 'Notifikationer, ' + ${unread} + ' ulæste' : 'Notifikationer'">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
+      <!-- th:attr ovenfor: skærmlæseren siger antallet, da den røde prik kun kan ses -->
       <!-- th:if: rød prik ved ulæste påmindelser. ${unread} sættes for alle sider i RouteConfig (before-handler) -->
       <span class="dot" th:if="${unread != null and unread > 0}"></span>
     </a>

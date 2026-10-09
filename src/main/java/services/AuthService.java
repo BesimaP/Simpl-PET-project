@@ -3,6 +3,7 @@ package services;
 import persistence.PatientMapper;
 import entities.Patient;
 import enums.ServiceResult;
+import exceptions.DatabaseException;
 import exceptions.UserNotFoundException;
 import org.mindrot.jbcrypt.BCrypt;
 import persistence.ConnectionPool;
@@ -13,6 +14,7 @@ import java.time.format.DateTimeParseException;
 // Forretningslogik for login og opret profil. Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
 public class AuthService {
     public static final int MIN_PASSWORD_LENGTH = 8;  // bruges også af ProfileService ved "skift kodeord"
+    public static final int MAX_PASSWORD_LENGTH = 72; // BCrypt bruger kun de første 72 bytes – resten ville blive ignoreret uden at sige det
 
     private PatientMapper patientMapper;          // attribut 1: arkivaren (laves én gang i konstruktøren)
     private DashboardService dashboardService;    // attribut 2: bruges til at oprette forløbet ved "opret profil"
@@ -68,7 +70,7 @@ public class AuthService {
         }
 
         // regel: kodeordet skal være mindst 8 tegn (samme som minlength="8" i HTML – serveren stoler ikke på HTML)
-        if (password.length() < MIN_PASSWORD_LENGTH) {
+        if (password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -97,7 +99,16 @@ public class AuthService {
         }
 
         // 2. gem patienten (login + persondata i én række). id'et fra databasen skal bruges til forløbet
-        int patientId = patientMapper.save(new Patient(0, username, BCrypt.hashpw(password, BCrypt.gensalt()), firstName.trim(), lastName.trim(), dob));
+        //    try/catch: ved dobbeltklik kan to forespørgsler komme forbi tjekket i trin 1 – databasens UNIQUE afviser den anden
+        int patientId;
+        try {
+            patientId = patientMapper.save(new Patient(0, username, BCrypt.hashpw(password, BCrypt.gensalt()), firstName.trim(), lastName.trim(), dob));
+        } catch (DatabaseException e) {
+            if (e.isDuplicate()) {
+                return ServiceResult.ALREADY_EXISTS;
+            }
+            throw e;   // en anden databasefejl – lad den samlede handler vise fejlsiden
+        }
 
         // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardet
         if (wantsJourney) {

@@ -7,6 +7,7 @@ import enums.RoundStatus;
 import enums.ServiceResult;
 import enums.TreatmentType;
 import enums.EventType;
+import exceptions.DatabaseException;
 import exceptions.NoActiveJourneyException;
 import exceptions.NoActiveRoundException;
 import persistence.ConnectionPool;
@@ -77,7 +78,15 @@ public class RoundService {
 
         // 5. byg kortet og gem. end_date og result er null, til runden afsluttes
         Round round = new Round(0, journey.getId(), roundNumber, treatmentType, start, null, RoundStatus.IN_PROGRESS, null);
-        roundMapper.save(round); // save sætter round.id til det id, databasen gav
+        //    try/catch: ved dobbeltklik afviser databasens unikke indeks (one_active_round_per_journey) den anden runde
+        try {
+            roundMapper.save(round); // save sætter round.id til det id, databasen gav
+        } catch (DatabaseException e) {
+            if (e.isDuplicate()) {
+                return ServiceResult.ROUND_IN_PROGRESS;
+            }
+            throw e;
+        }
 
         // 6. første trin på tidslinjen: runden er startet (US2). Startdato kl. 00:00, fordi Event bruger LocalDateTime
         timelineService.addEvent(round.getId(), start.atStartOfDay(), EventType.STIMULATION_START, treatmentType.name());
@@ -98,7 +107,7 @@ public class RoundService {
             return ServiceResult.NO_ACTIVE_ROUND; // intet forløb = heller ingen runde at afslutte
         }
 
-        // 2. afslut den: slutdato = i dag, status COMPLETED (UPDATE i databasen)
+        // 2. afslut den: slutdato = i dag (UPDATE i databasen). Status er afledt: med en slutdato er runden COMPLETED
         roundMapper.endRound(round.getId(), LocalDate.now(), result);
 
         return ServiceResult.OK; // ok

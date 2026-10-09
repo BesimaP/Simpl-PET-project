@@ -35,7 +35,8 @@
         <div class="topbar__actions">
             <!-- klokken er et link til /notifikationer (virker uden JavaScript). Med JavaScript stopper js/dashboard.js linket
                  og åbner i stedet pop-op'en #notif-dialog -->
-            <a href="/notifikationer" id="open-notifications" class="iconbtn" aria-label="Notifikationer">
+            <a href="/notifikationer" id="open-notifications" class="iconbtn" aria-label="Notifikationer"
+               th:attr="aria-label=${unread != null and unread > 0} ? 'Notifikationer, ' + ${unread} + ' ulæste' : 'Notifikationer'">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
                 <!-- th:if: den røde prik vises kun, når der er ulæste påmindelser (${unread} fra DashboardController) -->
                 <span class="dot" th:if="${unread > 0}"></span>
@@ -122,7 +123,7 @@
               <span class="med__name" th:text="${names[m.medicationId]} + ' · ' + ${m.doseText} + ' ' + ${m.unit}">Gonal-F · 150 IU</span>
               <span class="muted" th:text="${m.taken} ? 'Taget' : 'Planlagt'">Taget</span>
             </span>
-                        <time class="muted" th:text="${#temporals.format(m.scheduledDateTime, 'HH:mm')}">08:00</time>
+                        <time class="muted" th:attr="datetime=${m.scheduledDateTime}" th:text="${#temporals.format(m.scheduledDateTime, 'HH:mm')}">08:00</time>
                     </li>
                 </ul>
                 <p class="muted" th:if="${todayMeds.isEmpty()}">Ingen medicin planlagt i dag.</p>
@@ -140,7 +141,7 @@
                 </div>
                 <div class="appt" th:if="${nextAppointment != null}">
                     <!-- datebox = den lille kalender-firkant med dato -->
-                    <time class="datebox">
+                    <time class="datebox" th:attr="datetime=${nextAppointment.dateTime}">
                         <strong th:text="${#temporals.day(nextAppointment.dateTime)}">5</strong>
                         <small th:text="${#temporals.format(nextAppointment.dateTime, 'MMM')}">sep</small>
                     </time>
@@ -182,9 +183,9 @@
 <!-- Bekræftelse (Nielsen #3 + #5): rolig, neutral, med udvej -->
 <!-- Pop-op med notifikationer (US12). Skjult indtil js/dashboard.js åbner den, når man klikker på klokken.
      Samme liste som /notifikationer – de 5 nyeste. th:each over ${notifications} fra DashboardController -->
-<dialog id="notif-dialog" class="confirm">
+<dialog id="notif-dialog" class="confirm" aria-labelledby="notif-dialog-title">
     <form method="dialog">   <!-- method dialog = knapperne lukker bare vinduet -->
-        <h2>Notifikationer</h2>
+        <h2 id="notif-dialog-title">Notifikationer</h2>
         <ul class="rounds">
             <!-- ${#lists…}: kun de 5 nyeste. iterStat.index = nummeret i løkken (0, 1, 2 …) -->
             <li th:each="n, iterStat : ${notifications}" th:if="${iterStat.index < 5}" th:classappend="${n.read} ? 'is-read'">
@@ -207,10 +208,10 @@
 </dialog>
 
 <!-- dialog = et pop-op vindue. er skjult indtil js/dashboard.js åbner det. Kun med, når der er en runde -->
-<dialog id="confirm-end" class="confirm" th:if="${round != null}">
+<dialog id="confirm-end" class="confirm" th:if="${round != null}" aria-labelledby="confirm-end-title">
     <!-- method dialog = knapperne lukker bare vinduet, sender ikke noget -->
     <form method="dialog">
-        <h2 th:text="'Afslut runde ' + ${round.roundNumber} + '?'">Afslut runde 2?</h2>
+        <h2 id="confirm-end-title" th:text="'Afslut runde ' + ${round.roundNumber} + '?'">Afslut runde 2?</h2>
         <p class="muted">Runden markeres som afsluttet, og du kan starte en ny.
             Dine logs og noter gemmes.</p>
         <p class="muted">Det kan ikke fortrydes.</p>
@@ -218,8 +219,8 @@
         <label for="result">Resultat</label>
         <select id="result" name="result">
             <option value="">Ikke afgjort endnu</option>
-            <option value="POSITIVE">Positiv</option>
-            <option value="NEGATIVE">Negativ</option>
+            <!-- én option per værdi i enum Result (${results} fra DashboardController) – ny værdi = kun ét sted i Java -->
+            <option th:each="r : ${results}" th:value="${r.name()}" th:text="${r.label}">Positiv</option>
         </select>
         <div class="confirm__actions">
             <button type="submit" value="cancel" class="btn btn--outline">Annullér</button>

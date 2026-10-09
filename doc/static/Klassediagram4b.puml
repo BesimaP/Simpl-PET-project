@@ -16,7 +16,7 @@ skinparam enumBackgroundColor white
 skinparam enumBorderColor black
 hide circle
 
-title Klassediagram 4b — persistence-laget (Simpl, PostgreSQL)
+title Klassediagram 4b — persistence-laget (Simpl, PostgreSQL)\nConnectionPool laves én gang i Main og gives videre: Main → RouteConfig → Controller → Service → Mapper
 
 package "persistence" {
 
@@ -24,6 +24,7 @@ package "persistence" {
     - {static} instance : ConnectionPool
     - {static} ds : HikariDataSource
     - ConnectionPool()
+    - {static} createHikariConnectionPool(user : String, password : String, url : String, db : String) : HikariDataSource
     + {static} getInstance(user : String, password : String, url : String, db : String) : ConnectionPool
     + getConnection() : Connection
     + close() : void
@@ -97,10 +98,13 @@ package "persistence" {
 
   class RoundMapper {
     - connectionPool : ConnectionPool
+    --
     + RoundMapper(connectionPool : ConnectionPool)
     + save(round : Round) : int
+    .. læser fra viewet round_overview ..
     + findActiveByJourney(fertilityJourneyId : int) : Round
     + findByJourney(fertilityJourneyId : int) : List<Round>
+    ..
     + endRound(id : int, endDate : LocalDate, result : Result) : void
     - mapRow(rs : ResultSet) : Round
   }
@@ -118,7 +122,7 @@ package "persistence" {
     + HormoneLogMapper(connectionPool : ConnectionPool)
     + save(log : HormoneLog) : int
     + findByRound(roundId : int) : List<HormoneLog>
-    + delete(id : int) : void
+    + delete(id : int, patientId : int) : boolean
     - mapRow(rs : ResultSet) : HormoneLog
   }
 
@@ -135,30 +139,46 @@ package "persistence" {
     + MedicationLogMapper(connectionPool : ConnectionPool)
     + save(log : MedicationLog) : int
     + findByRound(roundId : int) : List<MedicationLog>
-    + markTaken(id : int) : void
-    + markNotTaken(id : int) : void
-    + delete(id : int) : void
+    + markTaken(id : int, patientId : int) : boolean
+    + markNotTaken(id : int, patientId : int) : boolean
+    + delete(id : int, patientId : int) : boolean
     - mapRow(rs : ResultSet) : MedicationLog
   }
 }
 
 ' Hver mapper får nøgleringen (ConnectionPool) i konstruktøren og låner en Connection pr. SQL-kald
-PatientMapper --> ConnectionPool
-DiagnosisMapper --> ConnectionPool
-DocumentMapper --> ConnectionPool
-DiaryEntryMapper --> ConnectionPool
-NotificationMapper -up-> ConnectionPool
+' Retningen (-down-, -up- …) og de usynlige streger bestemmer kun placeringen (gitter rundt om ConnectionPool)
+
+' række 1: patientens egne data
+PatientMapper -down-> ConnectionPool
+DiagnosisMapper -down-> ConnectionPool
+DocumentMapper -down-> ConnectionPool
+PatientMapper -[hidden]right- DiagnosisMapper
+DiagnosisMapper -[hidden]right- DocumentMapper
+
+' række 2: ConnectionPool i midten
+DiaryEntryMapper -right-> ConnectionPool
+NotificationMapper -left-> ConnectionPool
+
+' række 3: forløb og runde
 FertilityJourneyMapper -up-> ConnectionPool
 AppointmentMapper -up-> ConnectionPool
 RoundMapper -up-> ConnectionPool
+FertilityJourneyMapper -[hidden]right- AppointmentMapper
+AppointmentMapper -[hidden]right- RoundMapper
+
+' række 4: det, der hører til en runde
 EventMapper -up-> ConnectionPool
 HormoneLogMapper -up-> ConnectionPool
-MedicationMapper --> ConnectionPool
-MedicationLogMapper --> ConnectionPool
+MedicationLogMapper -up-> ConnectionPool
+MedicationMapper -up-> ConnectionPool
+FertilityJourneyMapper -[hidden]down- EventMapper
+AppointmentMapper -[hidden]down- HormoneLogMapper
+RoundMapper -[hidden]down- MedicationLogMapper
+EventMapper -[hidden]right- HormoneLogMapper
+HormoneLogMapper -[hidden]right- MedicationLogMapper
+MedicationLogMapper -[hidden]right- MedicationMapper
 
-note right of ConnectionPool
-  Laves én gang i Main og gives videre:
-  Main → RouteConfig → Controller → Service → Mapper
-end note
+' round_overview = view i schema_postgres.sql (runde + navnene på behandlingstype og resultat)
 
 @enduml

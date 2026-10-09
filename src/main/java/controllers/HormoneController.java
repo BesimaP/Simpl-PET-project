@@ -47,6 +47,7 @@ public class HormoneController {
             // ukendt hormon i URL'en – ignorér, vis standard
         }
         ctx.attribute("curve", hormoneService.getCurve(patientId, chosen));   // requestscope -> ${curve}
+        ctx.attribute("units", HormoneService.UNITS);                  // requestscope -> ${units} (enheds-dropdownen, samme liste som tjekket i service)
         ctx.attribute("hormoneTypes", HormoneType.values());           // requestscope -> ${hormoneTypes} (knapperne)
         ctx.attribute("roundStart", roundService.getActiveRoundStart(patientId)); // min på datofeltet (null = ingen runde)
         // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html

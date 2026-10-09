@@ -67,7 +67,7 @@ public class ProfileService {
         }
 
         // 2b. regel: mindst 8 tegn (samme regel som ved opret profil)
-        if (newPassword.length() < AuthService.MIN_PASSWORD_LENGTH) {
+        if (newPassword.length() < AuthService.MIN_PASSWORD_LENGTH || newPassword.length() > AuthService.MAX_PASSWORD_LENGTH) {
             return ServiceResult.INVALID_INPUT;
         }
 

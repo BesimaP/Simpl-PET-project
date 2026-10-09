@@ -108,10 +108,17 @@ class HormoneLogMapperTest {
 
     @Test
     void delete() {
-        hormoneLogMapper.delete(1);
+        assertTrue(hormoneLogMapper.delete(1, 1));                       // Anna (patient 1) sletter sin egen måling
 
         assertEquals(1, hormoneLogMapper.findByRound(2).size());        // én tilbage i runde 2
         assertEquals(1, hormoneLogMapper.findByRound(1).size());        // runde 1 er urørt (WHERE virker)
+    }
+
+    @Test
+    void deleteOtherPatientsLogDoesNothing() {
+        // patient 2 ejer ikke runden -> subqueryen finder ingen runder, så intet slettes
+        assertFalse(hormoneLogMapper.delete(1, 2));
+        assertEquals(2, hormoneLogMapper.findByRound(2).size());
     }
 
     // ---------- regler, der ligger i DATABASEN (kan kun fanges af en integrationstest) ----------

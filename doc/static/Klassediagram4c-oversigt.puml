@@ -1,131 +1,127 @@
 @startuml
 !pragma layout smetana
-left to right direction
-hide members
-hide circle
-skinparam packageStyle rectangle
+
 skinparam shadowing false
+skinparam classAttributeIconSize 0
 skinparam classBackgroundColor white
 skinparam classBorderColor black
 skinparam classHeaderBackgroundColor white
 skinparam packageBackgroundColor white
 skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
 skinparam noteBackgroundColor white
 skinparam noteBorderColor #555555
 skinparam ArrowColor black
 skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+hide circle
+hide members
 
 title Klassediagram 4c (oversigt) — hvem kalder hvem\nside -> Controller -> Service -> Mapper -> PostgreSQL
 
-' Læs fra venstre mod højre. Én række = ét emne.
-' Metoderne står i Klassediagram 4c (controllers + services) og 4b (mappers).
+' Læs oppefra og ned: controllers -> services -> mappers.
+' Metoderne står i 4c-1, 4c-2, 4c-3 (controllers + services) og 4b (mappers).
+' service -> service tegnes vandret (-right-), så alle services står i én række.
+' Hver pil = et felt i klassen (laves i konstruktøren).
 
 package "controllers" {
   class LoginController
   class ProfileController
-  class DashboardController
-  class TimelineController
-  class HormoneController
-  class MedicationController
-  class AppointmentController
-  class NotificationController
-  class DiaryController
   class DiagnosisController
   class DocumentController
+  class DashboardController
+  class TimelineController
+  class AppointmentController
+  class HormoneController
+  class MedicationController
+  class DiaryController
+  class NotificationController
 }
 
 package "services" {
   class AuthService
   class ProfileService
+  class DiagnosisService
+  class DocumentService
   class DashboardService
   class RoundService
   class TimelineService
+  class AppointmentService
   class HormoneService
   class MedicationService
-  class AppointmentService
-  class NotificationService
   class DiaryService
-  class DiagnosisService
-  class DocumentService
+  class NotificationService
 }
 
 package "persistence (4b)" {
   class PatientMapper
+  class DiagnosisMapper
+  class DocumentMapper
   class FertilityJourneyMapper
   class RoundMapper
   class EventMapper
-  class HormoneLogMapper
-  class "MedicationMapper\nMedicationLogMapper" as MedMappers
   class AppointmentMapper
-  class NotificationMapper
+  class HormoneLogMapper
+  class MedicationMapper
+  class MedicationLogMapper
   class DiaryEntryMapper
-  class DiagnosisMapper
-  class DocumentMapper
+  class NotificationMapper
 }
 
-' ---------- én række per emne ----------
-LoginController --> AuthService
-AuthService --> PatientMapper
-
-ProfileController --> ProfileService
-ProfileService --> PatientMapper
-
-DashboardController --> DashboardService
-DashboardService --> FertilityJourneyMapper
-
-DashboardController --> RoundService
-RoundService --> RoundMapper
-
-TimelineController --> TimelineService
-TimelineService --> EventMapper
-
-HormoneController --> HormoneService
-HormoneService --> HormoneLogMapper
-
-MedicationController --> MedicationService
-MedicationService --> MedMappers
-
-AppointmentController --> AppointmentService
-AppointmentService --> AppointmentMapper
-
-NotificationController --> NotificationService
-NotificationService --> NotificationMapper
-
-DiaryController --> DiaryService
-DiaryService --> DiaryEntryMapper
-
-DiagnosisController --> DiagnosisService
-DiagnosisService --> DiagnosisMapper
-
-DocumentController --> DocumentService
-DocumentService --> DocumentMapper
-
-DashboardService --> RoundMapper
-
-' ---------- ekstra controller -> service (felter i konstruktøren) ----------
-' Dashboard viser lidt af det hele
-DashboardController --> ProfileService
-DashboardController --> NotificationService
-DashboardController --> MedicationService
-DashboardController --> AppointmentService
-DashboardController --> HormoneService
-DashboardController --> DiaryService
-TimelineController --> ProfileService
-TimelineController --> RoundService
-AppointmentController --> DashboardService
+' ---------- controller -> service ----------
+LoginController ----> AuthService
+ProfileController ----> ProfileService
+DiagnosisController ----> DiagnosisService
+DocumentController ----> DocumentService
+DashboardController ----> DashboardService
+DashboardController ----> RoundService
+DashboardController ----> ProfileService
+DashboardController ----> NotificationService
+DashboardController ----> MedicationService
+DashboardController ----> AppointmentService
+DashboardController ----> HormoneService
+DashboardController ----> DiaryService
+TimelineController ----> TimelineService
+TimelineController ----> ProfileService
+TimelineController ----> RoundService
+AppointmentController ----> AppointmentService
+AppointmentController ----> DashboardService
+HormoneController ----> HormoneService
+HormoneController ----> RoundService
+MedicationController ----> MedicationService
+MedicationController ----> RoundService
+DiaryController ----> DiaryService
+NotificationController ----> NotificationService
 
 ' ---------- service -> service ----------
-AuthService --> DashboardService
-ProfileService --> DocumentService
-RoundService --> DashboardService
-RoundService --> TimelineService
-' stiplet: TimelineService laver først RoundService, når den skal bruges (ellers ring)
-TimelineService ..> RoundService
-HormoneService --> RoundService
-MedicationService --> RoundService
-AppointmentService --> DashboardService
-AppointmentService --> RoundService
-AppointmentService --> TimelineService
-NotificationService --> MedicationService
-NotificationService --> AppointmentService
+AuthService -right-> DashboardService
+ProfileService -right-> DocumentService
+RoundService -right-> DashboardService
+RoundService -right-> TimelineService
+' stiplet: TimelineService laver først en RoundService, når den skal bruges (ellers ring)
+TimelineService .left.> RoundService
+HormoneService -right-> RoundService
+MedicationService -right-> RoundService
+AppointmentService -right-> DashboardService
+AppointmentService -right-> RoundService
+AppointmentService -right-> TimelineService
+NotificationService -right-> MedicationService
+NotificationService -right-> AppointmentService
+
+' ---------- service -> mapper ----------
+AuthService ---> PatientMapper
+ProfileService ---> PatientMapper
+DiagnosisService ---> DiagnosisMapper
+DocumentService ---> DocumentMapper
+DashboardService ---> FertilityJourneyMapper
+DashboardService ---> RoundMapper
+RoundService ---> RoundMapper
+TimelineService ---> EventMapper
+AppointmentService ---> AppointmentMapper
+HormoneService ---> HormoneLogMapper
+MedicationService ---> MedicationMapper
+MedicationService ---> MedicationLogMapper
+DiaryService ---> DiaryEntryMapper
+NotificationService ---> NotificationMapper
+
 @enduml

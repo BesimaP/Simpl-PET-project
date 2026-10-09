@@ -58,8 +58,8 @@ public class LoginController {
             ctx.redirect("/dashboard");
 
         } catch (UserNotFoundException e) {
-            // requestscope: gælder kun for dette ene svar. Thymeleaf viser det som ${error} på login-siden
-            ctx.attribute("error", e.getMessage());
+            // requestscope: gælder kun for dette ene svar. Thymeleaf viser det som ${fejl} på login-siden (samme navn som resten af appen)
+            ctx.attribute("fejl", e.getMessage());
             ctx.attribute("username", username);   // brugernavnet står der stadig, så man kun skal skrive adgangskoden igen
             ctx.render("login");
         }

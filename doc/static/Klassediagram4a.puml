@@ -16,7 +16,7 @@ skinparam enumBackgroundColor white
 skinparam enumBorderColor black
 hide circle
 
-title Klassediagram 4a — model og enums (Simpl v2)
+title Klassediagram 4a — model, enums og exceptions (Simpl v2)
 
 ' Gettere/settere og setId() er udeladt for læsbarhed.
 ' Kun metoder med egen logik vises (getDoseText, getValueText, addPoint, getPolyline …).
@@ -31,6 +31,7 @@ package "entities" {
     - String firstName
     - String lastName
     - LocalDate dateOfBirth
+    + String getName()
   }
 
   class Diagnosis {
@@ -180,6 +181,9 @@ package "enums" {
   enum Result {
     POSITIVE
     NEGATIVE
+    --
+    - String label
+    + String getLabel()
   }
 
   enum AppointmentType {
@@ -189,6 +193,9 @@ package "enums" {
     EGG_RETRIEVAL
     EMBRYO_TRANSFER
     PREGNANCY_TEST
+    --
+    - String label
+    + String getLabel()
   }
 
   enum EventType {
@@ -197,6 +204,9 @@ package "enums" {
     FERTILISATION
     EMBRYO_TRANSFER
     PREGNANCY_TEST
+    --
+    - String label
+    + String getLabel()
   }
 
   enum HormoneType {
@@ -205,6 +215,9 @@ package "enums" {
     E2_OESTRADIOL
     PROGESTERONE
     AMH
+    --
+    - String label
+    + String getLabel()
   }
 
   enum DocumentType {
@@ -212,6 +225,9 @@ package "enums" {
     BLOOD_TEST_RESULT
     TREATMENT_PLAN
     OTHER
+    --
+    - String label
+    + String getLabel()
   }
 
   enum NotificationType {
@@ -219,7 +235,54 @@ package "enums" {
     APPOINTMENT_REMINDER
   }
 
+  ' Svaret fra en service til controlleren (i stedet for true/false eller en fejltekst)
+  enum ServiceResult {
+    OK
+    INVALID_INPUT
+    ALREADY_EXISTS
+    NO_ACTIVE_JOURNEY
+    NO_ACTIVE_ROUND
+    ROUND_IN_PROGRESS
+    NOT_FOUND
+  }
+
 }
+
+package "exceptions" {
+
+  class DatabaseException <<RuntimeException>> {
+    + DatabaseException(message : String, cause : Throwable)
+    + isDuplicate() : boolean
+  }
+
+  class FileStorageException <<RuntimeException>> {
+    + FileStorageException(message : String, cause : Throwable)
+  }
+
+  class NoActiveJourneyException <<Exception>> {
+    + NoActiveJourneyException(message : String)
+  }
+
+  class NoActiveRoundException <<Exception>> {
+    + NoActiveRoundException(message : String)
+  }
+
+  class UserNotFoundException <<Exception>> {
+    + UserNotFoundException(msg : String)
+  }
+
+  note as NEx
+    <<RuntimeException>> / <<Exception>> = klassen extends den.
+    DatabaseException: kastes af alle mappers (isDuplicate() = UNIQUE-brud, SQLState 23505).
+    FileStorageException: kastes af DocumentService (filen kunne ikke gemmes).
+    NoActiveJourney-/NoActiveRoundException: kastes af DashboardService/RoundService.
+    UserNotFoundException: kastes af AuthService.login().
+    Ufangede fejl ender i ExceptionConfig -> fejlsiden.
+  end note
+
+}
+
+
 
 ' ---------- Associationer (samme som domænemodellen) ----------
 
@@ -238,6 +301,26 @@ Round "1" *-- "0..*" MedicationLog
 Medication "1" -- "0..*" MedicationLog
 
 HormoneCurve "1" *-- "0..*" Point
+
+' ---------- Usynlige streger: kun til placering (gitter) ----------
+JourneyStatus -[hidden]right- TreatmentType
+TreatmentType -[hidden]right- RoundStatus
+JourneyStatus -[hidden]down- Result
+Result -[hidden]right- AppointmentType
+AppointmentType -[hidden]right- EventType
+Result -[hidden]down- HormoneType
+HormoneType -[hidden]right- DocumentType
+DocumentType -[hidden]right- NotificationType
+HormoneType -[hidden]down- ServiceResult
+
+DatabaseException -[hidden]right- FileStorageException
+FileStorageException -[hidden]right- UserNotFoundException
+NoActiveJourneyException -[hidden]right- NoActiveRoundException
+NoActiveRoundException -[hidden]right- NEx
+DatabaseException -[hidden]down- NoActiveJourneyException
+
+' exceptions-pakken under entities
+MedicationLog -[hidden]down- DatabaseException
 
 @enduml
 

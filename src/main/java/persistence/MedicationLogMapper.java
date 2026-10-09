@@ -31,9 +31,10 @@ public class MedicationLogMapper {
             statement.setBoolean(5, log.isTaken());                          // boolean -> BOOLEAN i PostgreSQL
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                log.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    log.setId(keys.getInt(1));
+                }
             }
             return log.getId();
 
@@ -53,49 +54,59 @@ public class MedicationLogMapper {
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, roundId);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                logs.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    logs.add(mapRow(rs));
+                }
+                return logs;
             }
-            return logs;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find medication logs for round " + roundId, e);
         }
     }
 
-    // sætter taken = TRUE på én dosis (US8 AC3: "markér som taget"). UPDATE ændrer en række, der allerede findes
-    public void markTaken(int id) {
-        String sql = "UPDATE medication_log SET taken = TRUE WHERE id = ?";
+    // runderne, der tilhører patienten: round -> fertility_journey -> patient_id.
+    // Sættes bag "WHERE id = ? AND", så databasen selv sikrer, at man kun rammer sine egne rækker
+    private static final String OWN_ROUNDS = "round_id IN (SELECT round.id FROM round "
+            + "JOIN fertility_journey ON fertility_journey.id = round.fertility_journey_id "
+            + "WHERE fertility_journey.patient_id = ?)";
+
+    // sætter taken = TRUE på én dosis (US8 AC3: "markér som taget"). UPDATE ændrer en række, der allerede findes.
+    // Kun patientens egen dosis. true = opdateret
+    public boolean markTaken(int id, int patientId) {
+        String sql = "UPDATE medication_log SET taken = TRUE WHERE id = ? AND " + OWN_ROUNDS;
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
-            statement.executeUpdate();
+            statement.setInt(2, patientId);
+            return statement.executeUpdate() > 0;   // 0 = ikke fundet / ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not mark medication log " + id + " as taken", e);
         }
     }
 
-    // sætter taken = FALSE på én dosis (fortryd "markér som taget")
-    public void markNotTaken(int id) {
-        String sql = "UPDATE medication_log SET taken = FALSE WHERE id = ?";
+    // sætter taken = FALSE på én dosis (fortryd "markér som taget"). Kun patientens egen dosis. true = opdateret
+    public boolean markNotTaken(int id, int patientId) {
+        String sql = "UPDATE medication_log SET taken = FALSE WHERE id = ? AND " + OWN_ROUNDS;
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
-            statement.executeUpdate();
+            statement.setInt(2, patientId);
+            return statement.executeUpdate() > 0;   // 0 = ikke fundet / ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not mark medication log " + id + " as not taken", e);
         }
     }
 
-    // sletter én dosis ud fra dens id
-    public void delete(int id) {
-        String sql = "DELETE FROM medication_log WHERE id = ?";
+    // sletter én dosis – men kun hvis den ligger i en af patientens egne runder. true = slettet
+    public boolean delete(int id, int patientId) {
+        String sql = "DELETE FROM medication_log WHERE id = ? AND " + OWN_ROUNDS;
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
-            statement.executeUpdate();
+            statement.setInt(2, patientId);
+            return statement.executeUpdate() > 0;   // antal rækker, der blev ramt: 0 = ikke fundet / ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not delete medication log " + id, e);
         }

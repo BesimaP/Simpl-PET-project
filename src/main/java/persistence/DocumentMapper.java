@@ -34,9 +34,10 @@ public class DocumentMapper {
             statement.setString(5, document.getFilePath());            // fx "uploads/blodprove-sep.pdf"
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                document.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    document.setId(keys.getInt(1));
+                }
             }
             return document.getId();
 
@@ -56,12 +57,12 @@ public class DocumentMapper {
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, patientId);
-            ResultSet rs = statement.executeQuery();
-
-            while (rs.next()) {
-                documents.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    documents.add(mapRow(rs));
+                }
+                return documents;
             }
-            return documents;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find documents for patient " + patientId, e);

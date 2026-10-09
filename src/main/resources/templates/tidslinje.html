@@ -24,6 +24,9 @@
   <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
   <header th:replace="~{fragments/topbar :: topbar('Tidslinje')}"></header>
 
+  <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
+  <div th:replace="~{fragments/besked :: besked}"></div>
+
   <!-- Tidslinjen genbruger .rounds-mønsteret (samme som rundehistorik), da der ikke findes en separat timeline-klasse -->
   <section class="card" aria-labelledby="tidslinje-title">
     <div class="section-head">

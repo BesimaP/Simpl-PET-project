@@ -36,9 +36,10 @@ public class PatientMapper {
             statement.executeUpdate();
 
             // RETURN_GENERATED_KEYS: databasen sender det nye id tilbage
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                patient.setId(keys.getInt(1));
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    patient.setId(keys.getInt(1));
+                }
             }
             return patient.getId();
 
@@ -50,7 +51,8 @@ public class PatientMapper {
     // Finder én patient ud fra brugernavnet – returnerer null, hvis den ikke findes (bruges ved login og opret profil)
     public Patient findByUsername(String username) {
         // ? = pladsholder for brugernavnet, som sættes nedenfor (aldrig lim tekst ind i SQL-strengen selv)
-        String sql = "SELECT * FROM patient WHERE username = ?";
+        // LOWER på begge sider: "Anna" og "anna" er samme bruger (passer med det unikke indeks på LOWER(username) i schemaet)
+        String sql = "SELECT * FROM patient WHERE LOWER(username) = LOWER(?)";
 
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -59,14 +61,14 @@ public class PatientMapper {
             statement.setString(1, username);
 
             // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
-            ResultSet rs = statement.executeQuery();
-
-            // if, ikke while: der kan højst være én række, fordi username er UNIQUE
-            if (rs.next()) {
-                // rækken -> et Patient-objekt (kortet). date_of_birth er en DATE, som hentes direkte som LocalDate
-                return new Patient(rs.getInt("id"), rs.getString("username"), rs.getString("password_hash"), rs.getString("first_name"), rs.getString("last_name"), rs.getObject("date_of_birth", LocalDate.class));
+            try (ResultSet rs = statement.executeQuery()) {
+                // if, ikke while: der kan højst være én række, fordi username er unikt (uanset store/små bogstaver)
+                if (rs.next()) {
+                    // rækken -> et Patient-objekt (kortet). date_of_birth er en DATE, som hentes direkte som LocalDate
+                    return new Patient(rs.getInt("id"), rs.getString("username"), rs.getString("password_hash"), rs.getString("first_name"), rs.getString("last_name"), rs.getObject("date_of_birth", LocalDate.class));
+                }
+                return null; // ingen række = brugeren findes ikke
             }
-            return null; // ingen række = brugeren findes ikke
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find user " + username, e);
@@ -100,13 +102,13 @@ public class PatientMapper {
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, id);
-            ResultSet rs = statement.executeQuery();
-
-            // if, ikke while: id er PRIMARY KEY, så der er højst én række
-            if (rs.next()) {
-                return new Patient(rs.getInt("id"), rs.getString("username"), rs.getString("password_hash"), rs.getString("first_name"), rs.getString("last_name"), rs.getObject("date_of_birth", LocalDate.class));
+            try (ResultSet rs = statement.executeQuery()) {
+                // if, ikke while: id er PRIMARY KEY, så der er højst én række
+                if (rs.next()) {
+                    return new Patient(rs.getInt("id"), rs.getString("username"), rs.getString("password_hash"), rs.getString("first_name"), rs.getString("last_name"), rs.getObject("date_of_birth", LocalDate.class));
+                }
+                return null;
             }
-            return null;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find patient " + id, e);

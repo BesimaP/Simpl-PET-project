@@ -3,6 +3,7 @@ package services;
 import entities.FertilityJourney;
 import enums.JourneyStatus;
 import enums.ServiceResult;
+import exceptions.DatabaseException;
 import exceptions.NoActiveJourneyException;
 import persistence.ConnectionPool;
 import persistence.FertilityJourneyMapper;
@@ -47,7 +48,15 @@ public class DashboardService {
         }
 
         // 3. byg kortet (id 0 = databasen finder på et) og læg det i skuffen. Status er ACTIVE fra start
-        journeyMapper.save(new FertilityJourney(0, patientId, start, JourneyStatus.ACTIVE));
+        //    try/catch: ved dobbeltklik afviser databasens unikke indeks (one_active_journey_per_patient) det andet forløb
+        try {
+            journeyMapper.save(new FertilityJourney(0, patientId, start, JourneyStatus.ACTIVE));
+        } catch (DatabaseException e) {
+            if (e.isDuplicate()) {
+                return ServiceResult.ALREADY_EXISTS;
+            }
+            throw e;
+        }
         return ServiceResult.OK;
     }
 

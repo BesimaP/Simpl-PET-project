@@ -24,8 +24,6 @@ function setTodayIn(dateField) {
     dateField.value = today;
 }
 
-// TODO senere: en opskrift til at vise en fejlbesked under et felt (bruges af flere sider)
-
 // BEKRÆFT SLETNING: alle slet-formularer har class="delete-form" (dagbog, hormoner, medicin, dokumenter).
 // Før formularen sendes, spørger browseren "Er du sikker?". Trykker man Annullér, stoppes afsendelsen.
 const deleteForms = document.querySelectorAll(".delete-form");

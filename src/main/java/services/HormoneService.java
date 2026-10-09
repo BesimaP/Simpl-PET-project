@@ -21,7 +21,7 @@ import java.util.List;
 // Svarer med ServiceResult: OK = ok, ellers hvad der gik galt (controlleren vælger side ud fra det).
 public class HormoneService {
     // de enheder, dropdownen i hormoner.html tilbyder – alt andet afvises
-    private static final List<String> UNITS = List.of("pmol/L", "IU/L", "nmol/L", "pg/mL", "ng/mL", "mIU/mL");
+    public static final List<String> UNITS = List.of("pmol/L", "IU/L", "nmol/L", "pg/mL", "ng/mL", "mIU/mL");
     private static final double MAX_VALUE = 100_000_000;   // NUMERIC(10,2) = højst 8 cifre før kommaet
     private HormoneLogMapper hormoneLogMapper;
     private RoundService roundService;
@@ -99,15 +99,9 @@ public class HormoneService {
         }
     }
 
-    // Sletter én måling – kun patientens egen (id'et skal findes i rundens liste). Svar: OK · NOT_FOUND
+    // Sletter én måling – kun patientens egen (tjekkes i SQL'en: AND round_id IN patientens runder). Svar: OK · NOT_FOUND
     public ServiceResult deleteLog(int patientId, int logId) {
-        for (HormoneLog log : getLogs(patientId)) {
-            if (log.getId() == logId) {
-                hormoneLogMapper.delete(logId);
-                return ServiceResult.OK;
-            }
-        }
-        return ServiceResult.NOT_FOUND;
+        return hormoneLogMapper.delete(logId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
     // SVG'ens størrelse – skabelonen bruger samme tal i viewBox

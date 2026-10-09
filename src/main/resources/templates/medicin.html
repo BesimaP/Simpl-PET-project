@@ -100,7 +100,7 @@
             <!-- slet: en lille formular med dosens id i et skjult felt -> POST /medicin/slet (fx ved en fejlindtastning) -->
             <form action="/medicin/slet" method="post" class="delete-form">
               <input type="hidden" name="id" th:value="${m.id}">
-              <button type="submit" class="muted-link">Slet</button>
+              <button type="submit" class="muted-link" th:attr="aria-label='Slet ' + ${names[m.medicationId]} + ' ' + ${#temporals.format(m.scheduledDateTime, 'd. MMM HH:mm')}">Slet</button>
             </form>
           </div>
         </li>
@@ -116,7 +116,7 @@
           <!-- slet: en lille formular med dosens id i et skjult felt -> POST /medicin/slet (fx ved en fejlindtastning) -->
           <form action="/medicin/slet" method="post" class="delete-form">
             <input type="hidden" name="id" th:value="${m.id}">
-            <button type="submit" class="muted-link">Slet</button>
+            <button type="submit" class="muted-link" th:attr="aria-label='Slet ' + ${names[m.medicationId]} + ' ' + ${#temporals.format(m.scheduledDateTime, 'd. MMM HH:mm')}">Slet</button>
           </form>
         </li>
       </ul>
@@ -130,7 +130,7 @@
           <!-- slet: en lille formular med dosens id i et skjult felt -> POST /medicin/slet (fx ved en fejlindtastning) -->
           <form action="/medicin/slet" method="post" class="delete-form">
             <input type="hidden" name="id" th:value="${m.id}">
-            <button type="submit" class="muted-link">Slet</button>
+            <button type="submit" class="muted-link" th:attr="aria-label='Slet ' + ${names[m.medicationId]} + ' ' + ${#temporals.format(m.scheduledDateTime, 'd. MMM HH:mm')}">Slet</button>
           </form>
         </li>
       </ul>

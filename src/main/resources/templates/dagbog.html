@@ -75,7 +75,7 @@
                     <!-- slet: en lille formular med notens id i et skjult felt -> POST /dagbog/slet -->
                     <form action="/dagbog/slet" method="post" class="delete-form">
                         <input type="hidden" name="id" th:value="${e.id}">
-                        <button type="submit" class="muted-link">Slet</button>
+                        <button type="submit" class="muted-link" th:attr="aria-label='Slet note ' + ${e.title}">Slet</button>
                     </form>
                 </li>
             </ul>

@@ -33,9 +33,10 @@ public class RoundMapper {
 
             statement.executeUpdate();
 
-            ResultSet keys = statement.getGeneratedKeys();
-            if (keys.next()) {
-                round.setId(keys.getInt(1)); // objektet får rækkens id
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    round.setId(keys.getInt(1)); // objektet får rækkens id
+                }
             }
             return round.getId();
 
@@ -55,13 +56,13 @@ public class RoundMapper {
 
 
             // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
-            ResultSet rs = statement.executeQuery();
-
-            // if, ikke while: der kan højst være én runde i gang per forløb
-            if (rs.next()) {
-                return mapRow(rs); // rækken -> et Round-objekt (kortet)
+            try (ResultSet rs = statement.executeQuery()) {
+                // if, ikke while: der kan højst være én runde i gang per forløb
+                if (rs.next()) {
+                    return mapRow(rs); // rækken -> et Round-objekt (kortet)
+                }
+                return null; // ingen række = ingen runde i gang
             }
-            return null; // ingen række = ingen runde i gang
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find active round for journey " + fertilityJourneyId, e);
@@ -75,20 +76,21 @@ public class RoundMapper {
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, fertilityJourneyId);
-            ResultSet rs = statement.executeQuery();
-
-            // while: der kan være mange runder – én tur i løkken per række
-            while (rs.next()) {
-                rounds.add(mapRow(rs));
+            try (ResultSet rs = statement.executeQuery()) {
+                // while: der kan være mange runder – én tur i løkken per række
+                while (rs.next()) {
+                    rounds.add(mapRow(rs));
+                }
+                return rounds;
             }
-            return rounds;
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not find rounds for journey " + fertilityJourneyId, e);
         }
     }
 
-    // Afslutter en runde: sætter slutdato, resultat og status COMPLETED (US10b). UPDATE ændrer en række, der findes.
+    // Afslutter en runde: sætter slutdato og resultat (US10b). Der er ingen status-kolonne – når end_date er udfyldt, er runden afsluttet.
+    // UPDATE ændrer en række, der findes.
     public void endRound(int id, LocalDate endDate, Result result) {
         String sql = "UPDATE round SET end_date = ?, result_id = (SELECT id FROM result WHERE name = ?) WHERE id = ?";
         try (Connection connection = connectionPool.getConnection();
