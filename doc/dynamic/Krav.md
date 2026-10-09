@@ -10,7 +10,7 @@
 2. Patienten skal kunne oprette, redigere og slette sin profil (navn, fødselsdato) (US6a, US6b)
 3. Patienten skal kunne registrere sine diagnoser (Diagnosis) på profilen (US7)
 4. Patienten skal kunne oprette et nyt fertilitetsforløb (FertilityJourney) (US1)
-5. Patienten skal kunne starte en ny runde (Round) i sit forløb med rundenummer og behandlingstype (IVF, ICSI, IUI, FET) (US10a)
+5. Patienten skal kunne starte en ny runde (Round) i sit forløb med en behandlingstype (IVF, ICSI, IUI, FET) – rundenummeret finder systemet selv (US10a)
 6. Patienten skal kunne afslutte en runde med et resultat og se sin fulde rundehistorik (US10a, US10b)
 7. Patienten skal kunne se en tidslinje over hændelser (Event) i en runde (US2)
 8. Patienten skal kunne se og registrere kommende aftaler (Appointment) tilknyttet sit forløb (US3)
@@ -34,7 +34,7 @@
 
 *Krav til Pet Project, stillet af underviseren. Sådan opfyldes de i Simpl:*
 
-1. **Thymeleaf på html-siderne** – siderne, der viser data fra databasen (dashboard, diagnoser, dagbog, hormoner, medicin, aftaler, rundehistorik, tidslinje, notifikationer, min profil), flyttes til `resources/templates` og vises via GET-ruter med `ctx.render("side", Map.of(...))` og `th:each`/`th:text`. Opsætning: `configuration/ThymeleafConfig` + `config.fileRenderer(...)` i Main.
-2. **Data i både sessionsscope og requestscope** – *session*: hvem der er logget ind (`ctx.sessionAttribute("patientId", ...)` sættes ved login, læses i alle controllere i stedet for `int patientId = 1`). *Request*: data til én side (listen/objektet, der gives med i `Map.of(...)` til `ctx.render`).
+1. **Thymeleaf på html-siderne** – siderne, der viser data fra databasen (dashboard, diagnoser, dagbog, hormoner, medicin, aftaler, rundehistorik, tidslinje, notifikationer, min profil), flyttes til `resources/templates` og vises via GET-ruter: controlleren lægger data i request scope med `ctx.attribute(...)` og kalder `ctx.render("side")`, og skabelonen viser dem med `th:each`/`th:text`. Opsætning: `configuration/ThymeleafConfig` + `config.fileRenderer(...)` i Main.
+2. **Data i både sessionsscope og requestscope** – *session*: hvem der er logget ind (`ctx.sessionAttribute("patientId", ...)` sættes ved login, læses i alle controllere i stedet for `int patientId = 1`). *Request*: data til én side (listen/objektet, der lægges i `ctx.attribute(...)` før `ctx.render`).
 3. **Kast og håndtér mindst én Exception** – egen `UserNotFoundException` (pakke `exceptions`), kastes af `AuthService.login`, når brugeren ikke findes, og fanges i `LoginController`, som viser login-siden med en fejlbesked via Thymeleaf. Derudover fanges `DateTimeParseException`/`NumberFormatException` allerede i services (ugyldig dato/tal → INVALID_INPUT).
 
