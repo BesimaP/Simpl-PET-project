@@ -66,6 +66,15 @@ class AuthServiceTest {
     }
 
     @Test
+    void usernameIsTrimmedWhenCreatingAndLoggingIn() throws Exception {
+        AuthService authService = new AuthService(TestData.pool());
+        assertEquals(ServiceResult.OK, authService.createProfile("Test", "Bruger", "1996-01-01", "  auth9  ", "hemmelig1", "no", ""));
+        // gemt uden mellemrum – og login virker både med og uden
+        assertEquals("auth9", authService.login("auth9", "hemmelig1").getUsername());
+        assertEquals("auth9", authService.login(" auth9 ", "hemmelig1").getUsername());
+    }
+
+    @Test
     void createProfileWithTooLongPasswordReturnsInvalidInput() {
         // BCrypt bruger kun de første 72 bytes – længere kodeord afvises i stedet for at blive skåret af i det skjulte
         String longPassword = "a".repeat(73);

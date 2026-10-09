@@ -33,7 +33,8 @@ public class AuthService {
             throw new UserNotFoundException("Forkert brugernavn eller adgangskode");
         }
 
-        Patient patient = patientMapper.findByUsername(username);
+        // mellemrum før/efter fjernes – samme som ved opret profil, så " anna" og "anna" er samme bruger
+        Patient patient = patientMapper.findByUsername(username.trim());
 
         if (patient == null || !passwordMatches(password, patient.getPasswordHash())) {
             throw new UserNotFoundException("Forkert brugernavn eller adgangskode");
@@ -51,6 +52,9 @@ public class AuthService {
         if (isBlank(firstName) || isBlank(lastName) || isBlank(dateOfBirth) || isBlank(username) || isBlank(password)) {
             return ServiceResult.INVALID_INPUT;
         }
+
+        // mellemrum før/efter fjernes (ligesom fornavn og efternavn), så man kan logge ind uden at ramme dem præcist
+        username = username.trim();
 
         // 0a. regel: teksten skal kunne være i kolonnerne (VARCHAR(50) – se schema_postgres.sql)
         if (isTooLong(firstName, 50) || isTooLong(lastName, 50) || isTooLong(username, 50)) {
