@@ -50,11 +50,9 @@ public class HormoneCurve {
 
     public HormoneType getType() { return type; }
     public String getUnit() { return unit; }
-    public double getMax() { return max; }
     public String getMaxText() { return java.math.BigDecimal.valueOf(max).stripTrailingZeros().toPlainString(); }   // 450.0 -> "450"
     public int getSkipped() { return skipped; }
     public void setSkipped(int skipped) { this.skipped = skipped; }
-    public double getAverage() { return average; }
     public String getAverageText() { return java.math.BigDecimal.valueOf(average).stripTrailingZeros().toPlainString(); }   // 535.0 -> "535"
     public double getAverageY() { return averageY; }
 

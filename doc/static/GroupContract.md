@@ -30,6 +30,22 @@ Vi mødes ofte og arbejder tæt sammen. Mødested på skolen (medmindre andet bl
 
 Nej vi vil gerne fælles samarbejde og ansvar.
 
+### Scrum: roller og Definition of Done
+
+**Product Owner og Scrum Master**
+- *Product Owner* ejer backloggen: prioriterer user stories efter værdi for patienten og er bindeled til brugerne.
+- *Scrum Master* ejer processen: sørger for, at vi følger Scrum, styrer møderne og fjerner forhindringer. SM er ikke chef, men en tjenende leder.
+- Vi er kun to, så vi har valgt ikke at fordele rollerne fast (se "Skal vi have en rollefordeling?"). Vi prioriterer backloggen sammen (P0–P2 i [Simpl Backlog](https://github.com/users/BesimaP/projects/6)) og holder begge øje med processen. I et større team ville rollerne være fordelt på hver sin person.
+
+**Definition of Done** – en user story er færdig, når:
+1. Alle acceptkriterier i `doc/dynamic/UserStories.md` er opfyldt.
+2. Siden er en Thymeleaf-template med data fra databasen og går gennem controller → service → mapper (ingen SQL i controllere).
+3. Input valideres i service-laget, så ugyldigt input giver en fejlbesked i stedet for en 500-fejl.
+4. Der er JUnit-tests på servicen (og mapperen), og `mvn clean test` er grøn.
+5. Siden virker på både mobil og desktop.
+6. Klassediagrammer, ERD og use cases er opdateret, hvis storyen ændrer dem (sort/hvid PlantUML).
+7. Tasks er krydset af i `doc/dynamic/Tasks.md`, kortet er flyttet til Done på boardet, og koden er committet og pushet til GitHub.
+
 ### Kommunikation i gruppen
 **Hvordan kommunikerer gruppen - mail, sms, andet?**
 

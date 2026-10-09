@@ -1,0 +1,252 @@
+@startuml
+!pragma layout smetana
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor white
+skinparam classBorderColor black
+skinparam classHeaderBackgroundColor white
+skinparam packageBackgroundColor white
+skinparam packageBorderColor #555555
+skinparam packageStyle rectangle
+skinparam noteBackgroundColor white
+skinparam noteBorderColor #555555
+skinparam ArrowColor black
+skinparam enumBackgroundColor white
+skinparam enumBorderColor black
+skinparam entityBackgroundColor white
+skinparam entityBorderColor black
+hide circle
+hide empty members
+left to right direction
+
+title ERD — Simpl (PostgreSQL, doc/database/schema_postgres.sql)\n20 tabeller + 1 view. Alle id: INT GENERATED ALWAYS AS IDENTITY. * = NOT NULL
+
+' ---------- Patient og det, der hører til personen ----------
+
+entity patient {
+  * id : INT <<PK>>
+  --
+  * username : VARCHAR(50) <<UK lower>>
+  * password_hash : VARCHAR(255)
+  * first_name : VARCHAR(50)
+  * last_name : VARCHAR(50)
+  * date_of_birth : DATE
+  ..
+  {field} UNIQUE INDEX ON LOWER(username)
+}
+
+entity diagnosis {
+  * id : INT <<PK>>
+  --
+  * patient_id : INT <<FK>>
+  * name : VARCHAR(100)
+  description : TEXT
+}
+
+entity diary_entry {
+  * id : INT <<PK>>
+  --
+  * patient_id : INT <<FK>>
+  * date_time : TIMESTAMP
+  * title : VARCHAR(100)
+  * content : TEXT
+}
+
+entity document {
+  * id : INT <<PK>>
+  --
+  * patient_id : INT <<FK>>
+  * upload_date : DATE
+  * title : VARCHAR(100)
+  * document_type_id : INT <<FK>>
+  * file_path : VARCHAR(255)
+}
+
+entity notification {
+  * id : INT <<PK>>
+  --
+  * patient_id : INT <<FK>>
+  * date_time : TIMESTAMP
+  * notification_type_id : INT <<FK>>
+  * title : VARCHAR(100)
+  * message : TEXT
+  * is_read : BOOLEAN = FALSE
+}
+
+' ---------- Forløb og runde ----------
+
+entity fertility_journey {
+  * id : INT <<PK>>
+  --
+  * patient_id : INT <<FK>>
+  * start_date : DATE
+  * journey_status_id : INT <<FK>> = 1
+  ..
+  {field} UNIQUE (patient_id) WHERE journey_status_id = 1
+  (one_active_journey_per_patient)
+}
+
+entity round {
+  * id : INT <<PK>>
+  --
+  * fertility_journey_id : INT <<FK>>
+  * round_number : INT
+  * treatment_type_id : INT <<FK>>
+  * start_date : DATE
+  end_date : DATE
+  result_id : INT <<FK>>
+  ..
+  {field} UNIQUE (fertility_journey_id, round_number)
+  {field} UNIQUE (fertility_journey_id) WHERE end_date IS NULL
+  (one_active_round_per_journey)
+  CHECK round_number > 0
+  CHECK end_date IS NULL OR end_date >= start_date
+}
+
+entity appointment {
+  * id : INT <<PK>>
+  --
+  * fertility_journey_id : INT <<FK>>
+  * date_time : TIMESTAMP
+  * appointment_type_id : INT <<FK>>
+  * location : VARCHAR(100)
+}
+
+entity event {
+  * id : INT <<PK>>
+  --
+  * round_id : INT <<FK>>
+  * date_time : TIMESTAMP
+  * event_type_id : INT <<FK>>
+  description : TEXT
+}
+
+entity hormone_log {
+  * id : INT <<PK>>
+  --
+  * round_id : INT <<FK>>
+  * date_time : TIMESTAMP
+  * hormone_type_id : INT <<FK>>
+  * value : NUMERIC(10,2)
+  * unit : VARCHAR(10)
+  ..
+  CHECK value >= 0
+  {field} CHECK unit IN (pmol/L, IU/L, nmol/L,
+  pg/mL, ng/mL, mIU/mL)
+}
+
+entity medication_log {
+  * id : INT <<PK>>
+  --
+  * round_id : INT <<FK>>
+  * medication_id : INT <<FK>>
+  * scheduled_date_time : TIMESTAMP
+  * dose : NUMERIC(10,2)
+  * taken : BOOLEAN = FALSE
+  ..
+  CHECK dose > 0
+}
+
+entity medication {
+  * id : INT <<PK>>
+  --
+  * name : VARCHAR(50) <<UK>>
+  description : VARCHAR(100)
+  * unit : VARCHAR(10)
+}
+
+' ---------- View ----------
+
+entity round_overview <<view>> #line.dashed {
+  id : INT
+  fertility_journey_id : INT
+  round_number : INT
+  {field} treatment_type : VARCHAR(30)
+  start_date : DATE
+  end_date : DATE
+  {field} result : VARCHAR(30)
+}
+
+' ---------- Typer (id, name) ----------
+
+package "Typer (faste værdilister)" as types {
+  entity journey_status {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+  entity treatment_type {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+  entity result {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+  entity appointment_type {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+  entity event_type {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+  entity hormone_type {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+  entity document_type {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+  entity notification_type {
+    * id : INT <<PK>>
+    * name : VARCHAR(30) <<UK>>
+  }
+}
+
+' ---------- Relationer (ON DELETE CASCADE fra forælder, undtagen typer og medication) ----------
+
+patient ||--o{ diagnosis : registers
+patient ||--o{ diary_entry : writes
+patient ||--o{ document : uploads
+patient ||--o{ fertility_journey : undergoes
+patient ||--o{ notification : receives
+fertility_journey ||--o{ round : "consists of"
+fertility_journey ||--o{ appointment : schedules
+round ||--o{ event : has
+round ||--o{ hormone_log : records
+round ||--o{ medication_log : logs
+medication ||--o{ medication_log : "is taken in\n(RESTRICT)"
+
+fertility_journey }o--|| journey_status : describes
+round }o--|| treatment_type : classifies
+round }o--o| result : ends
+appointment }o--|| appointment_type : classifies
+event }o--|| event_type : classifies
+hormone_log }o--|| hormone_type : classifies
+document }o--|| document_type : classifies
+notification }o--|| notification_type : classifies
+
+journey_status -[hidden]down- appointment_type
+treatment_type -[hidden]down- event_type
+result -[hidden]down- hormone_type
+document_type -[hidden]down- notification_type
+
+round_overview ..> round : SELECT
+round_overview ..> treatment_type : JOIN
+round_overview ..> result : LEFT JOIN
+
+' ---------- Indekser ----------
+
+note as idx
+  <b>Indekser på FK</b> (PK/UNIQUE har selv indeks)
+  fertility_journey(patient_id)
+  diagnosis(patient_id), diary_entry(patient_id)
+  document(patient_id), notification(patient_id)
+  appointment(fertility_journey_id)
+  event(round_id), hormone_log(round_id)
+  medication_log(round_id)
+end note
+
+@enduml

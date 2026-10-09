@@ -60,7 +60,7 @@ class RoundServiceTest {
     }
 
     @Test
-    void endRoundReturnsOkAndNoRoundIsActiveAfterwards() {
+    void endRoundReturnsOkAndNoRoundIsActiveAfterwards() throws Exception {
         int patientId = TestData.newPatientWithRound();
         RoundService service = new RoundService(TestData.pool());
         assertEquals(ServiceResult.OK, service.endRound(patientId, Result.NEGATIVE));
@@ -85,25 +85,27 @@ class RoundServiceTest {
     }
 
     @Test
-    void findActiveRoundWithoutJourneyThrowsNoActiveJourney() {
+    void findActiveRoundWithoutJourneyThrowsNoActiveJourney() throws Exception {
         int patientId = TestData.newPatient();
         assertThrows(NoActiveJourneyException.class, () -> new RoundService(TestData.pool()).findActiveRound(patientId));
     }
 
     @Test
-    void getRoundsWithoutJourneyReturnsEmptyList() {
+    void getRoundsPerJourneyWithoutJourneyReturnsEmptyMap() {
         int patientId = TestData.newPatient();
-        assertTrue(new RoundService(TestData.pool()).getRounds(patientId).isEmpty());
+        assertTrue(new RoundService(TestData.pool()).getRoundsPerJourney(patientId).isEmpty());
     }
 
     @Test
-    void getRoundsContainsBothFinishedAndActiveRound() {
+    void getRoundsPerJourneyContainsBothFinishedAndActiveRound() throws Exception {
         int patientId = TestData.newPatientWithRound();
         new RoundService(TestData.pool()).endRound(patientId, null);
         new RoundService(TestData.pool()).startRound(patientId, "FET", "2026-10-01");
-        assertEquals(2, new RoundService(TestData.pool()).getRounds(patientId).size());
-        assertEquals(RoundStatus.COMPLETED, new RoundService(TestData.pool()).getRounds(patientId).get(0).getStatus());
-        assertEquals(RoundStatus.IN_PROGRESS, new RoundService(TestData.pool()).getRounds(patientId).get(1).getStatus());
+        // samme metode som rundehistorikken bruger: forløbets id -> dets runder (ældste først)
+        var rounds = new RoundService(TestData.pool()).getRoundsPerJourney(patientId).get(TestData.activeJourneyId(patientId));
+        assertEquals(2, rounds.size());
+        assertEquals(RoundStatus.COMPLETED, rounds.get(0).getStatus());
+        assertEquals(RoundStatus.IN_PROGRESS, rounds.get(1).getStatus());
     }
 
     @Test
@@ -130,11 +132,11 @@ class RoundServiceTest {
     }
 
     @Test
-    void findRoundOnlyFindsOwnRounds() {
+    void findRoundOnlyFindsOwnRounds() throws Exception {
         int anna = TestData.newPatientWithRound();
         int maria = TestData.newPatientWithRound();
         RoundService rounds = new RoundService(TestData.pool());
-        int annasRound = rounds.getRounds(anna).get(0).getId();
+        int annasRound = rounds.findActiveRound(anna).getId();
         assertNotNull(rounds.findRound(anna, annasRound));
         assertNull(rounds.findRound(maria, annasRound));         // Maria må ikke se Annas runde
     }

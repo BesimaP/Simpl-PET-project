@@ -67,4 +67,15 @@ class TestData {
         new RoundService(pool()).startRound(patientId, "IVF", "2026-09-10");
         return patientId;
     }
+
+    // Tidslinjen for runden, der er i gang – samme to kald som TimelineController (findActiveRound + getEvents(patientId, roundId))
+    static java.util.List<entities.Event> eventsInActiveRound(int patientId) throws Exception {
+        entities.Round round = new RoundService(pool()).findActiveRound(patientId);
+        return new TimelineService(pool()).getEvents(patientId, round.getId());
+    }
+
+    // id på det aktive forløb – bruges, når en test skal kalde de samme metoder som AppointmentController (getPast(patientId, journeyId))
+    static int activeJourneyId(int patientId) throws Exception {
+        return new DashboardService(pool()).findActiveJourney(patientId).getId();
+    }
 }

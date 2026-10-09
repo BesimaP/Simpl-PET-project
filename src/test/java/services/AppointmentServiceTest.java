@@ -54,21 +54,21 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void appointmentInFutureIsUpcomingNotPast() {
+    void appointmentInFutureIsUpcomingNotPast() throws Exception {
         int patientId = TestData.newPatientWithJourney();
         String nextYear = LocalDate.now().plusYears(1).toString(); // altid i fremtiden, uanset hvornår testen kører
         new AppointmentService(TestData.pool()).addAppointment(patientId, "SCANNING", "Vitanova", nextYear, "10:30");
         assertEquals(1, new AppointmentService(TestData.pool()).getUpcoming(patientId).size());
-        assertEquals(0, new AppointmentService(TestData.pool()).getPast(patientId).size());
+        assertEquals(0, new AppointmentService(TestData.pool()).getPast(patientId, TestData.activeJourneyId(patientId)).size());
     }
 
     @Test
-    void appointmentInPastIsPastNotUpcoming() {
+    void appointmentInPastIsPastNotUpcoming() throws Exception {
         int patientId = TestData.newPatientWithJourney();
         String lastYear = LocalDate.now().minusYears(1).toString();
         new AppointmentService(TestData.pool()).addAppointment(patientId, "BLOOD_TEST", "Vitanova", lastYear, "10:30");
         assertEquals(0, new AppointmentService(TestData.pool()).getUpcoming(patientId).size());
-        assertEquals(1, new AppointmentService(TestData.pool()).getPast(patientId).size());
+        assertEquals(1, new AppointmentService(TestData.pool()).getPast(patientId, TestData.activeJourneyId(patientId)).size());
     }
 
     @Test
@@ -80,39 +80,39 @@ class AppointmentServiceTest {
     }
 
     @Test
-    void eggRetrievalAppointmentCreatesTimelineEvent() {
+    void eggRetrievalAppointmentCreatesTimelineEvent() throws Exception {
         int patientId = TestData.newPatientWithRound(); // runde i gang -> 1 event (STIMULATION_START) i forvejen
         new AppointmentService(TestData.pool()).addAppointment(patientId, "EGG_RETRIEVAL", "Vitanova", "2026-10-05", "08:00");
-        assertEquals(2, new TimelineService(TestData.pool()).getEvents(patientId).size());
-        assertEquals(EventType.EGG_RETRIEVAL, new TimelineService(TestData.pool()).getEvents(patientId).get(1).getEventType());
+        assertEquals(2, TestData.eventsInActiveRound(patientId).size());
+        assertEquals(EventType.EGG_RETRIEVAL, TestData.eventsInActiveRound(patientId).get(1).getEventType());
     }
 
     @Test
-    void eggRetrievalBeforeRoundStartDoesNotCreateTimelineEvent() {
+    void eggRetrievalBeforeRoundStartDoesNotCreateTimelineEvent() throws Exception {
         int patientId = TestData.newPatientWithRound(); // runden startede 2026-09-10
         new AppointmentService(TestData.pool()).addAppointment(patientId, "EGG_RETRIEVAL", "Vitanova", "2026-09-01", "08:00");
         // aftalen ligger før runden -> den gemmes, men kommer ikke på rundens tidslinje
-        assertEquals(1, new TimelineService(TestData.pool()).getEvents(patientId).size());
+        assertEquals(1, TestData.eventsInActiveRound(patientId).size());
     }
 
     @Test
-    void scanningAppointmentDoesNotCreateTimelineEvent() {
+    void scanningAppointmentDoesNotCreateTimelineEvent() throws Exception {
         int patientId = TestData.newPatientWithRound();
         new AppointmentService(TestData.pool()).addAppointment(patientId, "SCANNING", "Vitanova", "2026-10-05", "08:00");
         // scanning er en almindelig aftale, ikke et trin i runden
-        assertEquals(1, new TimelineService(TestData.pool()).getEvents(patientId).size());
+        assertEquals(1, TestData.eventsInActiveRound(patientId).size());
     }
 
     @Test
     void eggRetrievalWithoutRoundIsSavedButNoEvent() {
         int patientId = TestData.newPatientWithJourney(); // forløb, men ingen runde
+        // aftalen gemmes uden fejl – der er bare ingen runde at lægge et tidslinje-trin på (event.round_id er NOT NULL)
         assertEquals(ServiceResult.OK, new AppointmentService(TestData.pool()).addAppointment(patientId, "EGG_RETRIEVAL", "Vitanova", "2099-10-05", "08:00"));
         assertEquals(1, new AppointmentService(TestData.pool()).getUpcoming(patientId).size());
-        assertTrue(new TimelineService(TestData.pool()).getEvents(patientId).isEmpty());
     }
 
     @Test
-    void appointmentsFromEndedJourneyCanStillBeShown() {
+    void appointmentsFromEndedJourneyCanStillBeShown() throws Exception {
         int patientId = TestData.newPatientWithJourney();
         AppointmentService appointments = new AppointmentService(TestData.pool());
         DashboardService journeys = new DashboardService(TestData.pool());
@@ -120,7 +120,7 @@ class AppointmentServiceTest {
         int oldJourneyId = journeys.getJourneys(patientId).get(0).getId();
         journeys.endJourney(patientId);
         journeys.createJourney(patientId, java.time.LocalDate.now().toString());
-        assertTrue(appointments.getPast(patientId).isEmpty());                    // det nye forløb har ingen aftaler
+        assertTrue(appointments.getPast(patientId, TestData.activeJourneyId(patientId)).isEmpty());                    // det nye forløb har ingen aftaler
         assertEquals(1, appointments.getPast(patientId, oldJourneyId).size());   // men det gamle har stadig sin
     }
 

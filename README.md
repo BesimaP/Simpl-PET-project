@@ -80,7 +80,7 @@ Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST
 
 ## Database
 
-Databasen er **PostgreSQL** (databasen hedder `Simpl`). Schema og testdata ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.). ERD: `doc/database/ERD.mmd`.
+Databasen er **PostgreSQL** (databasen hedder `Simpl`). Schema og testdata ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.). ERD: `doc/database/ERD.puml`.
 
 **View:** `round_overview` samler `round` med navnene fra `treatment_type` og `result` (JOIN + LEFT JOIN, fordi resultatet er tomt, mens runden er i gang). `RoundMapper` læser runder fra viewet i stedet for at skrive joinet selv.
 
@@ -135,11 +135,12 @@ Uploadede dokumenter gemmes i mappen `uploads/` i projektmappen. Den oprettes ve
 
 Dokumentationen findes i `doc/`-mappen:
 
+- **Backlog og kanban (GitHub Projects):** [Simpl Backlog](https://github.com/users/BesimaP/projects/6) (offentligt) med prioritering, estimater og status, og [Simpl Kanban](https://github.com/users/BesimaP/projects/5) (privat)
 - **Prototype (Figma):** https://www.figma.com/design/wGXeM5LlHTKdwRZigeKyDh/Simpl – skitserne, som HTML/CSS-siderne er bygget ud fra. Eksporteret til `doc/prototype/`: login og dashboard på desktop (1440 × 1024) og mobil (iPhone 17)
 
 - `doc/dynamic/` — idébeskrivelse, VPC, krav, entiteter, user stories med acceptkriterier, tasks, use case-beskrivelser, use case-diagram (`Usecase.puml`), navigationsdiagram (`Navigation.puml`) og sekvensdiagrammer for UC1–UC15 (`UC1 - LogIn.puml` … `UC15 - EndJourney.puml`)
 - `doc/static/` — domænemodel (`Domænemodel1.puml`), klassediagrammer (`Klassediagram4a` entities/enums/exceptions, `Klassediagram4b` persistence-laget med ConnectionPool og mappers, `Klassediagram4c-1-login-profil`, `Klassediagram4c-2-forloeb-runde` og `Klassediagram4c-3-registreringer` controllers og services + `Klassediagram4c-oversigt` uden metoder) og gruppekontrakt
-- `doc/database/` — ERD (`ERD.mmd`/`ERD.png`), PostgreSQL-schema (`schema_postgres.sql`) og testdata (`data_postgres.sql`)
+- `doc/database/` — ERD (`ERD.puml`/`ERD.png`), PostgreSQL-schema (`schema_postgres.sql`) og testdata (`data_postgres.sql`)
 
 Sekvensdiagrammerne (UC1–UC15) er opdateret i oktober 2026, så de følger koden: side → Javalin → Controller → Service → Mapper → ConnectionPool → PostgreSQL.
 

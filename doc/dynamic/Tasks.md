@@ -1,12 +1,12 @@
 # Tasks per user story
 
-*Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 250 JUnit-tests (mappers, services og entiteter) mod schemaet `test` i databasen `Simpl`, alle grønne.*
+*Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 256 JUnit-tests (mappers, services, entiteter og exceptions) mod schemaet `test` i databasen `Simpl`, alle grønne.*
 
 *Opdateret 7. okt 2026 (aften): rettelser efter kodegennemgang – afslut forløb, ret fødselsdato, slet dokument, aftalepåmindelser, kommende medicin, sider der virker uden JavaScript, fælles fejlside og menu som Thymeleaf-fragment. Testene er flyttet til `src/test/java` og sat op mod PostgreSQL (se "Tekniske krav").*
 
 *Opdateret 7. okt 2026: hele appen kører nu på PostgreSQL. DAO-klasserne er omdøbt til mappers i `persistence`, og alle får en fælles `ConnectionPool` gennem konstruktøren (Main → RouteConfig → Controller → Service → Mapper). Henvisninger til `…DAO` nedenfor svarer nu til `…Mapper`.*
 
-*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services – i dag 250 tests, se noten øverst).*
+*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services – i dag 256 tests, se noten øverst).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
 
@@ -123,7 +123,7 @@
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
 - [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep – SQLite er udskiftet, se næste punkt)*
-- [x]  Integrationstests mod en testdatabase i PostgreSQL *(8.–9. okt: testene kører mod schemaet `test` i databasen `Simpl`. `TestDatabase` (mappers) og `TestData` (services) kører `schema_postgres.sql` ind i `test`, så de rigtige data i `public` aldrig røres. 250 tests: 98 mapper-, 139 service- og 13 entitetstests – alle grønne)*
+- [x]  Integrationstests mod en testdatabase i PostgreSQL *(8.–9. okt: testene kører mod schemaet `test` i databasen `Simpl`. `TestDatabase` (mappers) og `TestData` (services) kører `schema_postgres.sql` ind i `test`, så de rigtige data i `public` aldrig røres. 256 tests: 100 mapper-, 141 service-, 13 entitets- og 2 exception-tests – alle grønne)*
 - [x]  Skift fra SQLite til PostgreSQL: `ConnectionPool` (HikariCP), mappers i `persistence`, try-with-resources, typetabeller med `SELECT id … WHERE name = ?` og `JOIN` *(7. okt)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
@@ -163,7 +163,7 @@
 - [x]  Mobil: avataren vises også på mobil, så Min profil, Diagnoser, Dokumenter og Log ud kan nås
 - [x]  Aftaler uden forløb viser "Intet forløb" i stedet for en formular, der altid fejler
 - [x]  JavaScript: `setTodayIn` bruger den lokale dato (ikke UTC) og tåler et manglende felt; medicin.js sætter dagens dato; dokumenter.js tåler "Annullér" i filvælgeren
-- [x]  Død kode fjernet: ubrugte mapper-metoder (`AppointmentMapper/EventMapper/NotificationMapper.delete`, `MedicationMapper.save`) og entitet-metoder, der aldrig blev kaldt. `RoundService.getRounds`, `TimelineService.getEvents(int)` og `AppointmentService.getPast(int)` er bevaret, fordi testene bruger dem til at tjekke den aktive runde/det aktive forløb
+- [x]  Død kode fjernet: ubrugte mapper-metoder (`AppointmentMapper/EventMapper/NotificationMapper.delete`, `MedicationMapper.save`) og entitet-metoder, der aldrig blev kaldt. 9. okt: også `RoundService.getRounds`, `TimelineService.getEvents(int)`, `AppointmentService.getPast(int)`, `DocumentService.deleteAllFiles` og `HormoneCurve.getMax/getAverage` fjernet – testene bruger nu de samme metoder som appen
 - [x]  Dokumentation: README (opsætning af database), UC4/UC6/UC9 (slet), US2 AC2, US1 AC3, US7 AC3, klassediagrammer og domænemodel i sort/hvid
 - [x]  Slet note/diagnose/dokument og "markér som læst" tjekker ejeren i SQL'en (`WHERE id = ? AND patient_id = ?`) – mapperen svarer true/false, så services ikke længere løber patientens liste igennem
 - [x]  Dokumenter: filen gemmes som UUID + endelse; `FileStorageException` (ny, i `exceptions`) i stedet for RuntimeException; fejler INSERT, slettes filen igen; ved sletning slettes rækken før filen; slet konto henter dokumenterne → sletter patienten → sletter filerne (`DocumentService.deleteFiles`)

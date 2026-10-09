@@ -114,12 +114,6 @@ public class DocumentService {
         return ServiceResult.OK;
     }
 
-    // Sletter ALLE patientens filer på disken. Kaldes af ProfileService, når kontoen slettes:
-    // ON DELETE CASCADE sletter kun rækkerne i databasen – filerne i uploads/ skal vi selv fjerne (US6b AC2)
-    public void deleteAllFiles(int patientId) {
-        deleteFiles(getDocuments(patientId));
-    }
-
     // Sletter filerne bag en liste dokumenter. ProfileService henter listen FØR kontoen slettes og kalder denne bagefter –
     // så slettes filerne kun, hvis rækkerne i databasen faktisk er væk
     public void deleteFiles(java.util.List<Document> documents) {

@@ -90,7 +90,6 @@ package "services" {
     + getActiveRoundStart(patientId : int) : LocalDate
     + getRoundsPerJourney(patientId : int) : Map<Integer, List<Round>>
     + findRound(patientId : int, roundId : int) : Round
-    + getRounds(patientId : int) : List<Round>
   }
 
   class TimelineService {
@@ -99,7 +98,6 @@ package "services" {
     + TimelineService(connectionPool : ConnectionPool)
     + addEvent(roundId : int, dateTime : LocalDateTime,\n    type : EventType, description : String) : void
     + getEvents(patientId : int, roundId : int) : List<Event>
-    + getEvents(patientId : int) : List<Event>
   }
 
   class AppointmentService {
@@ -110,7 +108,6 @@ package "services" {
     + AppointmentService(connectionPool : ConnectionPool)
     + addAppointment(patientId : int, type : String, location : String,\n    date : String, time : String) : ServiceResult
     + getUpcoming(patientId : int) : List<Appointment>
-    + getPast(patientId : int) : List<Appointment>
     + getUpcoming(patientId : int, journeyId : int) : List<Appointment>
     + getPast(patientId : int, journeyId : int) : List<Appointment>
   }

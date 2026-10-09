@@ -15,7 +15,6 @@ import persistence.RoundMapper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -155,15 +154,5 @@ public class RoundService {
             }
         }
         return null;
-    }
-
-    // Henter alle runder i patientens aktive forløb, ældste først – til rundehistorik (GET). Intet forløb -> tom liste
-    public List<Round> getRounds(int patientId) {
-        try {
-            FertilityJourney journey = dashboardService.findActiveJourney(patientId);
-            return roundMapper.findByJourney(journey.getId());
-        } catch (NoActiveJourneyException e) {
-            return new ArrayList<>();
-        }
     }
 }

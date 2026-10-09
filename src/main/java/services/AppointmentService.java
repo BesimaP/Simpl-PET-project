@@ -94,7 +94,7 @@ public class AppointmentService {
     }
 
 
-    // Henter aftaler på patientens aktive forløb, delt i kommende (fra nu og frem) og tidligere.
+    // Henter de kommende aftaler (fra nu og frem) på patientens aktive forløb – til "Næste aftale" på dashboardet.
     // Intet forløb -> tom liste
     public List<Appointment> getUpcoming(int patientId) {
         List<Appointment> upcoming = new ArrayList<>();
@@ -104,16 +104,6 @@ public class AppointmentService {
             }
         }
         return upcoming;
-    }
-
-    public List<Appointment> getPast(int patientId) {
-        List<Appointment> past = new ArrayList<>();
-        for (Appointment a : getAll(patientId)) {
-            if (!a.getDateTime().isAfter(LocalDateTime.now())) {  // ikke efter nu = tidligere
-                past.add(a);
-            }
-        }
-        return past;
     }
 
     // Samme to lister, men for ét bestemt forløb (også et afsluttet) – kun patientens eget, ellers tomme lister

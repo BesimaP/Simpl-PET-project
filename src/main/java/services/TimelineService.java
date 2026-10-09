@@ -3,8 +3,6 @@ package services;
 import entities.Event;
 import entities.Round;
 import enums.EventType;
-import exceptions.NoActiveJourneyException;
-import exceptions.NoActiveRoundException;
 import persistence.ConnectionPool;
 import persistence.EventMapper;
 
@@ -36,20 +34,6 @@ public class TimelineService {
         if (round == null) {
             return new ArrayList<>();
         }
-        return eventMapper.findByRound(round.getId());
-    }
-
-    // Henter rundens trin til tidslinjen – tom liste, hvis der ikke er forløb/runde (ikke en fejl, bare ingenting at vise)
-    public List<Event> getEvents(int patientId) {
-        // 1. find den runde, der er i gang – trinene hænger på runden. findActiveRound kaster, hvis der ikke er forløb eller runde
-        Round round;
-        try {
-            round = new RoundService(connectionPool).findActiveRound(patientId);
-        } catch (NoActiveJourneyException | NoActiveRoundException e) {
-            return new ArrayList<>(); // intet forløb eller ingen runde = ingen trin at vise
-        }
-
-        // 2. hent rundens trin fra databasen, ældste først
         return eventMapper.findByRound(round.getId());
     }
 }
