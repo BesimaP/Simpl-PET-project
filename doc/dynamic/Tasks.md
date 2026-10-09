@@ -1,10 +1,12 @@
 # Tasks per user story
 
+*Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 245 JUnit-tests (mappers, services og entiteter) mod schemaet `test` i databasen `Simpl`, alle grønne.*
+
 *Opdateret 7. okt 2026 (aften): rettelser efter kodegennemgang – afslut forløb, ret fødselsdato, slet dokument, aftalepåmindelser, kommende medicin, sider der virker uden JavaScript, fælles fejlside og menu som Thymeleaf-fragment. Testene er flyttet til `src/test/java` og sat op mod PostgreSQL (se "Tekniske krav").*
 
 *Opdateret 7. okt 2026: hele appen kører nu på PostgreSQL. DAO-klasserne er omdøbt til mappers i `persistence`, og alle får en fælles `ConnectionPool` gennem konstruktøren (Main → RouteConfig → Controller → Service → Mapper). Henvisninger til `…DAO` nedenfor svarer nu til `…Mapper`.*
 
-*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services).*
+*Opdateret 25. sep 2026: [x] = lavet. "Vis"-punkter er krydset, når siden er en Thymeleaf-template med data fra databasen. Gem-punkter er krydset, når formularen gemmer via controller → service → DAO. "Test"-punkter er krydset, når der er JUnit-tests på servicen (110 tests i src/test/java/services – i dag 245 tests, se noten øverst).*
 
 *Ældre note (22. sep): [x] = lavet. Gem-punkter er krydset, når formularen gemmer i databasen via controller → service → DAO. "Vis fra databasen" og "Test" venter på templates/session.*
 
@@ -86,7 +88,7 @@
 - [x]  Test registrering og "seneste værdi"-visning *(HormoneServiceTest)*
 
 ## User story 10a – Start og afslut runde
-- [x]  Lav layout til at starte en ny runde (rundenummer, behandlingstype som dropdown: IVF, ICSI, IUI, FET) *(HTML/CSS lavet)*
+- [x]  Lav layout til at starte en ny runde (behandlingstype som dropdown: IVF, ICSI, IUI, FET, og startdato – rundenummeret finder systemet selv) *(HTML/CSS lavet)*
 - [x]  JavaScript: dagens dato sættes automatisk i startdato-feltet *(js/start-runde.js, fælles funktion i common.js)*
 - [x]  Lav layout til at afslutte en runde med et resultat (Positiv / Negativ / Ikke afgjort endnu) *(HTML/CSS lavet)*
 - [x]  Gem resultatet på den specifikke Round, når den afsluttes *(POST /afslut-runde → RoundService.endRound → RoundDAO.endRound)*
@@ -121,7 +123,7 @@
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
 - [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep – SQLite er udskiftet, se næste punkt)*
-- [ ]  Integrationstests mod en testdatabase i PostgreSQL *(7. okt: testene er flyttet til `src/test/java` og `TestData` bruger en `ConnectionPool` mod databasen `Simpl_test` og kører `schema_postgres.sql` før hver testklasse. Ikke kørt endnu – sammenlignes med undervisningen torsdag 8. okt)*
+- [x]  Integrationstests mod en testdatabase i PostgreSQL *(8.–9. okt: testene kører mod schemaet `test` i databasen `Simpl`. `TestDatabase` (mappers) og `TestData` (services) kører `schema_postgres.sql` ind i `test`, så de rigtige data i `public` aldrig røres. 245 tests: 98 mapper-, 134 service- og 13 entitetstests – alle grønne)*
 - [x]  Skift fra SQLite til PostgreSQL: `ConnectionPool` (HikariCP), mappers i `persistence`, try-with-resources, typetabeller med `SELECT id … WHERE name = ?` og `JOIN` *(7. okt)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)

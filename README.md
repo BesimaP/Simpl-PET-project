@@ -26,7 +26,7 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 - **Diagnoser** — patientens registrerede diagnoser
 - **Dokumenter** — upload af fx blodprøvesvar og behandlingsplaner
 - **Tidslinje** — kronologisk overblik over trin i en runde
-- **Notifikationer** — påmindelser om dagens medicin
+- **Notifikationer** — påmindelser om dagens medicin og om aftaler i dag og i morgen
 
 ## Status (oktober 2026)
 
@@ -47,7 +47,7 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 - **HikariCP** — connection pool (`ConnectionPool` i `persistence`)
 - **jBCrypt** — hashing af kodeord
 - **Maven** — byggeværktøj og afhængighedsstyring (standardlayout som i undervisningen)
-- **JUnit 5** — unit tests
+- **JUnit 5** — integrationstests af mappers og services mod PostgreSQL, og unit tests af entiteterne
 
 ## Arkitektur
 

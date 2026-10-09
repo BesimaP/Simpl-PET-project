@@ -16,13 +16,13 @@ usecase "UC4: RegisterDiagnosis" as UC4
 usecase "UC5: ManageAppointments" as UC5
 usecase "UC6: WriteDiaryEntry" as UC6
 usecase "UC7: ViewNotifications" as UC7
+usecase "UC12: ManageDocuments" as UC12
 
 rectangle "Runde (Round)" {
   usecase "UC8: StartRound" as UC8
   usecase "UC9: LogHormoneValue" as UC9
   usecase "UC10: LogMedication" as UC10
   usecase "UC11: ViewTimeline" as UC11
-  usecase "UC12: ManageDocuments" as UC12
   usecase "UC13: ViewRoundHistory" as UC13
   usecase "UC14: EndRound" as UC14
 }
@@ -39,12 +39,12 @@ UC3 --> UC4
 UC3 --> UC5
 UC3 --> UC6
 UC3 --> UC7
+UC3 --> UC12
 UC3 --> UC8
 
 UC8 --> UC9
 UC8 --> UC10
 UC8 --> UC11
-UC8 --> UC12
 UC8 --> UC13
 UC8 --> UC14
 

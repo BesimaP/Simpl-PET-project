@@ -84,7 +84,7 @@ Som patient vil jeg kunne registrere mine hormonværdier, så jeg kan følge udv
 Som patient vil jeg kunne starte og afslutte en runde, så mit forløb afspejler, hvor jeg er i behandlingen.
 
 **Acceptkriterier:**
-- Acceptkriterie 1: "Givet et fertilitetsforløb, når en ny runde startes med rundenummer og behandlingstype, så oprettes runden tilknyttet forløbet" → tester at "start ny runde" opretter en selvstændig runde
+- Acceptkriterie 1: "Givet et fertilitetsforløb, når en ny runde startes med behandlingstype og startdato, så oprettes runden tilknyttet forløbet med næste rundenummer" → tester at "start ny runde" opretter en selvstændig runde, og at systemet selv tæller rundenummeret op
 - Acceptkriterie 2: "Givet en ny runde startes, når behandlingstype vælges, så kan der vælges mellem IVF, ICSI, IUI og FET" → tester at behandlingstyperne er faste værdier og matcher ordlisten
 - Acceptkriterie 3: "Givet en runde i gang, når den afsluttes med et resultat, så gemmes resultatet på runden" → tester at afslutning og resultat hænger sammen på det korrekte niveau
 
