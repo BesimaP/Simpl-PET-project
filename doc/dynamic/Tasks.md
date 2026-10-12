@@ -150,6 +150,7 @@
 
 ## Refaktorering (12. okt 2026)
 - [x]  `isBlank` og `isTooLong` stod som private kopier i 8 services → samlet i hjælpeklassen `services/InputCheck` med `static` metoder (SRP: én ting ét sted). Kald: `InputCheck.isBlank(name)`. Klassediagram 4c-oversigt og UC2 opdateret. Alle 256 tests grønne bagefter
+- [x]  `DocumentService` havde to jobs: reglerne for dokumenter OG selve filerne på disken → filerne er flyttet til `persistence/FileStorage` (save, read, contentType, delete), ligesom databasen klares af `DocumentMapper` (SRP/SoC). `DocumentController` læser heller ikke længere selv fra disken. Ny `FileStorageTest` (6 tests); alle 262 tests grønne. Klassediagram 4a/4b/4c-1/4c-oversigt og UC12 opdateret
 
 ## Rettelser efter gennemgang (9. okt 2026)
 - [x]  Findes der allerede et aktivt forløb, viser dashboardet "Du har allerede et aktivt forløb" i stedet for "Dit forløb er oprettet ✓" (DashboardController, besked.html)

@@ -2,32 +2,30 @@ package services;
 
 import persistence.ConnectionPool;
 import persistence.DocumentMapper;
+import persistence.FileStorage;
 import entities.Document;
 import enums.DocumentType;
 import enums.ServiceResult;
 import exceptions.DatabaseException;
-import exceptions.FileStorageException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
-import java.util.UUID;
 
 // Forretningslogik for dokumenter (US11). Kender IKKE Javalin.
 // Regler: titel og type udfyldt, filtype PDF/JPG/PNG, maks 10 MB.
 // Dokumentet ligger på patienten, så det kan uploades når som helst – også før første runde (fx en henvisning).
 // Svarer med ServiceResult: OK · INVALID_INPUT
+// Rækken i databasen klarer DocumentMapper, selve filen på disken klarer FileStorage – servicen har kun reglerne
 public class DocumentService {
 
-    private static final String UPLOAD_DIR = "uploads";
     private static final long MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
     private DocumentMapper documentMapper;
+    private FileStorage fileStorage;
 
     public DocumentService(ConnectionPool connectionPool) {
         this.documentMapper = new DocumentMapper(connectionPool);
+        this.fileStorage = new FileStorage();
     }
 
     public ServiceResult uploadDocument(int patientId, String title, String type,
@@ -61,24 +59,16 @@ public class DocumentService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 5. gem filen på disken under et unikt navn: UUID + endelsen (fx "3f2a….pdf").
-        //    Det oprindelige filnavn bruges ikke – det kan være for langt til file_path (VARCHAR(255)) og indeholde mærkelige tegn.
-        //    Titlen er det, patienten ser i listen
+        // 5. gem filen på disken – FileStorage giver den et unikt navn og svarer med stien. Titlen er det, patienten ser i listen
         String extension = lower.substring(lower.lastIndexOf('.'));   // ".pdf", ".jpg", ".jpeg" eller ".png" (tjekket i trin 3)
-        Path target = Path.of(UPLOAD_DIR, UUID.randomUUID() + extension);
-        try {
-            Files.createDirectories(target.getParent());
-            Files.copy(fileContent, target, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
-            throw new FileStorageException("Filen kunne ikke gemmes på disken", e);   // fanges af ExceptionConfig -> fejlsiden
-        }
+        String filePath = fileStorage.save(fileContent, extension);
 
         // 6. gem rækken i databasen – kun stien til filen og dagens dato.
         //    Fejler databasen, slettes filen igen, så der ikke ligger en fil på disken uden en række
         try {
-            documentMapper.save(new Document(0, patientId, LocalDate.now(), title.trim(), documentType, target.toString()));
+            documentMapper.save(new Document(0, patientId, LocalDate.now(), title.trim(), documentType, filePath));
         } catch (DatabaseException e) {
-            deleteFile(target.toString());
+            fileStorage.delete(filePath);
             throw e;   // videre til ExceptionConfig -> fejlsiden
         }
 
@@ -110,7 +100,7 @@ public class DocumentService {
         }
         // rækken først, så filen: fejler databasen, findes både række og fil stadig (ingen række, der peger på en slettet fil)
         documentMapper.delete(documentId, patientId);   // AND patient_id = ? i SQL'en – ekstra sikring
-        deleteFile(document.getFilePath());
+        fileStorage.delete(document.getFilePath());
         return ServiceResult.OK;
     }
 
@@ -118,17 +108,17 @@ public class DocumentService {
     // så slettes filerne kun, hvis rækkerne i databasen faktisk er væk
     public void deleteFiles(java.util.List<Document> documents) {
         for (Document d : documents) {
-            deleteFile(d.getFilePath());
+            fileStorage.delete(d.getFilePath());
         }
     }
 
-    // hjælper: slet én fil. deleteIfExists = ingen fejl, hvis filen allerede er væk
-    private void deleteFile(String filePath) {
-        try {
-            Files.deleteIfExists(Path.of(filePath));
-        } catch (IOException e) {
-            // filen kunne ikke slettes (fx låst) – rækken er allerede væk, så patienten ser den ikke mere
-            System.err.println("Kunne ikke slette filen " + filePath + ": " + e.getMessage());
-        }
+    // Selve filen til "Åbn" – controlleren sender den til browseren. IOException = filen er væk
+    public byte[] readFile(Document document) throws IOException {
+        return fileStorage.read(document.getFilePath());
+    }
+
+    // PDF eller billede? Så browseren ved, hvordan filen skal vises
+    public String contentType(Document document) {
+        return fileStorage.contentType(document.getFilePath());
     }
 }

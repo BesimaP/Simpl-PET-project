@@ -11,7 +11,7 @@ participant "dokumenter.html" as v
 participant "Javalin" as j
 participant "DocumentController" as c
 participant "DocumentService" as s
-participant "Disk (uploads/)" as fs
+participant "FileStorage\n(uploads/)" as fs
 participant "DocumentMapper" as dm
 participant "ConnectionPool" as cp
 database "PostgreSQL" as db
@@ -53,16 +53,16 @@ else File chosen
     s --> c : INVALID_INPUT
     c --> j : ctx.redirect("/dokumenter?fejl=fil")
   else All OK
-    s -> fs : Files.copy(content, uploads/<UUID>.<extension>)
+    s -> fs : save(content, extension)\n(Files.copy til uploads/<UUID>.<extension>)
     note right of fs : IOException → throw FileStorageException\n(ExceptionConfig shows the error page)
-    fs --> s : file saved on disk
+    fs --> s : filePath
     s -> dm : save(new Document(0, patientId, LocalDate.now(), title, type, filePath))
     dm -> cp : getConnection()
     cp --> dm : Connection
     dm -> db : INSERT INTO document (patient_id, upload_date, title, document_type_id, file_path)\nVALUES (?, ?, ?, (SELECT id FROM document_type WHERE name = ?), ?)
     note right of db : Only the path is stored,\nnot the file itself
     alt INSERT fails (DatabaseException)
-      s -> fs : Files.deleteIfExists(file) – no file without a row
+      s -> fs : delete(filePath) – no file without a row
       s --> c : rethrow DatabaseException → error page
     else Row saved
     db --> dm : generated id
@@ -85,12 +85,13 @@ s --> c : Document (or null if not the patient's own)
 alt id not a number / document null
   c --> j : ctx.status(404)
 else Document found
-  c -> fs : Files.readAllBytes(Path.of(filePath))
+  c -> s : contentType(document), readFile(document)
+  s -> fs : contentType(filePath), read(filePath)
   alt IOException (file missing on disk)
     c --> j : ctx.status(404)
   else File read
-    fs --> c : byte[]
-    c -> c : Files.probeContentType(path)\n(null → type from extension: .pdf / .png / else image/jpeg)
+    fs --> s : type + byte[]\n(probeContentType; null → type from extension)
+    s --> c : type + byte[]
     c --> j : ctx.contentType(...), ctx.result(bytes)
     j --> u : Browser shows the PDF / image
   end
@@ -114,7 +115,7 @@ else id OK
     dm -> cp : getConnection()
     cp --> dm : Connection
     dm -> db : DELETE FROM document WHERE id = ? AND patient_id = ?
-    s -> fs : Files.deleteIfExists(Path.of(filePath))
+    s -> fs : delete(filePath)
     note right of fs : Row first, then file: if the DB fails,\nboth row and file still exist
     s --> c : OK
     c --> j : ctx.redirect("/dokumenter?gemt=slettet")

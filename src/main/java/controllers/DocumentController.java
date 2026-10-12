@@ -10,8 +10,6 @@ import services.DocumentService;
 import entities.Document;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 // Koordinatoren for dokumenter.html (US11). Læser formularen, kalder DocumentService og sender brugeren videre.
 public class DocumentController {
@@ -70,23 +68,11 @@ public class DocumentController {
             return;
         }
 
-        // 3. læs filen fra disken og send den. contentType fortæller browseren, om det er PDF eller billede
+        // 3. hent filen gennem servicen (FileStorage læser den fra disken) og send den.
+        //    contentType fortæller browseren, om det er PDF eller billede
         try {
-            Path path = Path.of(document.getFilePath());
-            // probeContentType kan give null (computeren kender ikke filtypen) – så bruges en standardtype ud fra endelsen
-            String contentType = Files.probeContentType(path);
-            if (contentType == null) {
-                String name = path.toString().toLowerCase();
-                if (name.endsWith(".pdf")) {
-                    contentType = "application/pdf";
-                } else if (name.endsWith(".png")) {
-                    contentType = "image/png";
-                } else {
-                    contentType = "image/jpeg";   // .jpg / .jpeg – de eneste andre typer, upload tillader
-                }
-            }
-            ctx.contentType(contentType);
-            ctx.result(Files.readAllBytes(path));
+            ctx.contentType(documentService.contentType(document));
+            ctx.result(documentService.readFile(document));
         } catch (IOException e) {
             ctx.status(404);   // rækken findes i databasen, men filen er væk
         }

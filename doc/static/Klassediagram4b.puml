@@ -59,6 +59,14 @@ package "persistence" {
     - mapRow(rs : ResultSet) : Document
   }
 
+  class FileStorage {
+    - {static} UPLOAD_DIR : String = "uploads"
+    + save(content : InputStream, extension : String) : String
+    + read(filePath : String) : byte[]
+    + contentType(filePath : String) : String
+    + delete(filePath : String) : void
+  }
+
   class DiaryEntryMapper {
     - connectionPool : ConnectionPool
     + DiaryEntryMapper(connectionPool : ConnectionPool)
@@ -155,6 +163,8 @@ DiagnosisMapper -down-> ConnectionPool
 DocumentMapper -down-> ConnectionPool
 PatientMapper -[hidden]right- DiagnosisMapper
 DiagnosisMapper -[hidden]right- DocumentMapper
+DocumentMapper -[hidden]right- FileStorage
+note bottom of FileStorage : som en mapper – men for disken (uploads/).\nIngen ConnectionPool
 
 ' række 2: ConnectionPool i midten
 DiaryEntryMapper -right-> ConnectionPool

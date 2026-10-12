@@ -59,6 +59,7 @@ package "persistence (4b)" {
   class PatientMapper
   class DiagnosisMapper
   class DocumentMapper
+  class FileStorage
   class FertilityJourneyMapper
   class RoundMapper
   class EventMapper
@@ -115,6 +116,7 @@ AuthService ---> PatientMapper
 ProfileService ---> PatientMapper
 DiagnosisService ---> DiagnosisMapper
 DocumentService ---> DocumentMapper
+DocumentService ---> FileStorage
 DashboardService ---> FertilityJourneyMapper
 DashboardService ---> RoundMapper
 RoundService ---> RoundMapper

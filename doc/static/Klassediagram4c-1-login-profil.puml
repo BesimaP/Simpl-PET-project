@@ -18,7 +18,7 @@ hide circle
 
 title Klassediagram 4c-1 — login, profil, diagnoser og dokumenter\n(controller -> service; mappers står i 4b)
 
-' Små private hjælpere (deleteFile …) er udeladt. isBlank/isTooLong ligger i InputCheck (se 4c-oversigt).
+' Små private hjælpere (…) er udeladt. Filerne på disken klarer FileStorage (4b). isBlank/isTooLong ligger i InputCheck (se 4c-oversigt).
 ' Services svarer controlleren med enum ServiceResult (OK, INVALID_INPUT, NOT_FOUND …) – se 4a.
 ' AuthService.login() kaster UserNotFoundException (se 4a).
 ' Bokse uden indhold <<andet diagram>> er services fra et andet område (metoderne står der).
@@ -97,19 +97,23 @@ package "services" {
   }
 
   class DocumentService {
-    - {static} UPLOAD_DIR : String = "uploads"
     - {static} MAX_SIZE_BYTES : long = 10 MB
     - documentMapper : DocumentMapper
+    - fileStorage : FileStorage
     + DocumentService(connectionPool : ConnectionPool)
     + uploadDocument(patientId : int, title : String, type : String,\n    originalFileName : String, fileContent : InputStream, fileSize : long) : ServiceResult
     + getDocuments(patientId : int) : List<Document>
     + findDocument(patientId : int, documentId : int) : Document
     + deleteDocument(patientId : int, documentId : int) : ServiceResult
     + deleteFiles(documents : List<Document>) : void
+    + readFile(document : Document) : byte[]
+    + contentType(document : Document) : String
   }
 
   class DashboardService <<4c-2>>
 }
+
+class FileStorage <<4b>>
 
 ' ---------- controller -> service ----------
 LoginController --> AuthService
@@ -120,6 +124,7 @@ DocumentController --> DocumentService
 ' ---------- service -> service ----------
 AuthService --> DashboardService : opretter forløb\nved opret profil
 ProfileService --> DocumentService : sletter filer\nved slet konto
+DocumentService --> FileStorage : filen på disken
 
 
 @enduml

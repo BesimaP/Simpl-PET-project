@@ -274,7 +274,7 @@ package "exceptions" {
   note as NEx
     <<RuntimeException>> / <<Exception>> = klassen extends den.
     DatabaseException: kastes af alle mappers (isDuplicate() = UNIQUE-brud, SQLState 23505).
-    FileStorageException: kastes af DocumentService (filen kunne ikke gemmes).
+    FileStorageException: kastes af FileStorage (filen kunne ikke gemmes).
     NoActiveJourney-/NoActiveRoundException: kastes af DashboardService/RoundService.
     UserNotFoundException: kastes af AuthService.login().
     Ufangede fejl ender i ExceptionConfig -> fejlsiden.
