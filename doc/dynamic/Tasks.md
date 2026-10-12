@@ -1,5 +1,7 @@
 # Tasks per user story
 
+*Opdateret 12. okt 2026: refaktorering – `InputCheck` og `FileStorage` (se afsnittet "Refaktorering (12. okt 2026)"). Nu 262 tests (6 nye i `FileStorageTest`), alle grønne.*
+
 *Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 256 JUnit-tests (mappers, services, entiteter og exceptions) mod schemaet `test` i databasen `Simpl`, alle grønne.*
 
 *Opdateret 7. okt 2026 (aften): rettelser efter kodegennemgang – afslut forløb, ret fødselsdato, slet dokument, aftalepåmindelser, kommende medicin, sider der virker uden JavaScript, fælles fejlside og menu som Thymeleaf-fragment. Testene er flyttet til `src/test/java` og sat op mod PostgreSQL (se "Tekniske krav").*

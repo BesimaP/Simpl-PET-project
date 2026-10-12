@@ -58,16 +58,16 @@ src/main/java/
 ├── Main.java              # Laver ConnectionPool, starter Javalin (port 7070) og giver poolen til RouteConfig
 ├── configuration/         # RouteConfig (laver controllerne), ThymeleafConfig, ExceptionConfig
 ├── controllers/           # Javalin-ruter: læser formularen, kalder service, vælger side (én per side)
-├── services/              # Forretningslogik: regler og mapper-kald, uden Javalin (én per emne) – svarer med ServiceResult
+├── services/              # Forretningslogik: regler og mapper-kald, uden Javalin (én per emne) – svarer med ServiceResult. InputCheck = fælles tjek af tomme/for lange felter
 ├── entities/              # Model: dataklasser, én per tabel
-├── persistence/           # ConnectionPool + mappers: al SQL (én mapper per tabel)
+├── persistence/           # ConnectionPool + mappers: al SQL (én mapper per tabel). FileStorage = de uploadede filer i uploads/
 ├── exceptions/            # DatabaseException, FileStorageException, NoActiveJourneyException, NoActiveRoundException, UserNotFoundException
 └── enums/                 # Enums (AppointmentType, HormoneType, TreatmentType …) – matcher navnene i typetabellerne
 
 src/main/resources/
 ├── public/                # css/, js/ og img/ (hentes direkte af browseren)
 └── templates/             # View: alle sider som Thymeleaf-skabeloner (login, dashboard, medicin …)
-    └── fragments/         # genbrugte stykker: menu.html (menuen) og besked.html (Gemt ✓ / fejl)
+    └── fragments/         # genbrugte stykker: menu.html (menuen), topbar.html (overskrift, klokke, avatar) og besked.html (Gemt ✓ / fejl)
 
 src/test/java/persistence/ # integrationstests af mapperne – kører mod schemaet test i databasen Simpl (se TestDatabase.java)
 src/test/java/services/    # integrationstests af services – kører mod schemaet test i databasen Simpl (se TestData.java)
