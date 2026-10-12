@@ -11,57 +11,54 @@ import persistence.ConnectionPool;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
-// Forretningslogik for login og opret profil. Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
+// Logik for login og opret profil.
 public class AuthService {
-    public static final int MIN_PASSWORD_LENGTH = 8;  // bruges også af ProfileService ved "skift kodeord"
-    public static final int MAX_PASSWORD_LENGTH = 72; // BCrypt bruger kun de første 72 bytes – resten ville blive ignoreret uden at sige det
+    public static final int MIN_PASSWORD_LENGTH = 8;  // bruges også af ProfileService ved skift kodeord
+    public static final int MAX_PASSWORD_LENGTH = 72; // BCrypt bruger kun de første 72 bytes – resten ville blive ignoreret
 
-    private PatientMapper patientMapper;          // attribut 1: arkivaren (laves én gang i konstruktøren)
-    private DashboardService dashboardService;    // attribut 2: bruges til at oprette forløbet ved "opret profil"
+    private PatientMapper patientMapper;
+    private DashboardService dashboardService;    // til at oprette forløbet ved opret profil
 
-    // Konstruktøren: den, der laver en AuthService, SKAL give nøgleringen med.
-    // Kaldes fra LoginController: new AuthService(connectionPool)
     public AuthService(ConnectionPool connectionPool) {
-        this.patientMapper = new PatientMapper(connectionPool);       // lav arkivaren, giv ham ringen, gem ham i attributten
-        this.dashboardService = new DashboardService(connectionPool); // ringen gives videre til DashboardService
+        this.patientMapper = new PatientMapper(connectionPool);
+        this.dashboardService = new DashboardService(connectionPool);
     }
 
-    // Login: giver patientens id tilbage (det er det, sessionen skal huske) – ellers kastes UserNotFoundException
+    // Giver patienten tilbage, hvis brugernavn og kodeord passer – ellers UserNotFoundException
     public Patient login(String username, String password) throws UserNotFoundException {
-        // regel: begge felter skal være udfyldt (BCrypt kan ikke tjekke et kodeord, der er null)
+        // begge felter skal være udfyldt (BCrypt kan ikke tjekke null)
         if (InputCheck.isBlank(username) || InputCheck.isBlank(password)) {
             throw new UserNotFoundException("Forkert brugernavn eller adgangskode");
         }
 
-        // mellemrum før/efter fjernes – samme som ved opret profil, så " anna" og "anna" er samme bruger
+        // trim ligesom ved opret profil, så " anna" og "anna" er samme bruger
         Patient patient = patientMapper.findByUsername(username.trim());
 
         if (patient == null || !passwordMatches(password, patient.getPasswordHash())) {
             throw new UserNotFoundException("Forkert brugernavn eller adgangskode");
         }
 
-        // brugernavn og kodeord passer – giv patientens kort tilbage (id'et skal i sessionen)
         return patient;
     }
 
-    // Opret profil: patient (+ forløb, hvis brugeren allerede er i gang med et).
-    // OK = oprettet · INVALID_INPUT = tomt felt/ugyldig dato · ALREADY_EXISTS = brugernavnet er optaget
+    // Opretter patienten og evt. et forløb, hvis hun allerede er i gang med et.
+    // Svar: OK, INVALID_INPUT eller ALREADY_EXISTS (brugernavnet er optaget)
     public ServiceResult createProfile(String firstName, String lastName, String dateOfBirth, String username, String password, String hasJourney, String journeyStart) {
 
-        // 0. regel: ingen tomme felter
+        // ingen tomme felter
         if (InputCheck.isBlank(firstName) || InputCheck.isBlank(lastName) || InputCheck.isBlank(dateOfBirth) || InputCheck.isBlank(username) || InputCheck.isBlank(password)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // mellemrum før/efter fjernes (ligesom fornavn og efternavn), så man kan logge ind uden at ramme dem præcist
+        // trim, så man kan logge ind uden at ramme mellemrummene præcist
         username = username.trim();
 
-        // 0a. regel: teksten skal kunne være i kolonnerne (VARCHAR(50) – se schema_postgres.sql)
+        // teksten skal kunne være i kolonnerne (VARCHAR(50))
         if (InputCheck.isTooLong(firstName, 50) || InputCheck.isTooLong(lastName, 50) || InputCheck.isTooLong(username, 50)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 0b. regel: fødselsdatoen skal være en rigtig dato (ellers crasher LocalDate.parse længere nede)
+        // fødselsdatoen skal være en rigtig dato
         LocalDate dob;
         try {
             dob = LocalDate.parse(dateOfBirth);
@@ -73,13 +70,13 @@ public class AuthService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // regel: kodeordet skal være mindst 8 tegn (samme som minlength="8" i HTML – serveren stoler ikke på HTML)
+        // mindst 8 tegn – vi tjekker det her også, fordi man kan komme uden om minlength i HTML
         if (password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 0c. regel: har brugeren svaret "ja" til forløb, skal startdatoen være en rigtig dato
-        //     (tjekkes HER, før vi gemmer noget – ellers ville kontoen være oprettet, men forløbet fejle)
+        // har hun svaret ja til forløb, skal startdatoen tjekkes nu, før vi gemmer noget –
+        // ellers kunne kontoen blive oprettet, mens forløbet fejler
         boolean wantsJourney = "yes".equals(hasJourney);
         if (wantsJourney) {
             if (InputCheck.isBlank(journeyStart)) {
@@ -97,13 +94,12 @@ public class AuthService {
             }
         }
 
-        // 1. regel: brugernavn skal være unikt
+        // brugernavnet skal være unikt
         if (patientMapper.findByUsername(username) != null) {
-            return ServiceResult.ALREADY_EXISTS; // brugernavnet er optaget
+            return ServiceResult.ALREADY_EXISTS;
         }
 
-        // 2. gem patienten (login + persondata i én række). id'et fra databasen skal bruges til forløbet
-        //    try/catch: ved dobbeltklik kan to forespørgsler komme forbi tjekket i trin 1 – databasens UNIQUE afviser den anden
+        // ved dobbeltklik kan to forespørgsler nå forbi tjekket ovenfor – så afviser databasens unikke indeks den anden
         int patientId;
         try {
             patientId = patientMapper.save(new Patient(0, username, BCrypt.hashpw(password, BCrypt.gensalt()), firstName.trim(), lastName.trim(), dob));
@@ -111,10 +107,10 @@ public class AuthService {
             if (e.isDuplicate()) {
                 return ServiceResult.ALREADY_EXISTS;
             }
-            throw e;   // en anden databasefejl – lad den samlede handler vise fejlsiden
+            throw e;   // andre databasefejl går videre til ExceptionConfig
         }
 
-        // 3. valgfrit: opret forløbet med det samme – samme regel/metode som "Start dit forløb" på dashboardet
+        // samme metode som "Start dit forløb" på dashboardet
         if (wantsJourney) {
             dashboardService.createJourney(patientId, journeyStart);
         }
@@ -122,9 +118,8 @@ public class AuthService {
         return ServiceResult.OK;
     }
 
-    // hjælper: passer kodeordet med hashet fra databasen?
-    // BCrypt.checkpw KASTER en IllegalArgumentException eller StringIndexOutOfBoundsException, hvis hashet i databasen
-    // ikke er et rigtigt BCrypt-hash (fx en pladsholder i testdata). Det skal give "forkert kodeord" – ikke en 500-fejl
+    // Passer kodeordet med hashet? checkpw kaster en exception, hvis hashet ikke er et rigtigt BCrypt-hash
+    // (fx i testdata). Det skal bare give "forkert kodeord" og ikke en 500-fejl
     public static boolean passwordMatches(String password, String hash) {
         try {
             return BCrypt.checkpw(password, hash);

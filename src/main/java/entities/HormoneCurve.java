@@ -5,11 +5,11 @@ import enums.HormoneType;
 import java.util.ArrayList;
 import java.util.List;
 
-// Kurven på hormoner-siden (US9). IKKE en tabel i databasen – bare et "kort" med de punkter, SVG'en skal tegne.
-// HormoneService regner målingerne om til koordinater, så skabelonen kun skal tegne, ikke regne.
+// Kurven på hormoner-siden (US9). Ikke en tabel – bare de punkter, SVG'en skal tegne.
+// HormoneService regner koordinaterne ud, så skabelonen ikke skal regne.
 public class HormoneCurve {
 
-    // Ét punkt på kurven: x/y i SVG-koordinater + tekst til hover/akse
+    // Et punkt på kurven: x/y i SVG-koordinater plus tekst til hover og akse
     public static class Point {
         private double x;
         private double y;
@@ -35,7 +35,7 @@ public class HormoneCurve {
     private double max;
     private double average;    // gennemsnit af værdierne
     private double averageY;   // gennemsnittet som y-koordinat (til den stiplede linje)
-    private int skipped;       // målinger af hormonet i en ANDEN enhed – kan ikke tegnes på samme akse
+    private int skipped;       // målinger i en anden enhed – de kan ikke tegnes på samme akse
     private List<Point> points = new ArrayList<>();
 
     public HormoneCurve(HormoneType type, String unit, double max) {
@@ -62,7 +62,7 @@ public class HormoneCurve {
     }
     public List<Point> getPoints() { return points; }
 
-    // "x1,y1 x2,y2 …" – præcis den tekst <polyline points="…"> i SVG skal have
+    // "x1,y1 x2,y2 …" – formatet som <polyline points="…"> skal have
     public String getPolyline() {
         String s = "";
         for (Point p : points) {

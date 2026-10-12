@@ -1,43 +1,37 @@
-// dashboard.js — JavaScript kun til dashboard (templates/dashboard.html)
+// dashboard.js – til dashboard.html
 
-// --- "Afslut runde": spørg først i vores egen dialog (samme mønster som slet konto på min profil) ---
+// --- Afslut runde: spørg først i en dialog (samme som slet konto på min profil) ---
 
-// FIND "Afslut runde"-knappen og dialogen nederst i html'en
 const endRoundButton = document.getElementById("end-round");
 const endRoundDialog = document.getElementById("confirm-end");
 
-// knappen og dialogen findes KUN, når der er en runde i gang (th:if i skabelonen) – ellers er de null, og vi gør ingenting
+// de findes kun, når der er en runde i gang
 if (endRoundButton && endRoundDialog) {
 
-    // NÅR man klikker på knappen:
     endRoundButton.addEventListener("click", function (event) {
 
-        // knappen er et link til /afslut-runde (til dem uden JavaScript) – stop linket, vi viser dialogen i stedet
+        // linket til /afslut-runde er til dem uden JavaScript, her viser vi dialogen i stedet
         event.preventDefault();
 
-        // åbn dialogen (modal = resten af siden låses imens)
         endRoundDialog.showModal();
     });
 }
 
-// Der er IKKE en "close"-handler mere: "Afslut runde"-knappen i dialogen har formmethod="post" formaction="/afslut-runde",
-// så browseren sender selv formularen til serveren, og serveren sender videre til rundehistorik.
-// Et window.location.href her ville afbryde den afsendelse.
+// Vi har ikke en close-handler, fordi knappen i dialogen selv sender til /afslut-runde via formaction.
+// Et window.location.href her ville afbryde afsendelsen.
 
-// --- Notifikationer: klokken øverst åbner pop-op'en #notif-dialog (samme mønster som "Afslut runde" ovenfor) ---
+// --- Notifikationer: klokken åbner pop-op'en ---
 
-// FIND klokke-knappen og dialogen nederst i html'en
 const notifButton = document.getElementById("open-notifications");
 const notifDialog = document.getElementById("notif-dialog");
 
-// begge findes altid på dashboard, men vi tjekker alligevel (så koden ikke fejler, hvis html'en ændres)
+// de findes altid, men vi tjekker alligevel, hvis HTML'en bliver ændret
 if (notifButton && notifDialog) {
 
-    // NÅR man klikker på klokken: åbn dialogen (modal = resten af siden låses imens)
     notifButton.addEventListener("click", function (event) {
-        event.preventDefault();   // klokken er et link til /notifikationer (til dem uden JavaScript) – stop linket
+        event.preventDefault();   // uden JavaScript er klokken bare et link
         notifDialog.showModal();
     });
 }
 
-// "Luk" lukker via method="dialog", og "Markér alle som læst" sender selv til serveren via formaction – ingen mere JS nødvendig.
+// Luk og "Markér alle som læst" klares af method="dialog" og formaction, så der skal ikke mere JS til.

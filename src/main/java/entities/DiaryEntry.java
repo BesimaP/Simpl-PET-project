@@ -2,7 +2,7 @@ package entities;
 
 import java.time.LocalDateTime;
 
-// En dagbogsnote på forløbet (tabel diary_entry, US4).
+// En dagbogsnote (tabel diary_entry, US4).
 public class DiaryEntry {
 
     private int id;
@@ -11,7 +11,7 @@ public class DiaryEntry {
     private String title;
     private String content;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public DiaryEntry(int id, int patientId, LocalDateTime dateTime, String title, String content) {
         this.id = id;
         this.patientId = patientId;
@@ -20,7 +20,7 @@ public class DiaryEntry {
         this.content = content;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }

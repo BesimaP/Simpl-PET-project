@@ -17,9 +17,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-// Forretningslogik for aftaler (US3). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
-// Aftaler hænger på forløbet, ikke runden (første konsultation sker før nogen runde).
-// Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldig type eller dato · NO_ACTIVE_JOURNEY = intet forløb
+// Logik for aftaler (US3). Aftaler hænger på forløbet, ikke runden, fordi første konsultation sker før nogen runde.
 public class AppointmentService {
     private AppointmentMapper appointmentMapper;
     private DashboardService dashboardService;
@@ -33,9 +31,9 @@ public class AppointmentService {
         this.timelineService = new TimelineService(connectionPool);
     }
 
-    // Gemmer én aftale på patientens aktive forløb
+    // Gemmer en aftale på det aktive forløb. Svar: OK, INVALID_INPUT eller NO_ACTIVE_JOURNEY
     public ServiceResult addAppointment(int patientId, String type, String location, String date, String time) {
-        // 1. regel: alle felter skal være udfyldt
+        // alle felter skal være udfyldt
         if (InputCheck.isBlank(type) || InputCheck.isBlank(location) || InputCheck.isBlank(date) || InputCheck.isBlank(time)) {
             return ServiceResult.INVALID_INPUT;
         }
@@ -44,18 +42,16 @@ public class AppointmentService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. tekst fra formularen -> rigtige typer. Ugyldigt input giver INVALID_INPUT i stedet for et crash
+        // ugyldig type eller dato giver INVALID_INPUT i stedet for et crash
         AppointmentType appointmentType;
         LocalDateTime dateTime;
         try {
-            appointmentType = AppointmentType.valueOf(type);                             // "SCANNING" -> enum (value i dropdownen)
-            dateTime = LocalDateTime.of(LocalDate.parse(date), LocalTime.parse(time)); // "2026-09-22" + "10:30" -> ét tidspunkt
+            appointmentType = AppointmentType.valueOf(type);
+            dateTime = LocalDateTime.of(LocalDate.parse(date), LocalTime.parse(time));
         } catch (IllegalArgumentException | DateTimeParseException e) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 3. find det aktive forløb – en aftale hører til forløbet (ikke runden).
-        //    findActiveJourney kaster, hvis der ikke er et – vi fanger og oversætter til et ServiceResult
         FertilityJourney journey;
         try {
             journey = dashboardService.findActiveJourney(patientId);
@@ -63,12 +59,10 @@ public class AppointmentService {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         }
 
-        // 4. byg kortet (id 0 = databasen giver et) og læg det i skuffen appointment
-        //    trim = mellemrum før/efter stedet fjernes
         appointmentMapper.save(new Appointment(0, journey.getId(), dateTime, appointmentType, location.trim()));
 
-        // 5. de store trin (ægudtagning, oplægning, graviditetstest) skal også på tidslinjen (US2) – men kun hvis en runde er i gang
-        //    og aftalen ikke ligger før runden startede (ellers hører den ikke til denne runde)
+        // ægudtagning, oplægning og graviditetstest skal også på tidslinjen (US2) –
+        // men kun hvis en runde er i gang, og aftalen ikke ligger før runden startede
         EventType eventType = toEventType(appointmentType);
         if (eventType != null) {
             try {
@@ -77,13 +71,13 @@ public class AppointmentService {
                     timelineService.addEvent(round.getId(), dateTime, eventType, location.trim());
                 }
             } catch (NoActiveJourneyException | NoActiveRoundException e) {
-                // ingen runde i gang = aftalen gemmes, men kommer ikke på tidslinjen. Ikke en fejl
+                // ingen runde i gang: aftalen er gemt, den kommer bare ikke på tidslinjen
             }
         }
         return ServiceResult.OK;
     }
 
-    // hjælper: hvilke aftaletyper er også et trin på tidslinjen? Resten (konsultation, scanning, blodprøve) giver null
+    // hvilke aftaletyper er også et trin på tidslinjen? Resten giver null
     private EventType toEventType(AppointmentType type) {
         switch (type) {
             case EGG_RETRIEVAL:   return EventType.EGG_RETRIEVAL;
@@ -94,19 +88,18 @@ public class AppointmentService {
     }
 
 
-    // Henter de kommende aftaler (fra nu og frem) på patientens aktive forløb – til "Næste aftale" på dashboardet.
-    // Intet forløb -> tom liste
+    // Kommende aftaler på det aktive forløb – til "Næste aftale" på dashboardet. Intet forløb giver en tom liste
     public List<Appointment> getUpcoming(int patientId) {
         List<Appointment> upcoming = new ArrayList<>();
         for (Appointment a : getAll(patientId)) {
-            if (a.getDateTime().isAfter(LocalDateTime.now())) {   // ligger efter nu = kommende
+            if (a.getDateTime().isAfter(LocalDateTime.now())) {
                 upcoming.add(a);
             }
         }
         return upcoming;
     }
 
-    // Samme to lister, men for ét bestemt forløb (også et afsluttet) – kun patientens eget, ellers tomme lister
+    // Kommende og tidligere aftaler for et bestemt forløb (også et afsluttet). Kun patientens eget forløb
     public List<Appointment> getUpcoming(int patientId, int journeyId) {
         List<Appointment> upcoming = new ArrayList<>();
         for (Appointment a : getAllForJourney(patientId, journeyId)) {
@@ -127,7 +120,7 @@ public class AppointmentService {
         return past;
     }
 
-    // hjælper: aftaler på ét af patientens egne forløb. Tilhører forløbet en anden -> tom liste
+    // aftaler på et af patientens egne forløb – tilhører det en anden, får vi en tom liste
     private List<Appointment> getAllForJourney(int patientId, int journeyId) {
         if (dashboardService.findJourney(patientId, journeyId) == null) {
             return new ArrayList<>();
@@ -135,7 +128,7 @@ public class AppointmentService {
         return appointmentMapper.findByJourney(journeyId);
     }
 
-    // hjælper: alle aftaler på forløbet, tidligste først (mapperen sorterer). Bruges af de to ovenfor
+    // alle aftaler på det aktive forløb, tidligste først (mapperen sorterer)
     private List<Appointment> getAll(int patientId) {
         try {
             FertilityJourney journey = dashboardService.findActiveJourney(patientId);

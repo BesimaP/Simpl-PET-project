@@ -1,24 +1,24 @@
 -- =========================================================
--- SIMPL – databaseskema i PostgreSQL (uge 40)
--- Kør hele scriptet på én gang i pgAdmin Query Tool (F5) på databasen "Simpl" (stort S – Postgres skelner mellem store og små bogstaver i navne i anførselstegn).
--- 20 tabeller = de 20 kasser i domænemodellen (doc/static/Domænemodel1.puml).
--- Konventioner:
---   - primærnøgle hedder id i alle tabeller; fremmednøgler hedder <tabel>_id
---   - INT GENERATED ALWAYS AS IDENTITY = databasen giver id'et
---   - typer (fx treatment_type) har hver deres tabel (id, name); andre tabeller peger på dem med <type>_id.
---     name matcher vores enums i Java. Fremmednøglen gør, at ugyldige værdier afvises af databasen
---   - ON DELETE CASCADE: slettes patienten (kontoen), slettes alt under den (NFR2)
--- Normaliseret til 3NF: ingen gentagne grupper, ingen afledte kolonner, stamdata (medication og typerne) i egne tabeller.
+-- Simpl – databaseskema til PostgreSQL (uge 40)
+-- Køres som ét script på databasen "Simpl" (med stort S).
+-- 20 tabeller, én for hver klasse i domænemodellen (doc/static/Domænemodel1.puml).
+-- Vi har brugt de her regler:
+--   - primærnøglen hedder id, fremmednøgler hedder <tabel>_id
+--   - id'er laves af databasen (GENERATED ALWAYS AS IDENTITY)
+--   - typerne (fx treatment_type) har egne tabeller, og name passer med vores enums i Java,
+--     så databasen selv afviser ugyldige værdier
+--   - ON DELETE CASCADE: sletter man patienten, forsvinder alle data under den (NFR2)
+-- Normaliseret til 3NF.
 -- =========================================================
 
--- Slet eksisterende tabeller, så scriptet kan køres igen (CASCADE sletter også views, der bygger på dem, fx round_overview)
+-- Sletter tabellerne først, så scriptet kan køres igen. CASCADE tager også viewet round_overview med
 DROP TABLE IF EXISTS medication_log, medication, event, hormone_log, document,
     round, appointment, diary_entry, notification, fertility_journey,
     diagnosis, patient,
     journey_status, treatment_type, result, appointment_type, event_type, hormone_type, document_type, notification_type CASCADE;
 
 -- ---------- Typer (faste værdilister) ----------
--- Hver type har sin egen tabel med id og name, ligesom medication. id'erne står i kommentaren, fordi testdata bruger dem.
+-- id'erne står ved hver INSERT, fordi testdata bruger dem.
 
 CREATE TABLE journey_status (
     id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -70,24 +70,24 @@ INSERT INTO notification_type (name) VALUES ('MEDICATION_REMINDER'), ('APPOINTME
 
 -- ---------- Patient ----------
 
--- Patient — login og persondata i én tabel (UserAccount og Patient er samlet: de var 1-til-1 og oprettes altid sammen).
--- "brugernavn er taget" håndhæves af databasen med et unikt indeks på LOWER(username) lige under tabellen.
+-- Patient – login og persondata. Vi har slået UserAccount og Patient sammen, fordi de var 1-til-1
+-- og altid blev oprettet sammen.
 CREATE TABLE patient (
     id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     username      VARCHAR(50)  NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,         -- gem et hash (BCrypt), aldrig klartekst
+    password_hash VARCHAR(255) NOT NULL,         -- BCrypt-hash, aldrig klartekst
     first_name    VARCHAR(50)  NOT NULL,
     last_name     VARCHAR(50)  NOT NULL,
     date_of_birth DATE NOT NULL
 );
 
--- Unikt på LOWER(username) i stedet for UNIQUE på kolonnen: så kan "Anna" og "anna" ikke begge oprettes.
--- PatientMapper.findByUsername sammenligner også med LOWER, så login er ligeglad med store/små bogstaver
+-- Unikt på LOWER(username), så "Anna" og "anna" ikke kan oprettes begge to.
+-- PatientMapper.findByUsername bruger også LOWER, så login ikke skelner mellem store og små bogstaver
 CREATE UNIQUE INDEX patient_username_unique ON patient (LOWER(username));
 
--- ---------- Tilknyttet patienten (alt om PERSONEN) ----------
+-- ---------- Hører til patienten ----------
 
--- Diagnosis — patientens egne diagnoser (1–mange).
+-- Diagnosis – patientens diagnoser (1-til-mange).
 CREATE TABLE diagnosis (
     id          INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     patient_id  INT NOT NULL REFERENCES patient(id) ON DELETE CASCADE,
@@ -95,7 +95,7 @@ CREATE TABLE diagnosis (
     description TEXT
 );
 
--- DiaryEntry — private noter. Ligger på patienten (ikke forløbet): dagbog kan bruges før, mellem og efter forløb.
+-- DiaryEntry – private noter. Ligger på patienten og ikke forløbet, så dagbogen også kan bruges før og mellem forløb.
 CREATE TABLE diary_entry (
     id         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     patient_id INT NOT NULL REFERENCES patient(id) ON DELETE CASCADE,
@@ -104,8 +104,8 @@ CREATE TABLE diary_entry (
     content    TEXT NOT NULL
 );
 
--- Document — ligger på patienten (ikke runden): fx henvisning og blodprøvesvar kommer før første runde.
--- Kun stien gemmes; filen ligger på disken. upload_date gør, at dokumenter kan vises under den rigtige runde (via dato).
+-- Document – ligger på patienten, fordi fx henvisning og blodprøvesvar kommer før første runde.
+-- Vi gemmer kun stien, selve filen ligger på disken. upload_date bruges til at vise dokumentet under den rigtige runde.
 CREATE TABLE document (
     id            INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     patient_id    INT NOT NULL REFERENCES patient(id) ON DELETE CASCADE,
@@ -115,7 +115,7 @@ CREATE TABLE document (
     file_path     VARCHAR(255) NOT NULL
 );
 
--- Notification — påmindelser genereret af systemet.
+-- Notification – påmindelser, som systemet laver.
 CREATE TABLE notification (
     id                INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     patient_id        INT NOT NULL REFERENCES patient(id) ON DELETE CASCADE,
@@ -126,9 +126,9 @@ CREATE TABLE notification (
     is_read           BOOLEAN NOT NULL DEFAULT FALSE
 );
 
--- ---------- Forløb og runde (alt om BEHANDLINGEN) ----------
+-- ---------- Forløb og runde ----------
 
--- FertilityJourney — det samlede forløb hos klinikken, fra første kontakt.
+-- FertilityJourney – hele forløbet hos klinikken fra første kontakt.
 CREATE TABLE fertility_journey (
     id         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     patient_id INT NOT NULL REFERENCES patient(id) ON DELETE CASCADE,
@@ -136,14 +136,13 @@ CREATE TABLE fertility_journey (
     journey_status_id INT NOT NULL DEFAULT 1 REFERENCES journey_status(id)   -- 1 = ACTIVE
 );
 
--- Højst ét ACTIVE forløb pr. patient (noten i domænemodellen) – et partielt unikt indeks håndhæver reglen i databasen
+-- Højst ét aktivt forløb pr. patient (noten i domænemodellen). Det partielle indeks gør, at databasen selv håndhæver det
 CREATE UNIQUE INDEX one_active_journey_per_patient
     ON fertility_journey(patient_id)
     WHERE journey_status_id = 1;   -- 1 = ACTIVE
 
--- Round — ét behandlingsforsøg i et forløb. end_date og result_id er NULL, indtil runden afsluttes.
--- Ingen status-kolonne: en runde er i gang, så længe end_date er NULL (status ville være en afledt kolonne).
--- UNIQUE (fertility_journey_id, round_number): rundenummeret kan ikke gentages i samme forløb.
+-- Round – ét behandlingsforsøg. end_date og result_id er NULL, indtil runden afsluttes.
+-- Vi har ikke en status-kolonne: runden er i gang, så længe end_date er NULL (ellers en afledt kolonne).
 CREATE TABLE round (
     id                   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     fertility_journey_id INT NOT NULL REFERENCES fertility_journey(id) ON DELETE CASCADE,
@@ -157,14 +156,13 @@ CREATE TABLE round (
     CHECK (end_date IS NULL OR end_date >= start_date)     -- en runde kan ikke slutte, før den starter
 );
 
--- Højst én runde i gang pr. forløb – samme idé som one_active_journey_per_patient ovenfor
+-- Højst én runde i gang pr. forløb, samme idé som indekset ovenfor
 CREATE UNIQUE INDEX one_active_round_per_journey
     ON round(fertility_journey_id)
     WHERE end_date IS NULL;   -- NULL = runden er i gang
 
--- VIEW round_overview — en gemt SELECT med et navn. Indeholder ingen data selv, men kører forespørgslen hver gang.
--- Samler runden med navnene på behandlingstype og resultat, så RoundMapper ikke skal gentage joinet.
--- JOIN treatment_type: altid udfyldt (NOT NULL). LEFT JOIN result: NULL, mens runden er i gang – ellers forsvandt de runder.
+-- round_overview samler runden med navnene på behandlingstype og resultat, så RoundMapper ikke skal joine hver gang.
+-- LEFT JOIN på result, fordi result_id er NULL mens runden er i gang - ellers ville de runder ikke komme med.
 CREATE VIEW round_overview AS
 SELECT round.id,
        round.fertility_journey_id,
@@ -177,7 +175,7 @@ FROM round
 JOIN treatment_type ON round.treatment_type_id = treatment_type.id
 LEFT JOIN result ON round.result_id = result.id;
 
--- Appointment — ligger på forløbet (første konsultation sker før nogen runde).
+-- Appointment – ligger på forløbet, fordi første konsultation er før første runde.
 CREATE TABLE appointment (
     id                   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     fertility_journey_id INT NOT NULL REFERENCES fertility_journey(id) ON DELETE CASCADE,
@@ -186,9 +184,9 @@ CREATE TABLE appointment (
     location             VARCHAR(100) NOT NULL
 );
 
--- ---------- Tilknyttet runden ----------
+-- ---------- Hører til runden ----------
 
--- Event — trin i runden, bygger tidslinjen. Oprettes automatisk af systemet.
+-- Event – trin i runden, bruges til tidslinjen. Systemet opretter dem selv.
 CREATE TABLE event (
     id          INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     round_id    INT NOT NULL REFERENCES round(id) ON DELETE CASCADE,
@@ -197,7 +195,7 @@ CREATE TABLE event (
     description TEXT
 );
 
--- HormoneLog — en måling i en runde. unit gemmes per måling: klinikker bruger forskellige enheder.
+-- HormoneLog – én måling i en runde. unit gemmes pr. måling, fordi klinikker bruger forskellige enheder.
 CREATE TABLE hormone_log (
     id           INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     round_id     INT NOT NULL REFERENCES round(id) ON DELETE CASCADE,
@@ -210,9 +208,8 @@ CREATE TABLE hormone_log (
 
 -- ---------- Medicin ----------
 
--- Medication — stamdata (3NF: navnet og enheden står ét sted, ikke i hver log-række). Tilhører ingen patient.
--- unit ligger her og ikke på medication_log: enheden er fast pr. præparat (svar fra fertilitetsklinik, okt 2026) –
--- det er kun dosis, der varierer fra patient til patient. Enheder: IU (internationale enheder), mg og µg (mikrogram).
+-- Medication – stamdata, så navn og enhed kun står ét sted (3NF). Hører ikke til en patient.
+-- unit ligger her, fordi enheden er fast pr. præparat (svar fra fertilitetsklinik, okt. 2026). Det er kun dosis, der varierer.
 CREATE TABLE medication (
     id          INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     name        VARCHAR(50)  NOT NULL UNIQUE,
@@ -220,8 +217,7 @@ CREATE TABLE medication (
     unit        VARCHAR(10)  NOT NULL
 );
 
--- De fire første beholder id 1–4, så testdata (medication_id) stadig passer.
--- Grupperet efter brug: stimulering, forhindrer ægløsning, ægløsningssprøjte, progesteron, tabletter
+-- De fire første skal blive på id 1-4, ellers passer medication_id i testdata ikke.
 INSERT INTO medication (name, description, unit) VALUES
     ('GONAL_F',    'Gonal-F',    'IU'),   -- 1  stimulering
     ('ORGALUTRAN', 'Orgalutran', 'mg'),   -- 2  forhindrer ægløsning (0,25 mg)
@@ -242,8 +238,8 @@ INSERT INTO medication (name, description, unit) VALUES
     ('ESTRADIOL',  'Estradiol',  'mg');   -- 17 tablet (2 mg)
 
 
--- MedicationLog — én planlagt dosis i en runde.
--- medication ON DELETE RESTRICT: stamdata kan ikke slettes, mens de bruges (association, ikke komposition).
+-- MedicationLog – én planlagt dosis i en runde.
+-- RESTRICT på medication: et præparat kan ikke slettes, så længe det bliver brugt (association, ikke komposition).
 CREATE TABLE medication_log (
     id                  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     round_id            INT NOT NULL REFERENCES round(id) ON DELETE CASCADE,
@@ -254,12 +250,10 @@ CREATE TABLE medication_log (
 );
 
 -- ---------- Indekser på fremmednøgler ----------
--- Et indeks er ligesom stikordsregistret bag i en bog: databasen kan slå direkte op i det
--- i stedet for at læse hele tabellen igennem. PostgreSQL laver selv indeks på PRIMARY KEY og UNIQUE,
--- men IKKE på fremmednøgler. Vores mappers søger næsten altid på fremmednøglen (WHERE patient_id = ?,
--- WHERE round_id = ?), og ON DELETE CASCADE skal også finde rækkerne – derfor et indeks på hver af dem.
--- round.fertility_journey_id mangler med vilje: UNIQUE (fertility_journey_id, round_number) giver allerede et indeks, der starter med den.
-CREATE INDEX fertility_journey_patient_id_idx ON fertility_journey (patient_id);   -- det partielle indeks dækker kun ACTIVE forløb
+-- PostgreSQL laver selv indeks på PRIMARY KEY og UNIQUE, men ikke på fremmednøgler.
+-- Vores mappers søger næsten altid på fremmednøglen, og ON DELETE CASCADE skal også finde rækkerne.
+-- round mangler med vilje, fordi UNIQUE (fertility_journey_id, round_number) allerede giver et indeks.
+CREATE INDEX fertility_journey_patient_id_idx ON fertility_journey (patient_id);   -- det partielle indeks dækker kun aktive forløb
 CREATE INDEX diagnosis_patient_id_idx         ON diagnosis (patient_id);
 CREATE INDEX diary_entry_patient_id_idx       ON diary_entry (patient_id);
 CREATE INDEX document_patient_id_idx          ON document (patient_id);

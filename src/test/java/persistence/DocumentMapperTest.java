@@ -15,15 +15,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af DocumentMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// Et dokument hænger direkte på patienten. Typen gemmes som id (document_type) men slås op via navnet.
-// Testen rører kun rækkerne i databasen – ikke selve filerne på disken.
+// Integrationstest af DocumentMapper mod schema test (se TestDatabase).
+// Vi tester kun rækkerne i databasen – filerne på disken testes i FileStorageTest.
 class DocumentMapperTest {
 
     private static ConnectionPool connectionPool;
     private static DocumentMapper documentMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -31,10 +29,10 @@ class DocumentMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: 2 patienter og 2 dokumenter til Anna
+    // før hver test: 2 patienter og 2 dokumenter til Anna
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -60,7 +58,6 @@ class DocumentMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -71,8 +68,8 @@ class DocumentMapperTest {
         List<Document> documents = documentMapper.findByPatient(1);
 
         assertEquals(2, documents.size());
-        assertEquals("Blodprøve", documents.get(0).getTitle());                       // nyeste først (upload_date DESC)
-        assertEquals(DocumentType.BLOOD_TEST_RESULT, documents.get(0).getDocumentType()); // JOIN giver ordet -> enum
+        assertEquals("Blodprøve", documents.get(0).getTitle());                       // nyeste først
+        assertEquals(DocumentType.BLOOD_TEST_RESULT, documents.get(0).getDocumentType());
         assertEquals(LocalDate.of(2026, 8, 1), documents.get(1).getUploadDate());
         assertEquals("uploads/henvisning.pdf", documents.get(1).getFilePath());
     }
@@ -99,11 +96,11 @@ class DocumentMapperTest {
 
     @Test
     void deleteOtherPatientsDocumentDoesNothing() {
-        assertFalse(documentMapper.delete(1, 2));                     // Bo kan ikke slette Annas henvisning
+        assertFalse(documentMapper.delete(1, 2));                     // Bo kan ikke slette Annas dokument
         assertEquals(2, documentMapper.findByPatient(1).size());
     }
 
-    // ---------- regler, der ligger i DATABASEN ----------
+    // ---------- regler, som databasen selv håndhæver ----------
 
     @Test
     void saveWithoutFilePathThrowsDatabaseException() {

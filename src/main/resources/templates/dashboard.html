@@ -5,40 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Simpl – Overblik</title>
 
-    <!-- skrifttyper og vores css filer -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/tokens.css">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
     <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
-    <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+    <link rel="stylesheet" href="/css/pages.css">      <!-- css til de enkelte sider -->
 
-    <!-- javascript: defer = vent med at køre til hele siden er læst. dashboard.js = åbner "Afslut runde"-dialogen -->
+    <!-- defer: scripts kører først, når HTML'en er læst. dashboard.js åbner dialogerne -->
     <script src="/js/common.js" defer></script>
     <script src="/js/dashboard.js" defer></script>
 </head>
 <body class="dashboard">
 
-<!-- menuen hentes fra fragments/menu.html – 'dashboard' = det menupunkt, der lyser op -->
 <nav th:replace="~{fragments/menu :: menu('dashboard')}"></nav>
 
-<!-- selve siden -->
 <main class="content">
 
-    <!-- overskrift + klokke og avatar øverst -->
+    <!-- egen topbar i stedet for fragmentet, fordi klokken her åbner en pop-op -->
     <header class="topbar">
         <div>
-            <!-- th:text: navnet og dagens dato fra controlleren -->
             <h1 th:text="'Hej, ' + ${#strings.capitalize(patient.firstName)}">Godmorgen, Anna</h1>
             <p class="muted" th:text="${#temporals.format(today, 'EEEE d. MMMM')}">Onsdag 2. september</p>
         </div>
         <div class="topbar__actions">
-            <!-- klokken er et link til /notifikationer (virker uden JavaScript). Med JavaScript stopper js/dashboard.js linket
-                 og åbner i stedet pop-op'en #notif-dialog -->
+            <!-- uden JavaScript er klokken bare et link. dashboard.js åbner pop-op'en i stedet -->
             <a href="/notifikationer" id="open-notifications" class="iconbtn" aria-label="Notifikationer"
                th:attr="aria-label=${unread != null and unread > 0} ? 'Notifikationer, ' + ${unread} + ' ulæste' : 'Notifikationer'">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
-                <!-- th:if: den røde prik vises kun, når der er ulæste påmindelser (${unread} fra DashboardController) -->
+                <!-- rød prik ved ulæste påmindelser -->
                 <span class="dot" th:if="${unread > 0}"></span>
             </a>
             <a href="/min-profil" class="avatar" aria-label="Min profil"
@@ -46,43 +41,42 @@
         </div>
     </header>
 
-    <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>
 
-    <!-- ===== TILSTAND 1: intet forløb (før: dashboardtom.html) ===== -->
+    <!-- ===== Tilstand 1: intet forløb ===== -->
     <div class="round-grid" th:if="${journey == null}">
         <section class="card card--dark empty" aria-labelledby="empty-title">
             <img src="/img/spire-ring.svg" alt="" width="72" height="72">
             <h2 id="empty-title">Du har ikke et forløb endnu</h2>
             <p>Når du starter dit forløb, samler Simpl dine runder, din medicin, dine aftaler og dine noter ét sted.</p>
-            <!-- UC3 CreateJourney (US1): opretter forløbet med en startdato -->
+            <!-- UC3 CreateJourney (US1) -->
             <form action="/opret-forloeb" method="post">
                 <label for="startDate">Startdato</label>
-                <!-- th:value: dags dato er udfyldt på forhånd (US1 AC2) – kan ændres, hvis forløbet startede tidligere -->
+                <!-- dags dato er udfyldt på forhånd (US1 AC2), men kan rettes, hvis forløbet startede tidligere -->
                 <input type="date" id="startDate" name="startDate" th:value="${today}" th:attr="max=${today}" required>
                 <button type="submit" class="btn btn--light">Start dit forløb</button>
             </form>
         </section>
     </div>
 
-    <!-- ===== TILSTAND 2 + 3: der er et forløb ===== -->
+    <!-- ===== Tilstand 2 og 3: der er et forløb ===== -->
     <div th:unless="${journey == null}">
 
         <div class="round-grid">
 
-            <!-- TILSTAND 2: forløb, men ingen runde i gang -->
+            <!-- tilstand 2: forløb, men ingen runde i gang -->
             <section class="card card--dark empty" th:if="${round == null}" aria-labelledby="noround-title">
                 <img src="/img/spire-ring.svg" alt="" width="72" height="72">
                 <h2 id="noround-title">Ingen runde i gang</h2>
                 <p>Dit forløb er i gang. Start en runde, når behandlingen begynder.</p>
                 <a href="/start-runde" class="btn btn--light">Start runde</a>
-                <!-- afslut hele forløbet (fx når behandlingen er slut) – går til en bekræft-side, så man ikke trykker ved et uheld -->
+                <!-- går til en bekræft-side, så man ikke afslutter forløbet ved et uheld -->
                 <p><a href="/afslut-forloeb" class="muted-link">Afslut forløb</a></p>
             </section>
 
-            <!-- TILSTAND 3: runde i gang – det mørke runde-kort -->
+            <!-- tilstand 3: runde i gang -->
             <section class="round card card--dark" th:unless="${round == null}" aria-labelledby="round-title">
-                <!-- ring = den runde dag-tæller. stroke-dasharray: dage af ca. 28 = procent fyldt -->
+                <!-- dag-tælleren. Ringen fyldes ud fra dagnummer af ca. 28 dage -->
                 <div class="ring" role="img" th:aria-label="'Dag ' + ${dayNumber} + ' af runden'">
                     <svg viewBox="0 0 100 100" aria-hidden="true">
                         <circle class="ring__track" cx="50" cy="50" r="44"/>
@@ -100,21 +94,19 @@
                     <p class="round__meta desktop-only" th:text="'Startet ' + ${#temporals.format(round.startDate, 'd. MMMM')}">Startet 21. august</p>
                     <div class="round__actions">
                         <a href="/tidslinje" class="btn btn--light">Se tidslinje</a>
-                        <!-- et link til bekræft-siden /afslut-runde (virker uden JavaScript).
-                             Med JavaScript stopper js/dashboard.js linket og åbner i stedet dialogen #confirm-end -->
+                        <!-- link til bekræft-siden uden JavaScript. dashboard.js åbner dialogen #confirm-end i stedet -->
                         <a href="/afslut-runde" class="btn btn--ghost" id="end-round">Afslut runde</a>
                     </div>
                 </div>
             </section>
 
-            <!-- dagens medicin -->
             <section class="today" aria-labelledby="today-title">
                 <div class="section-head">
                     <h2 id="today-title" class="eyebrow">I dag</h2>
                     <a href="/medicin">Medicinlog →</a>
                 </div>
                 <ul class="meds">
-                    <!-- th:each: én dosis per li. th:classappend: med--taken (grøn + flueben) når den er taget -->
+                    <!-- doser der er taget bliver grønne med flueben -->
                     <li class="card med" th:each="m : ${todayMeds}" th:classappend="${m.taken} ? 'med--taken'">
             <span class="med__check" aria-hidden="true">
               <svg th:if="${m.taken}" viewBox="0 0 24 24"><path d="M7 12.5l3.5 3.5 6.5-7"/></svg>
@@ -130,17 +122,15 @@
             </section>
         </div>
 
-        <!-- grid = nederste række med tre små kort -->
+        <!-- nederste række med tre små kort -->
         <div class="grid">
 
-            <!-- kort 1: næste aftale -->
             <section class="next card" aria-labelledby="next-title">
                 <div class="section-head">
                     <h2 id="next-title" class="eyebrow">Næste aftale</h2>
                     <a href="/aftaler">Alle aftaler →</a>
                 </div>
                 <div class="appt" th:if="${nextAppointment != null}">
-                    <!-- datebox = den lille kalender-firkant med dato -->
                     <time class="datebox" th:attr="datetime=${nextAppointment.dateTime}">
                         <strong th:text="${#temporals.day(nextAppointment.dateTime)}">5</strong>
                         <small th:text="${#temporals.format(nextAppointment.dateTime, 'MMM')}">sep</small>
@@ -153,7 +143,6 @@
                 <p class="muted" th:if="${nextAppointment == null}">Ingen kommende aftaler.</p>
             </section>
 
-            <!-- kort 2: seneste hormonværdi -->
             <section class="stat card" aria-labelledby="hormone-title">
                 <div class="section-head">
                     <h2 id="hormone-title" class="eyebrow">Seneste hormonværdi</h2>
@@ -166,7 +155,6 @@
                 <p class="muted" th:if="${latestHormone == null}">Ingen målinger endnu.</p>
             </section>
 
-            <!-- kort 3: dagbog -->
             <section class="stat card" aria-labelledby="diary-title">
                 <div class="section-head">
                     <h2 id="diary-title" class="eyebrow">Dagbog</h2>
@@ -180,14 +168,12 @@
     </div>
 </main>
 
-<!-- Bekræftelse (Nielsen #3 + #5): rolig, neutral, med udvej -->
-<!-- Pop-op med notifikationer (US12). Skjult indtil js/dashboard.js åbner den, når man klikker på klokken.
-     Samme liste som /notifikationer – de 5 nyeste. th:each over ${notifications} fra DashboardController -->
+<!-- Pop-op med de 5 nyeste notifikationer (US12). Åbnes af dashboard.js, når man klikker på klokken -->
 <dialog id="notif-dialog" class="confirm" aria-labelledby="notif-dialog-title">
-    <form method="dialog">   <!-- method dialog = knapperne lukker bare vinduet -->
+    <form method="dialog">   <!-- method dialog: knapperne lukker bare vinduet -->
         <h2 id="notif-dialog-title">Notifikationer</h2>
         <ul class="rounds">
-            <!-- ${#lists…}: kun de 5 nyeste. iterStat.index = nummeret i løkken (0, 1, 2 …) -->
+            <!-- iterStat.index starter ved 0, så vi viser kun de første 5 -->
             <li th:each="n, iterStat : ${notifications}" th:if="${iterStat.index < 5}" th:classappend="${n.read} ? 'is-read'">
                 <div class="round__info">
                     <strong th:text="${n.title}">Husk din medicin</strong>
@@ -199,32 +185,30 @@
         <p class="muted" th:if="${notifications.isEmpty()}">Ingen notifikationer.</p>
         <div class="confirm__actions">
             <button type="submit" value="close" class="btn btn--outline">Luk</button>
-            <!-- formmethod/formaction: DENNE knap sender til serveren – markér alle som læst. Kun når der er ulæste -->
+            <!-- formaction gør, at kun den her knap sender til serveren -->
             <button type="submit" formmethod="post" formaction="/notifikationer/laest-alle" class="btn btn--primary" th:if="${unread > 0}">Markér alle som læst</button>
-            <!-- almindeligt link til hele siden -->
             <a href="/notifikationer" class="btn btn--outline" th:unless="${unread > 0}">Se alle</a>
         </div>
     </form>
 </dialog>
 
-<!-- dialog = et pop-op vindue. er skjult indtil js/dashboard.js åbner det. Kun med, når der er en runde -->
+<!-- Bekræft afslut runde (Nielsen #3 og #5). Åbnes af dashboard.js og findes kun, når der er en runde -->
 <dialog id="confirm-end" class="confirm" th:if="${round != null}" aria-labelledby="confirm-end-title">
-    <!-- method dialog = knapperne lukker bare vinduet, sender ikke noget -->
     <form method="dialog">
         <h2 id="confirm-end-title" th:text="'Afslut runde ' + ${round.roundNumber} + '?'">Afslut runde 2?</h2>
         <p class="muted">Runden markeres som afsluttet, og du kan starte en ny.
             Dine logs og noter gemmes.</p>
         <p class="muted">Det kan ikke fortrydes.</p>
-        <!-- resultat er valgfrit: value = det, der sendes til /afslut-runde (matcher enum Result) – tom = ikke afgjort endnu -->
+        <!-- resultatet er valgfrit, tom værdi betyder ikke afgjort endnu -->
         <label for="result">Resultat</label>
         <select id="result" name="result">
             <option value="">Ikke afgjort endnu</option>
-            <!-- én option per værdi i enum Result (${results} fra DashboardController) – ny værdi = kun ét sted i Java -->
+            <!-- optionerne kommer fra enum Result, så en ny værdi kun skal tilføjes ét sted -->
             <option th:each="r : ${results}" th:value="${r.name()}" th:text="${r.label}">Positiv</option>
         </select>
         <div class="confirm__actions">
             <button type="submit" value="cancel" class="btn btn--outline">Annullér</button>
-            <!-- formmethod/formaction: DENNE knap sender til serveren (/afslut-runde) – Annullér lukker bare dialogen -->
+            <!-- kun den her knap sender til serveren, Annullér lukker bare dialogen -->
             <button type="submit" value="confirm" formmethod="post" formaction="/afslut-runde" class="btn btn--primary">Afslut runde</button>
         </div>
     </form>

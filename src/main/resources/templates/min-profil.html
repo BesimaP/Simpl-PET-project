@@ -5,93 +5,84 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simpl – Min profil</title>
 
-  <!-- skrifttyper og vores css filer -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">     <!-- farver og skrifttyper -->
   <link rel="stylesheet" href="/css/base.css">       <!-- css til alle sider -->
   <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
   <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
-  <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+  <link rel="stylesheet" href="/css/pages.css">      <!-- css til de enkelte sider -->
 
-  <!-- javascript: defer = vent med at køre til hele siden er læst. min-profil.js = kodeord-tjek + slet-dialog -->
+  <!-- defer: scripts kører først, når HTML'en er læst. min-profil.js tjekker kodeord og åbner slet-dialogen -->
   <script src="/js/common.js" defer></script>
   <script src="/js/min-profil.js" defer></script>
 </head>
 <body class="dashboard">
 
-<!-- menuen hentes fra fragments/menu.html – 'ingen' = det menupunkt, der lyser op -->
 <nav th:replace="~{fragments/menu :: menu('ingen')}"></nav>
 
-<!-- selve siden -->
 <main class="content">
 
-  <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
   <header th:replace="~{fragments/topbar :: topbar('Min profil')}"></header>
 
-  <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
   <div th:replace="~{fragments/besked :: besked}"></div>
 
-  <!-- form-layout gør at kortene står i 2 kolonner -->
+  <!-- kortene står i to kolonner -->
   <div class="form-layout">
 
-    <!-- kort 1: ret sine oplysninger -->
+    <!-- ret oplysninger -->
     <section class="card">
       <h2 class="eyebrow">Profil</h2>
       <form action="/min-profil" method="post">
-        <!-- th:value: felterne er forudfyldt med det nuværende navn fra databasen -->
+        <!-- felterne er udfyldt med det nuværende navn -->
         <label for="firstName">Fornavn</label>
         <input type="text" id="firstName" name="firstName" th:value="${patient.firstName}" placeholder="Dit fornavn" autocomplete="given-name" maxlength="50" required>
 
         <label for="lastName">Efternavn</label>
         <input type="text" id="lastName" name="lastName" th:value="${patient.lastName}" placeholder="Dit efternavn" autocomplete="family-name" maxlength="50" required>
 
-        <!-- fødselsdato kan rettes (US6b AC1) – ProfileService.updateProfile tjekker, at datoen er gyldig og ikke i fremtiden -->
+        <!-- fødselsdato kan rettes (US6b AC1). ProfileService tjekker, at den ikke ligger i fremtiden -->
         <label for="dateOfBirth">Fødselsdato</label>
         <input type="date" id="dateOfBirth" name="dateOfBirth" th:value="${patient.dateOfBirth}" th:attr="max=${today}" required>
 
-        <!-- knappen sender formularen -->
         <button type="submit">Gem ændringer</button>
       </form>
 
-      <!-- diagnoser hører til profilen, så de har deres egen side herfra -->
+      <!-- diagnoser hører til profilen, så de linkes herfra -->
       <p class="muted centered"><a href="/diagnoser">Mine diagnoser →</a></p>
-      <!-- Dokumenter er skjult i menuen på mobil, så de kan også nås herfra -->
+      <!-- dokumenter er ikke i mobilmenuen, så de kan også nås herfra -->
       <p class="muted centered"><a href="/dokumenter">Mine dokumenter →</a></p>
     </section>
 
-    <!-- kort 2: skift adgangskode -->
+    <!-- skift adgangskode -->
     <section class="card">
       <h2 class="eyebrow">Adgangskode</h2>
       <form action="/skift-kodeord" method="post">
-        <!-- type password = der kommer prikker når man skriver -->
         <label for="current-password">Nuværende adgangskode</label>
         <input type="password" id="current-password" name="current-password" autocomplete="current-password" required>
 
-        <!-- minlength 8 = koden skal være mindst 8 tegn -->
+        <!-- maxlength 72, fordi BCrypt kun bruger de første 72 bytes -->
         <label for="new-password">Ny adgangskode</label>
         <input type="password" id="new-password" name="new-password" autocomplete="new-password" placeholder="Mindst 8 tegn" required minlength="8" maxlength="72">
 
         <label for="repeat-password">Gentag ny adgangskode</label>
         <input type="password" id="repeat-password" name="repeat-password" autocomplete="new-password" required>
-        <p id="password-error" class="field-error"></p>   <!-- tom; js/min-profil.js skriver en fejl herind, hvis koderne ikke er ens -->
+        <p id="password-error" class="field-error"></p>   <!-- min-profil.js skriver her, hvis de to nye koder ikke er ens -->
 
         <button type="submit">Skift adgangskode</button>
       </form>
     </section>
 
-    <!-- kort 3: log ud og slet konto -->
+    <!-- log ud og slet konto -->
     <section class="card">
       <h2 class="eyebrow">Konto</h2>
-      <!-- th:text: navnet fra databasen -->
       <p class="muted">Du er logget ind som <span th:text="${patient.name}">Anna</span>.</p>
 
-      <!-- en lille formular, så log ud er en POST (ikke et link, som andre sider kan "klikke" på for en) -->
+      <!-- log ud er en POST, så andre sider ikke kan logge en ud med et link -->
       <form action="/logout" method="post">
         <button type="submit">Log ud</button>
       </form>
 
-      <!-- slet konto er med vilje lille, så man ikke trykker ved en fejl -->
-      <!-- link til bekræft-siden /slet-konto (virker uden JavaScript). Med JavaScript åbner js/min-profil.js dialogen i stedet -->
+      <!-- med vilje et lille link, så man ikke trykker på det ved en fejl. Med JavaScript åbner min-profil.js dialogen i stedet -->
       <p class="muted centered"><a href="/slet-konto" id="delete-account">Slet konto</a></p>
     </section>
 
@@ -99,10 +90,9 @@
 
 </main>
 
-<!-- Bekræftelse før sletning (Nielsen #5: forebyg fejl). Skjult indtil js/min-profil.js åbner den.
-     Uden JavaScript bruges bekræft-siden /slet-konto (templates/bekraeft.html) i stedet -->
+<!-- Bekræft sletning (Nielsen #5). Uden JavaScript bruges bekraeft.html i stedet -->
 <dialog id="confirm-delete" class="confirm" aria-labelledby="confirm-delete-title">
-  <!-- method dialog = knapperne lukker bare vinduet, sender ikke noget. Slet-knappen sender til serveren via formaction -->
+  <!-- method dialog: knapperne lukker bare vinduet, kun slet-knappen sender via formaction -->
   <form method="dialog">
     <h2 id="confirm-delete-title">Slet din konto?</h2>
     <p class="muted">Alle dine data – forløb, runder, noter og dokumenter – slettes og kan ikke gendannes.</p>

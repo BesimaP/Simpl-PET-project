@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <!--
-  Fejlside: vises af ExceptionConfig, når der sker en fejl, ingen controller fangede (status 500).
-  ${message} = en venlig tekst fra ExceptionConfig. Den tekniske fejl står i konsollen i IntelliJ – ikke her.
+  Vises af ExceptionConfig ved fejl, som ingen controller har fanget (500).
+  Brugeren får kun en venlig tekst, selve fejlen skrives i konsollen.
 -->
 <head>
     <meta charset="UTF-8">
@@ -27,7 +27,7 @@
     <main class="form-area">
         <div class="card login-card">
             <h2>Noget gik galt</h2>
-            <!-- rolig, neutral tekst (Nielsen #9: hjælp brugeren videre) -->
+            <!-- rolig tekst og et link videre (Nielsen #9) -->
             <p class="subtitle" th:text="${message}">Noget gik galt. Prøv igen.</p>
             <p class="link-line"><a href="/dashboard">Tilbage til forsiden</a></p>
         </div>

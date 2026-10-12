@@ -2,7 +2,7 @@ package entities;
 
 import java.time.LocalDateTime;
 
-// En planlagt dosis af en Medication i en runde, og om den er taget (tabel medication_log, US8).
+// En planlagt dosis i en runde, og om den er taget (tabel medication_log, US8).
 public class MedicationLog {
 
     private int id;
@@ -10,10 +10,10 @@ public class MedicationLog {
     private int medicationId;          // FK til medication.id
     private LocalDateTime scheduledDateTime;
     private double dose;
-    private String unit;               // hentes fra medication-tabellen (JOIN) – gemmes ikke på loggen
+    private String unit;               // kommer fra medication via JOIN – gemmes ikke på loggen
     private boolean taken;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public MedicationLog(int id, int roundId, int medicationId, LocalDateTime scheduledDateTime,
                          double dose, String unit, boolean taken) {
         this.id = id;
@@ -25,7 +25,7 @@ public class MedicationLog {
         this.taken = taken;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }
@@ -50,8 +50,7 @@ public class MedicationLog {
         return dose;
     }
 
-    // dosis som pæn tekst: 150.0 -> "150", 0.25 -> "0.25" (Thymeleaf: ${m.doseText}).
-    // stripTrailingZeros fjerner nullerne efter kommaet, toPlainString undgår "1.5E+2"
+    // dosis uden unødvendige nuller: 150.0 -> "150", 0.25 -> "0.25". toPlainString undgår "1.5E+2"
     public String getDoseText() {
         return java.math.BigDecimal.valueOf(dose).stripTrailingZeros().toPlainString();
     }

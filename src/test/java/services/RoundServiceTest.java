@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af RoundService (start/afslut runde, US10a/10b)
+// Integrationstest af RoundService (start/afslut runde, US10a/10b)
 class RoundServiceTest {
 
     @BeforeAll
@@ -43,13 +43,13 @@ class RoundServiceTest {
         RoundService service = new RoundService(TestData.pool());
         assertEquals(ServiceResult.OK, service.startRound(patientId, "IVF", "2026-09-10"));
         assertEquals(RoundStatus.IN_PROGRESS, service.findActiveRound(patientId).getStatus());
-        assertEquals(1, service.findActiveRound(patientId).getRoundNumber()); // første runde = nr. 1
+        assertEquals(1, service.findActiveRound(patientId).getRoundNumber());
     }
 
     @Test
     void startRoundWhileRoundInProgressReturnsRoundInProgress() {
         int patientId = TestData.newPatientWithRound();
-        // regel: kun én runde i gang ad gangen
+        // kun én runde i gang ad gangen
         assertEquals(ServiceResult.ROUND_IN_PROGRESS, new RoundService(TestData.pool()).startRound(patientId, "ICSI", "2026-09-11"));
     }
 
@@ -64,14 +64,13 @@ class RoundServiceTest {
         int patientId = TestData.newPatientWithRound();
         RoundService service = new RoundService(TestData.pool());
         assertEquals(ServiceResult.OK, service.endRound(patientId, Result.NEGATIVE));
-        // runden er afsluttet -> der er ikke længere en runde i gang
         assertThrows(NoActiveRoundException.class, () -> service.findActiveRound(patientId));
     }
 
     @Test
     void endRoundWithoutResultIsAllowed() {
         int patientId = TestData.newPatientWithRound();
-        // resultatet må være null (kan udfyldes senere)
+        // resultatet må være null, så det kan udfyldes senere
         assertEquals(ServiceResult.OK, new RoundService(TestData.pool()).endRound(patientId, null));
     }
 
@@ -101,7 +100,7 @@ class RoundServiceTest {
         int patientId = TestData.newPatientWithRound();
         new RoundService(TestData.pool()).endRound(patientId, null);
         new RoundService(TestData.pool()).startRound(patientId, "FET", "2026-10-01");
-        // samme metode som rundehistorikken bruger: forløbets id -> dets runder (ældste først)
+        // samme metode som rundehistorikken bruger
         var rounds = new RoundService(TestData.pool()).getRoundsPerJourney(patientId).get(TestData.activeJourneyId(patientId));
         assertEquals(2, rounds.size());
         assertEquals(RoundStatus.COMPLETED, rounds.get(0).getStatus());
@@ -116,19 +115,19 @@ class RoundServiceTest {
 
     @Test
     void roundsFromEndedJourneyAreStillInHistory() {
-        int patientId = TestData.newPatientWithRound();          // forløb 1 med en runde
+        int patientId = TestData.newPatientWithRound();
         RoundService rounds = new RoundService(TestData.pool());
         DashboardService journeys = new DashboardService(TestData.pool());
         rounds.endRound(patientId, null);
-        journeys.endJourney(patientId);                          // forløb 1 afsluttet
-        journeys.createJourney(patientId, java.time.LocalDate.now().toString());   // forløb 2 (aktivt, ingen runder)
+        journeys.endJourney(patientId);
+        journeys.createJourney(patientId, java.time.LocalDate.now().toString());   // nyt forløb uden runder
         var perJourney = rounds.getRoundsPerJourney(patientId);
-        assertEquals(2, perJourney.size());                      // begge forløb er med
+        assertEquals(2, perJourney.size());
         int total = 0;
         for (var list : perJourney.values()) {
             total += list.size();
         }
-        assertEquals(1, total);                                  // runden fra det afsluttede forløb kan stadig ses
+        assertEquals(1, total);                                  // runden fra det afsluttede forløb skal stadig kunne ses
     }
 
     @Test
@@ -138,7 +137,7 @@ class RoundServiceTest {
         RoundService rounds = new RoundService(TestData.pool());
         int annasRound = rounds.findActiveRound(anna).getId();
         assertNotNull(rounds.findRound(anna, annasRound));
-        assertNull(rounds.findRound(maria, annasRound));         // Maria må ikke se Annas runde
+        assertNull(rounds.findRound(maria, annasRound));
     }
 
     @Test

@@ -17,14 +17,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af RoundMapper: mapperen taler med en RIGTIG PostgreSQL-database.
-// Testene bruger schemaet "test" i databasen Simpl (se TestDatabase), så de aldrig rører de rigtige data i "public".
+// Integrationstest af RoundMapper mod schema test (se TestDatabase).
 class RoundMapperTest {
 
     private static ConnectionPool connectionPool;
     private static RoundMapper roundMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -32,11 +30,10 @@ class RoundMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: tøm tabellerne og indsæt kæden patient -> forløb -> 2 runder
-    // Rækkefølgen betyder noget: en runde peger på et forløb, og et forløb peger på en patient (fremmednøgler)
+    // før hver test: patient -> forløb -> 2 runder. Rækkefølgen skyldes fremmednøglerne
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -54,7 +51,7 @@ class RoundMapperTest {
             """);
 
             // Runder i forløb 1. treatment_type_id 1 = IVF, 2 = ICSI. result_id 2 = NEGATIVE
-            // runde 1 (id 1): afsluttet · runde 2 (id 2): i gang (end_date = NULL)
+            // runde 1 er afsluttet, runde 2 er i gang (end_date = NULL)
             stmt.execute("""
             INSERT INTO test.round (fertility_journey_id, round_number, treatment_type_id, start_date, end_date, result_id) VALUES
             (1, 1, 1, '2026-02-01', '2026-03-01', 2),
@@ -68,7 +65,6 @@ class RoundMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -93,16 +89,16 @@ class RoundMapperTest {
     void findByJourney() {
         List<Round> rounds = roundMapper.findByJourney(1);
         assertEquals(2, rounds.size());
-        assertEquals(1, rounds.get(0).getRoundNumber());          // ældste først (ORDER BY round_number)
-        assertEquals(Result.NEGATIVE, rounds.get(0).getResult()); // LEFT JOIN result giver ordet tilbage
-        assertNull(rounds.get(1).getResult());                    // runden i gang har intet resultat endnu
+        assertEquals(1, rounds.get(0).getRoundNumber());          // ældste først
+        assertEquals(Result.NEGATIVE, rounds.get(0).getResult());
+        assertNull(rounds.get(1).getResult());
     }
 
     @Test
     void endRound() {
         roundMapper.endRound(2, LocalDate.of(2026, 5, 1), Result.POSITIVE);
 
-        assertNull(roundMapper.findActiveByJourney(1));           // ingen runde i gang længere
+        assertNull(roundMapper.findActiveByJourney(1));
         Round round = roundMapper.findByJourney(1).get(1);
         assertEquals(LocalDate.of(2026, 5, 1), round.getEndDate());
         assertEquals(Result.POSITIVE, round.getResult());
@@ -110,7 +106,7 @@ class RoundMapperTest {
 
     @Test
     void saveAfterEndingRound() {
-        roundMapper.endRound(2, LocalDate.of(2026, 5, 1), Result.NEGATIVE);   // først skal runde 2 afsluttes
+        roundMapper.endRound(2, LocalDate.of(2026, 5, 1), Result.NEGATIVE);   // runde 2 skal afsluttes først
 
         Round round = new Round(0, 1, 3, TreatmentType.FET, LocalDate.of(2026, 6, 1), null, RoundStatus.IN_PROGRESS, null);
         int id = roundMapper.save(round);
@@ -119,11 +115,11 @@ class RoundMapperTest {
         assertEquals(TreatmentType.FET, roundMapper.findActiveByJourney(1).getTreatmentType());
     }
 
-    // ---------- regler, der ligger i DATABASEN (kan kun fanges af en integrationstest) ----------
+    // ---------- regler, som databasen selv håndhæver ----------
 
     @Test
     void saveSecondActiveRoundThrowsDatabaseException() {
-        // runde 2 er stadig i gang -> one_active_round_per_journey (unikt index på end_date IS NULL) afviser
+        // runde 2 er stadig i gang, så indekset one_active_round_per_journey afviser en runde til
         Round round = new Round(0, 1, 3, TreatmentType.IVF, LocalDate.of(2026, 6, 1), null, RoundStatus.IN_PROGRESS, null);
         assertThrows(DatabaseException.class, () -> roundMapper.save(round));
     }
@@ -131,14 +127,14 @@ class RoundMapperTest {
     @Test
     void saveDuplicateRoundNumberThrowsDatabaseException() {
         roundMapper.endRound(2, LocalDate.of(2026, 5, 1), Result.NEGATIVE);
-        // rundenummer 2 findes allerede i forløb 1 -> UNIQUE (fertility_journey_id, round_number) afviser
+        // rundenummer 2 findes allerede i forløb 1 – UNIQUE (fertility_journey_id, round_number)
         Round round = new Round(0, 1, 2, TreatmentType.IVF, LocalDate.of(2026, 6, 1), null, RoundStatus.IN_PROGRESS, null);
         assertThrows(DatabaseException.class, () -> roundMapper.save(round));
     }
 
     @Test
     void endRoundBeforeStartDateThrowsDatabaseException() {
-        // runde 2 startede 2026-04-01 -> CHECK (end_date >= start_date) afviser en slutdato før
+        // runde 2 startede 2026-04-01, så CHECK (end_date >= start_date) afviser en tidligere slutdato
         assertThrows(DatabaseException.class,
                 () -> roundMapper.endRound(2, LocalDate.of(2026, 3, 1), Result.NEGATIVE));
     }

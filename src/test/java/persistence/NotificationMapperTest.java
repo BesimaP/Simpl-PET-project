@@ -15,14 +15,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af NotificationMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// En påmindelse hænger på patienten. countUnread bruger COUNT(*) – den røde prik på klokken.
+// Integrationstest af NotificationMapper mod schema test (se TestDatabase).
 class NotificationMapperTest {
 
     private static ConnectionPool connectionPool;
     private static NotificationMapper notificationMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -30,10 +28,10 @@ class NotificationMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: 2 patienter, 3 påmindelser til Anna (2 ulæste) og 1 ulæst til Bo
+    // før hver test: 2 patienter, 3 påmindelser til Anna (2 ulæste) og 1 ulæst til Bo
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -61,7 +59,6 @@ class NotificationMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -71,10 +68,10 @@ class NotificationMapperTest {
     void findByPatient() {
         List<Notification> notifications = notificationMapper.findByPatient(1);
 
-        assertEquals(3, notifications.size());                                     // kun Annas, ikke Bos
+        assertEquals(3, notifications.size());                                     // Bos må ikke komme med
         assertEquals(NotificationType.APPOINTMENT_REMINDER, notifications.get(0).getNotificationType()); // nyeste først
         assertEquals("Scanning kl. 10", notifications.get(0).getMessage());
-        assertTrue(notifications.get(2).isRead());                                 // den ældste er læst
+        assertTrue(notifications.get(2).isRead());
     }
 
     @Test
@@ -85,7 +82,7 @@ class NotificationMapperTest {
 
     @Test
     void countUnreadWithoutNotificationsIsZero() {
-        assertEquals(0, notificationMapper.countUnread(99));                       // COUNT giver 0, ikke null
+        assertEquals(0, notificationMapper.countUnread(99));
     }
 
     @Test
@@ -106,9 +103,9 @@ class NotificationMapperTest {
 
     @Test
     void markReadOtherPatientsNotificationDoesNothing() {
-        // Anna (id 1) prøver at markere Bos påmindelse (id 4) som læst
+        // Anna prøver at markere Bos påmindelse (id 4) som læst
         assertFalse(notificationMapper.markRead(4, 1));
-        assertEquals(1, notificationMapper.countUnread(2));                        // Bos er stadig ulæst
+        assertEquals(1, notificationMapper.countUnread(2));
     }
 
     @Test
@@ -116,10 +113,10 @@ class NotificationMapperTest {
         notificationMapper.markAllRead(1);
 
         assertEquals(0, notificationMapper.countUnread(1));
-        assertEquals(1, notificationMapper.countUnread(2));                        // WHERE patient_id: Bo er urørt
+        assertEquals(1, notificationMapper.countUnread(2));                        // Bos påmindelse må ikke røres
     }
 
-    // ---------- regler, der ligger i DATABASEN ----------
+    // ---------- regler, som databasen selv håndhæver ----------
 
     @Test
     void saveWithoutTitleThrowsDatabaseException() {

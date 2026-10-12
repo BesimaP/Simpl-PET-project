@@ -2,18 +2,17 @@ package entities;
 
 import java.time.LocalDate;
 
-// Patienten — den centrale entitet (tabel patient). Login (brugernavn + kodeord) og persondata i ét kort
-// (UserAccount er samlet ind i Patient, uge 41: de var 1-1 og blev altid oprettet sammen).
+// Patienten (tabel patient). Login og persondata ligger samme sted, fordi de altid oprettes sammen.
 public class Patient {
 
     private int id;
     private String username;
-    private String passwordHash;   // gem et hash (BCrypt senere), aldrig klartekst
+    private String passwordHash;   // BCrypt-hash, aldrig klartekst
     private String firstName;
     private String lastName;
     private LocalDate dateOfBirth;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public Patient(int id, String username, String passwordHash, String firstName, String lastName, LocalDate dateOfBirth) {
         this.id = id;
         this.username = username;
@@ -23,7 +22,7 @@ public class Patient {
         this.dateOfBirth = dateOfBirth;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }
@@ -48,7 +47,7 @@ public class Patient {
         return lastName;
     }
 
-    // fulde navn – bruges i views (${patient.name}); gemmes ikke, sættes sammen her
+    // fulde navn til visning – gemmes ikke i databasen
     public String getName() {
         return firstName + " " + lastName;
     }

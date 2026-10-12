@@ -3,7 +3,7 @@ package entities;
 import enums.EventType;
 import java.time.LocalDateTime;
 
-// Et konkret trin i en runde, vises på tidslinjen (tabel event, US2/UC11).
+// Et trin i en runde, som vises på tidslinjen (tabel event, US2/UC11).
 public class Event {
 
     private int id;
@@ -12,7 +12,7 @@ public class Event {
     private EventType eventType;
     private String description;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public Event(int id, int roundId, LocalDateTime dateTime, EventType eventType, String description) {
         this.id = id;
         this.roundId = roundId;
@@ -21,7 +21,7 @@ public class Event {
         this.description = description;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }

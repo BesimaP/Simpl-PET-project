@@ -17,7 +17,7 @@ public class ConnectionPool {
     public static ConnectionPool getInstance(String user, String password, String url, String db) {
         if (instance == null) {
             synchronized (ConnectionPool.class) {
-                if (instance == null) {  // Double-checked locking
+                if (instance == null) {  // tjekker igen inde i synchronized, så to tråde ikke laver hver sin pool
                     if (System.getenv("DEPLOYED") != null) {
                         ds = createHikariConnectionPool(
                                 System.getenv("JDBC_USER"),
@@ -41,14 +41,14 @@ public class ConnectionPool {
         config.setUsername(user);
         config.setPassword(password);
 
-        // Connection Pool Configurations
-        config.setMaximumPoolSize(10); // Default is 10
-        config.setMinimumIdle(2);      // Ensures some connections are always available
-        config.setIdleTimeout(30000);  // 30 seconds idle timeout
-        config.setConnectionTimeout(30000); // Max wait time for a connection
+        // indstillinger for poolen
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(2);      // der står altid et par forbindelser klar
+        config.setIdleTimeout(30000);  // 30 sek.
+        config.setConnectionTimeout(30000); // max ventetid på en ledig forbindelse
         config.setPoolName("Postgresql-Pool");
 
-        // Optimizations
+        // cacher prepared statements, så de ikke skal bygges forfra hver gang
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
@@ -56,7 +56,7 @@ public class ConnectionPool {
         return new HikariDataSource(config);
     }
 
-    // Ikke static: man skal have nøgleringen (ConnectionPool-objektet) for at låne en nøgle – den gives videre Main → … → Mapper
+    // ikke static: poolen sendes med fra Main ned til mapperne, og testene kan bruge en pool, der peger på schema test
     public Connection getConnection() throws SQLException {
         if (ds == null) {
             throw new SQLException("Connection pool is not initialized.");

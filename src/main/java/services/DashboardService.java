@@ -13,21 +13,20 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-// Forretningslogik for forløb (FertilityJourney, US1). Kender IKKE Javalin.
+// Logik for forløb (FertilityJourney, US1).
 public class DashboardService {
     private FertilityJourneyMapper journeyMapper;
-    private RoundMapper roundMapper;   // til reglen "et forløb kan ikke afsluttes, mens en runde er i gang"
+    private RoundMapper roundMapper;   // et forløb må ikke afsluttes, mens en runde er i gang
 
-    // ny konstruktør: med nøgleringen
     public DashboardService(ConnectionPool connectionPool) {
         this.journeyMapper = new FertilityJourneyMapper(connectionPool);
         this.roundMapper = new RoundMapper(connectionPool);
     }
 
-    // Opretter et forløb til patienten. Regel: kun ét aktivt forløb ad gangen.
-    // OK = oprettet, ALREADY_EXISTS = der var allerede et aktivt forløb, INVALID_INPUT = ingen dato
+    // Opretter et forløb. Patienten må kun have ét aktivt forløb ad gangen.
+    // Svar: OK, INVALID_INPUT eller ALREADY_EXISTS
     public ServiceResult createJourney(int patientId, String startDate) {
-        // 1. regel: startdatoen skal være udfyldt og være en rigtig dato (try/catch: ugyldig dato = INVALID_INPUT, ikke crash)
+        // startdatoen skal være udfyldt og være en rigtig dato
         if (startDate == null || startDate.isBlank()) {
             return ServiceResult.INVALID_INPUT;
         }
@@ -37,18 +36,16 @@ public class DashboardService {
         } catch (DateTimeParseException e) {
             return ServiceResult.INVALID_INPUT;
         }
-        // et forløb kan ikke starte i fremtiden – ellers kan der ikke startes en runde før den dato
+        // et forløb må ikke starte i fremtiden – så kunne man ikke starte en runde før den dato
         if (start.isAfter(LocalDate.now())) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. regel: har patienten allerede et aktivt forløb, må der ikke oprettes et nyt
         if (journeyMapper.findActiveByPatient(patientId) != null) {
             return ServiceResult.ALREADY_EXISTS;
         }
 
-        // 3. byg kortet (id 0 = databasen finder på et) og læg det i skuffen. Status er ACTIVE fra start
-        //    try/catch: ved dobbeltklik afviser databasens unikke indeks (one_active_journey_per_patient) det andet forløb
+        // ved dobbeltklik afviser databasens unikke indeks (one_active_journey_per_patient) det andet forløb
         try {
             journeyMapper.save(new FertilityJourney(0, patientId, start, JourneyStatus.ACTIVE));
         } catch (DatabaseException e) {
@@ -60,32 +57,29 @@ public class DashboardService {
         return ServiceResult.OK;
     }
 
-    // Afslutter patientens aktive forløb (status COMPLETED). Bagefter viser dashboard "Start dit forløb" igen,
-    // så patienten kan oprette et nyt forløb (US1: "en patient kan godt have flere forløb over tid").
-    // Svar: OK · NO_ACTIVE_JOURNEY = der er intet forløb at afslutte · ROUND_IN_PROGRESS = afslut runden først
+    // Afslutter det aktive forløb, så patienten kan starte et nyt senere (US1).
+    // Svar: OK, NO_ACTIVE_JOURNEY eller ROUND_IN_PROGRESS (runden skal afsluttes først)
     public ServiceResult endJourney(int patientId) {
-        // 1. find det aktive forløb
         FertilityJourney journey = journeyMapper.findActiveByPatient(patientId);
         if (journey == null) {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         }
 
-        // 2. regel: en runde i gang skal afsluttes først (ellers ville den hænge "i gang" i et afsluttet forløb)
+        // ellers ville runden hænge "i gang" i et afsluttet forløb
         if (roundMapper.findActiveByJourney(journey.getId()) != null) {
             return ServiceResult.ROUND_IN_PROGRESS;
         }
 
-        // 3. sæt status til COMPLETED
         journeyMapper.endJourney(journey.getId());
         return ServiceResult.OK;
     }
 
-    // Alle patientens forløb, nyeste først (aktive og afsluttede) – til rundehistorik og valg af forløb på aftaler
+    // Alle patientens forløb, nyeste først – til rundehistorik og valg af forløb på aftaler
     public List<FertilityJourney> getJourneys(int patientId) {
         return journeyMapper.findByPatient(patientId);
     }
 
-    // Finder ét af patientens EGNE forløb ud fra id – null, hvis det ikke findes eller tilhører en anden
+    // Finder et af patientens egne forløb – null, hvis det ikke findes eller tilhører en anden
     // (så man ikke kan se andres aftaler ved at rette ?forloeb= i adressen)
     public FertilityJourney findJourney(int patientId, int journeyId) {
         for (FertilityJourney j : getJourneys(patientId)) {
@@ -96,8 +90,7 @@ public class DashboardService {
         return null;
     }
 
-    // Finder patientens aktive forløb. Findes der ikke et, KASTES NoActiveJourneyException (i stedet for at returnere null,
-    // som ikke siger hvorfor). Bruges af de andre services (runde, hormoner, dagbog, aftaler, tidslinje) og senere af dashboard-visningen
+    // Finder det aktive forløb. Vi kaster en exception i stedet for at give null, så den, der kalder, ved hvorfor
     public FertilityJourney findActiveJourney(int patientId) throws NoActiveJourneyException {
         FertilityJourney journey = journeyMapper.findActiveByPatient(patientId);
         if (journey == null) {

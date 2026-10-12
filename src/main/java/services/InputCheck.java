@@ -1,10 +1,9 @@
 package services;
 
-// Fælles tjek af tekst fra formularerne. Stod før som en kopi i hver service – nu ét sted (SRP).
-// Kun static metoder: kaldes direkte på klassen, fx InputCheck.isBlank(name), uden new
+// Fælles tjek af tekst fra formularerne, så det ikke skal kopieres ind i hver service.
 public class InputCheck {
 
-    // ingen objekter af klassen – den er kun en samling hjælpemetoder
+    // klassen har kun static metoder, så den skal ikke kunne laves med new
     private InputCheck() {
     }
 
@@ -13,7 +12,7 @@ public class InputCheck {
         return s == null || s.isBlank();
     }
 
-    // længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
+    // længere end kolonnen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
     public static boolean isTooLong(String s, int max) {
         return s != null && s.length() > max;
     }

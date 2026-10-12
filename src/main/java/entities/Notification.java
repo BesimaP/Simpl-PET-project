@@ -3,7 +3,7 @@ package entities;
 import enums.NotificationType;
 import java.time.LocalDateTime;
 
-// En påmindelse til patienten, genereret af systemet (tabel notification, US12).
+// En påmindelse til patienten, som systemet laver (tabel notification, US12).
 public class Notification {
 
     private int id;
@@ -14,7 +14,7 @@ public class Notification {
     private String message;
     private boolean read;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public Notification(int id, int patientId, LocalDateTime dateTime, NotificationType notificationType,
                         String title, String message, boolean read) {
         this.id = id;
@@ -26,7 +26,7 @@ public class Notification {
         this.read = read;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }

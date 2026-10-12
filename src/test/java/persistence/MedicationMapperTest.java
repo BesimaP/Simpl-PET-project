@@ -10,15 +10,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af MedicationMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// Medicinlisten er STAMDATA: de 17 præparater indsættes af schema_postgres.sql, og mapperen kan kun læse dem.
-// Derfor er der ingen @BeforeEach med testdata – listen er den samme i alle tests (clearData() rører den ikke).
+// Integrationstest af MedicationMapper mod schema test (se TestDatabase).
+// Medicinlisten er stamdata fra schemaet, så vi har ingen @BeforeEach med testdata.
 class MedicationMapperTest {
 
     private static ConnectionPool connectionPool;
     private static MedicationMapper medicationMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test (inkl. medicinlisten)
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -28,7 +26,6 @@ class MedicationMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -38,8 +35,8 @@ class MedicationMapperTest {
     void findAll() {
         List<Medication> medications = medicationMapper.findAll();
 
-        assertEquals(17, medications.size());                          // alle 17 fra schema_postgres.sql
-        assertEquals("Cetrotide", medications.get(0).getDescription()); // alfabetisk efter visningsnavn (ORDER BY description)
+        assertEquals(17, medications.size());                          // de 17 præparater fra schemaet
+        assertEquals("Cetrotide", medications.get(0).getDescription()); // sorteret efter description
     }
 
     @Test
@@ -59,7 +56,7 @@ class MedicationMapperTest {
 
     @Test
     void findByNameIsCaseSensitive() {
-        // WHERE name = ? skelner mellem store og små bogstaver – name gemmes med STORE (som enum-navne)
+        // name gemmes med store bogstaver, og WHERE name = ? skelner mellem store og små
         assertNull(medicationMapper.findByName("gonal_f"));
     }
 }

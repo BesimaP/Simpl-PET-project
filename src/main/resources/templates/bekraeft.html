@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <!--
-  Bekræft-side: "Er du sikker?" (Nielsen #5: forebyg fejl). Bruges, når JavaScript er slået fra –
-  så kan dialogerne på dashboard og min-profil ikke åbne, og knapperne sender i stedet hertil.
-  ÉN skabelon til tre ting: Afslut runde, Afslut forløb og Slet konto.
-  Controlleren lægger teksterne i request scope: ${title}, ${text}, ${action}, ${button}, ${cancel}, ${showResult}
+  "Er du sikker?"-side (Nielsen #5). Bruges når JavaScript er slået fra, så dialogerne på dashboard
+  og min-profil ikke kan åbne. Den samme side bruges til afslut runde, afslut forløb og slet konto,
+  så teksterne kommer fra controlleren.
 -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="'Simpl – ' + ${button}">Simpl – Bekræft</title>
 
-    <!-- skrifttyper og vores css filer (samme opsætning som login) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/tokens.css">
     <link rel="stylesheet" href="/css/base.css">
@@ -19,7 +17,6 @@
 </head>
 <body>
 
-<!-- split = siden er delt i to: brand til venstre, kortet til højre -->
 <div class="split">
 
     <section class="brand">
@@ -30,19 +27,17 @@
 
     <main class="form-area">
         <div class="card login-card">
-            <!-- th:text: overskrift og forklaring fra controlleren -->
             <h2 th:text="${title}">Afslut runde 2?</h2>
             <p class="subtitle" th:text="${text}">Runden markeres som afsluttet, og du kan starte en ny.</p>
 
-            <!-- th:action: hvor knappen sender hen (/afslut-runde, /afslut-forloeb eller /slet-konto) -->
+            <!-- /afslut-runde, /afslut-forloeb eller /slet-konto -->
             <form th:action="${action}" method="post">
 
-                <!-- kun ved "Afslut runde": resultat er valgfrit. value matcher enum Result – tom = ikke afgjort endnu -->
+                <!-- kun ved afslut runde. Resultatet er valgfrit, tom værdi betyder ikke afgjort endnu -->
                 <div th:if="${showResult}">
                     <label for="result">Resultat</label>
                     <select id="result" name="result">
                         <option value="">Ikke afgjort endnu</option>
-                        <!-- én option per værdi i enum Result (${results} fra controlleren) -->
                         <option th:each="r : ${results}" th:value="${r.name()}" th:text="${r.label}">Positiv</option>
                     </select>
                 </div>
@@ -50,7 +45,7 @@
                 <button type="submit" th:text="${button}">Afslut runde</button>
             </form>
 
-            <!-- udvej: tilbage, uden at noget sker -->
+            <!-- fortryd: tilbage uden at noget sker -->
             <p class="link-line"><a th:href="${cancel}">Annullér</a></p>
         </div>
     </main>

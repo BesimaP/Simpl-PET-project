@@ -9,8 +9,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Test af FileStorage: gemmer, læser og sletter rigtige filer i mappen uploads/ – ingen database.
-// Hver test rydder op efter sig selv, så der ikke ligger testfiler tilbage
+// Tester FileStorage med rigtige filer i uploads/. Hver test rydder op efter sig selv.
 class FileStorageTest {
 
     private final FileStorage fileStorage = new FileStorage();
@@ -31,7 +30,7 @@ class FileStorageTest {
         String first = fileStorage.save(new ByteArrayInputStream("a".getBytes()), ".png");
         String second = fileStorage.save(new ByteArrayInputStream("b".getBytes()), ".png");
         try {
-            assertNotEquals(first, second);   // UUID: to uploads overskriver ikke hinanden
+            assertNotEquals(first, second);   // to uploads med samme endelse må ikke overskrive hinanden
         } finally {
             fileStorage.delete(first);
             fileStorage.delete(second);

@@ -4,17 +4,18 @@ import enums.DocumentType;
 
 import java.time.LocalDate;
 
-// Et dokument på patienten (tabel document, US11) – fx henvisning eller blodprøvesvar, også før første runde. Selve filen ligger på disken; kun stien gemmes.
+// Et dokument på patienten (tabel document, US11), fx en henvisning. Ligger på patienten, så det kan uploades før første runde.
+// Selve filen ligger på disken – vi gemmer kun stien.
 public class Document {
 
     private int id;
     private int patientId;
-    private LocalDate uploadDate;   // gør, at dokumentet kan vises under den rigtige runde (via dato)
+    private LocalDate uploadDate;   // så dokumentet kan vises under den rigtige runde
     private String title;
     private DocumentType documentType;
     private String filePath;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public Document(int id, int patientId, LocalDate uploadDate, String title, DocumentType documentType, String filePath) {
         this.id = id;
         this.patientId = patientId;
@@ -24,7 +25,7 @@ public class Document {
         this.filePath = filePath;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }

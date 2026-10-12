@@ -14,15 +14,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af MedicationLogMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// En dosis hænger på en runde (round_id) OG på et præparat i medicinlisten (medication_id).
-// Medicinlisten (Gonal-F = 1, Orgalutran = 2 …) fyldes af schema_postgres.sql og tømmes IKKE af clearData().
+// Integrationstest af MedicationLogMapper mod schema test (se TestDatabase).
+// Medicinlisten (Gonal-F = 1, Orgalutran = 2 osv.) kommer fra schemaet og bliver ikke tømt af clearData().
 class MedicationLogMapperTest {
 
     private static ConnectionPool connectionPool;
     private static MedicationLogMapper medicationLogMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -30,10 +28,10 @@ class MedicationLogMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: kæden patient -> forløb -> runde -> 2 doser
+    // før hver test: patient -> forløb -> runde -> 2 doser
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -46,13 +44,13 @@ class MedicationLogMapperTest {
             INSERT INTO test.fertility_journey (patient_id, start_date, journey_status_id) VALUES
             (1, '2026-01-10', 1)
             """);
-            // runde 1 i gang (IVF)
+            // runde 1 er i gang
             stmt.execute("""
             INSERT INTO test.round (fertility_journey_id, round_number, treatment_type_id, start_date) VALUES
             (1, 1, 1, '2026-09-01')
             """);
 
-            // Doser i runde 1: id 1 = Gonal-F 150 IU (taget), id 2 = Orgalutran 0,25 mg (ikke taget endnu)
+            // id 1 = Gonal-F 150 IU (taget), id 2 = Orgalutran 0,25 mg (ikke taget)
             stmt.execute("""
             INSERT INTO test.medication_log (round_id, medication_id, scheduled_date_time, dose, taken) VALUES
             (1, 1, '2026-09-02 20:00', 150, TRUE),
@@ -66,7 +64,6 @@ class MedicationLogMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -77,7 +74,7 @@ class MedicationLogMapperTest {
         List<MedicationLog> logs = medicationLogMapper.findByRound(1);
 
         assertEquals(2, logs.size());
-        assertEquals(1, logs.get(0).getMedicationId());   // ældste først (ORDER BY scheduled_date_time)
+        assertEquals(1, logs.get(0).getMedicationId());   // ældste først
         assertEquals(150.0, logs.get(0).getDose());
         assertEquals("IU", logs.get(0).getUnit());          // enheden kommer fra medication via JOIN
         assertEquals("mg", logs.get(1).getUnit());
@@ -99,7 +96,7 @@ class MedicationLogMapperTest {
         assertEquals(3, id);                                         // der ligger 2 i forvejen
         List<MedicationLog> logs = medicationLogMapper.findByRound(1);
         assertEquals(3, logs.size());
-        assertEquals("IU", logs.get(2).getUnit());                   // enheden blev ikke gemt i medication_log, men hentes fra medication
+        assertEquals("IU", logs.get(2).getUnit());                   // enheden gemmes ikke i medication_log, den hentes fra medication
     }
 
     @Test
@@ -120,19 +117,19 @@ class MedicationLogMapperTest {
 
         List<MedicationLog> logs = medicationLogMapper.findByRound(1);
         assertEquals(1, logs.size());
-        assertEquals(2, logs.get(0).getId());                        // kun den anden dosis er tilbage
+        assertEquals(2, logs.get(0).getId());
     }
 
     @Test
     void otherPatientCannotChangeDose() {
-        // patient 2 ejer ikke runden -> 0 rækker ramt, dosen er urørt
+        // patient 2 ejer ikke runden, så dosen skal være urørt
         assertFalse(medicationLogMapper.markTaken(2, 2));
         assertFalse(medicationLogMapper.delete(1, 2));
         assertEquals(2, medicationLogMapper.findByRound(1).size());
         assertFalse(medicationLogMapper.findByRound(1).get(1).isTaken());
     }
 
-    // ---------- regler, der ligger i DATABASEN ----------
+    // ---------- regler, som databasen selv håndhæver ----------
 
     @Test
     void saveZeroDoseThrowsDatabaseException() {
@@ -143,14 +140,14 @@ class MedicationLogMapperTest {
 
     @Test
     void saveUnknownMedicationThrowsDatabaseException() {
-        // fremmednøgle: medication_id 999 findes ikke i medicinlisten
+        // medication_id 999 findes ikke i medicinlisten
         MedicationLog log = new MedicationLog(0, 1, 999, LocalDateTime.of(2026, 9, 4, 20, 0), 50, null, false);
         assertThrows(DatabaseException.class, () -> medicationLogMapper.save(log));
     }
 
     @Test
     void saveOnUnknownRoundThrowsDatabaseException() {
-        // fremmednøgle: round_id 99 findes ikke
+        // runde 99 findes ikke
         MedicationLog log = new MedicationLog(0, 99, 1, LocalDateTime.of(2026, 9, 4, 20, 0), 50, null, false);
         assertThrows(DatabaseException.class, () -> medicationLogMapper.save(log));
     }

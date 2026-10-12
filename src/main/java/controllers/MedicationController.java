@@ -7,8 +7,8 @@ import persistence.ConnectionPool;
 import services.MedicationService;
 import services.RoundService;
 
-// Koordinatoren for medicin.html (US8). Læser formularen, kalder MedicationService og sender brugeren videre.
-// Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
+// Controller for medicin.html (US8). Læser formularen, kalder MedicationService og sender brugeren videre.
+// SQL og mappers ligger i service- og persistence-laget.
 public class MedicationController {
 
     private MedicationService medicationService;
@@ -19,44 +19,43 @@ public class MedicationController {
         this.roundService = new RoundService(connectionPool);
     }
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new MedicationController(connectionPool).setRoutes(config)
+    // bliver kaldt én gang fra RouteConfig
     public void setRoutes(JavalinConfig config) {
         config.routes.get("/medicin", ctx -> showLogs(ctx));
         config.routes.post("/medicin", ctx -> logDose(ctx));
-        config.routes.post("/medicin/taget", ctx -> markTaken(ctx));   // knappen på hver dosis
-        config.routes.post("/medicin/ikke-taget", ctx -> markNotTaken(ctx));   // fortryd på hver dosis
-        config.routes.post("/medicin/slet", ctx -> deleteDose(ctx));           // "Slet" på én dosis (fx en fejlindtastning)
+        config.routes.post("/medicin/taget", ctx -> markTaken(ctx));
+        config.routes.post("/medicin/ikke-taget", ctx -> markNotTaken(ctx));   // fortryd "taget"
+        config.routes.post("/medicin/slet", ctx -> deleteDose(ctx));           // fx en fejlindtastning
     }
 
-    // GET /medicin – hent dagens og tidligere doser + medicinnavne, og fyld skabelonen
+    // GET /medicin – dagens, kommende og tidligere doser
     private void showLogs(Context ctx) {
-        // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
 
-        ctx.attribute("today", medicationService.getTodayLogs(patientId));   // requestscope -> ${today}
-        ctx.attribute("upcoming", medicationService.getUpcomingLogs(patientId)); // requestscope -> ${upcoming} (fra i morgen og frem)
-        ctx.attribute("past", medicationService.getPastLogs(patientId));     // requestscope -> ${past}
-        ctx.attribute("names", medicationService.getMedicationNames());      // requestscope -> ${names[m.medicationId]}
-        ctx.attribute("medications", medicationService.getMedications());    // requestscope -> dropdownen (th:each)
+        ctx.attribute("today", medicationService.getTodayLogs(patientId));
+        ctx.attribute("upcoming", medicationService.getUpcomingLogs(patientId)); // fra i morgen og frem
+        ctx.attribute("past", medicationService.getPastLogs(patientId));
+        ctx.attribute("names", medicationService.getMedicationNames());      // ${names[m.medicationId]} i skabelonen
+        ctx.attribute("medications", medicationService.getMedications());    // til dropdownen
         ctx.attribute("roundStart", roundService.getActiveRoundStart(patientId)); // min på datofeltet (null = ingen runde)
-        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        // ?gemt= / ?fejl= fra sidste POST vises af fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
-        ctx.render("medicin");                                     // templates/medicin.html
+        ctx.render("medicin");
     }
 
-    // POST /medicin/taget – knappen "markér som taget" på én dosis (id i et skjult felt)
+    // POST /medicin/taget – id kommer fra et skjult felt
     private void markTaken(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        // "17" -> 17. try/catch: et ugyldigt id (fx rettet i det skjulte felt) giver en fejlbesked i stedet for en 500-fejl
+        // et ugyldigt id giver en fejlbesked i stedet for en 500-fejl
         int logId;
         try {
             logId = Integer.parseInt(ctx.formParam("id"));
@@ -68,7 +67,7 @@ public class MedicationController {
         ctx.redirect(result == ServiceResult.OK ? "/medicin" : "/medicin?fejl=ukendt");
     }
 
-    // POST /medicin/slet – slet én dosis (id i et skjult felt). Service tjekker, at dosen er patientens egen
+    // POST /medicin/slet – service tjekker, at dosen er patientens egen
     private void deleteDose(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -86,7 +85,7 @@ public class MedicationController {
         ctx.redirect(result == ServiceResult.OK ? "/medicin?gemt=slettet" : "/medicin?fejl=ukendt");
     }
 
-    // POST /medicin/ikke-taget – fortryd "markér som taget" (id i et skjult felt)
+    // POST /medicin/ikke-taget – fortryder "markér som taget"
     private void markNotTaken(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -104,15 +103,14 @@ public class MedicationController {
         ctx.redirect(result == ServiceResult.OK ? "/medicin" : "/medicin?fejl=ukendt");
     }
 
-    // POST /medicin – når brugeren trykker "Gem". ctx = kuverten fra Javalin
+    // POST /medicin – når brugeren trykker "Gem"
     private void logDose(Context ctx) {
-        // 1. åbn kuverten: læs felterne (name="medication", "dose", "date", "time", "taken" i medicin.html).
-        //    Ingen enhed: den følger lægemidlet (medication.unit)
-        String medication = ctx.formParam("medication"); // fx "GONAL_F" – value i dropdownen, matcher medication.name i databasen
-        String dose = ctx.formParam("dose");             // fx "150" – tekst endnu, service laver den om til tal
-        String date = ctx.formParam("date");             // fx "2026-09-22"
-        String time = ctx.formParam("time");             // fx "08:00"
-        boolean taken = ctx.formParam("taken") != null;  // en afkrydset checkbox sendes med, en tom sendes slet ikke (null)
+        // ingen enhed i formularen – den følger lægemidlet (medication.unit)
+        String medication = ctx.formParam("medication"); // fx "GONAL_F", skal matche medication.name i databasen
+        String dose = ctx.formParam("dose");             // stadig tekst, service laver den om til et tal
+        String date = ctx.formParam("date");
+        String time = ctx.formParam("time");
+        boolean taken = ctx.formParam("taken") != null;  // en tom checkbox bliver slet ikke sendt med
 
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -120,10 +118,9 @@ public class MedicationController {
             return;
         }
 
-        // 2. bed service gemme dosen – den finder selv forløb, runde og lægemiddel. Svar: OK = ok, ellers hvad der gik galt
+        // service finder selv forløb, runde og lægemiddel
         ServiceResult result = medicationService.logDose(patientId, medication, dose, date, time, taken);
 
-        // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
             case OK -> ctx.redirect("/medicin?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/medicin?fejl=felter");            // tomt felt, ugyldigt tal/dato eller ukendt medicin

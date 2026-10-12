@@ -4,12 +4,11 @@ import io.javalin.config.JavalinConfig;
 import services.NotificationService;
 import persistence.ConnectionPool;
 
-// Samler registreringen af alle controllere ét sted, så Main slipper for den lange liste.
+// Vi samler alle controllere her, så Main ikke bliver rodet.
 public class RouteConfig {
 
     public static void register(JavalinConfig config, ConnectionPool connectionPool) {
-        // hver controller skriver sine ruter (config.routes.post("/…")) på Javalins liste –
-        // står en controller ikke her, virker dens formularer ikke
+        // hver controller registrerer sine egne ruter. Mangler en controller her, virker dens sider ikke
         new LoginController(connectionPool).setRoutes(config);
         new DashboardController(connectionPool).setRoutes(config);
         new HormoneController(connectionPool).setRoutes(config);
@@ -24,10 +23,8 @@ public class RouteConfig {
 
         config.routes.get("/", ctx -> ctx.redirect("/login"));
 
-        // before = kører FØR hver eneste rute. Er man logget ind, lægges antal ulæste påmindelser i request scope,
-        // så klokken på ALLE sider kan vise den røde prik (${unread}) – uden at hver controller skal gentage det
-        // NotificationService laves ÉN gang her – ikke ved hver request inde i lambdaen.
-        // Statiske filer (css/js/img) springes over: de har ingen klokke, så der er ingen grund til at spørge databasen
+        // before kører før hver rute og lægger antal ulæste påmindelser i ${unread}, så klokken virker på alle sider.
+        // Statiske filer springer vi over, så vi ikke spørger databasen unødigt
         NotificationService notificationService = new NotificationService(connectionPool);
         config.routes.before("/*", ctx -> {
             String path = ctx.path();

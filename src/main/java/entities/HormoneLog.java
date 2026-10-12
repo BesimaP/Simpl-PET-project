@@ -13,7 +13,7 @@ public class HormoneLog {
     private double value;
     private String unit;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public HormoneLog(int id, int roundId, LocalDateTime dateTime, HormoneType hormoneType, double value, String unit) {
         this.id = id;
         this.roundId = roundId;
@@ -23,7 +23,7 @@ public class HormoneLog {
         this.unit = unit;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }
@@ -48,7 +48,7 @@ public class HormoneLog {
         return value;
     }
 
-    // værdien som pæn tekst: 2162.0 -> "2162", 3.5 -> "3.5" (Thymeleaf: ${h.valueText}) – samme som doseText på MedicationLog
+    // værdien uden unødvendige nuller: 2162.0 -> "2162", 3.5 -> "3.5"
     public String getValueText() {
         return java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
     }

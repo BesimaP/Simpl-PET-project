@@ -14,14 +14,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af DiaryEntryMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// Et dagbogsnotat hænger direkte på patienten. Samme "kun egne"-mønster som DiagnosisMapper.
+// Integrationstest af DiaryEntryMapper mod schema test (se TestDatabase).
 class DiaryEntryMapperTest {
 
     private static ConnectionPool connectionPool;
     private static DiaryEntryMapper diaryEntryMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -29,10 +27,10 @@ class DiaryEntryMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: 2 patienter og 2 dagbogsnotater til Anna
+    // før hver test: 2 patienter og 2 dagbogsnotater til Anna
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -58,7 +56,6 @@ class DiaryEntryMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -69,14 +66,14 @@ class DiaryEntryMapperTest {
         List<DiaryEntry> entries = diaryEntryMapper.findByPatient(1);
 
         assertEquals(2, entries.size());
-        assertEquals("Scanning", entries.get(0).getTitle());                   // nyeste først (ORDER BY date_time DESC)
+        assertEquals("Scanning", entries.get(0).getTitle());                   // nyeste først
         assertEquals(LocalDateTime.of(2026, 9, 5, 21, 30), entries.get(0).getDateTime());
         assertEquals("Det gik fint", entries.get(1).getContent());
     }
 
     @Test
     void findByPatientWithoutEntriesReturnsEmptyList() {
-        assertTrue(diaryEntryMapper.findByPatient(2).isEmpty());              // Bo har ingen notater
+        assertTrue(diaryEntryMapper.findByPatient(2).isEmpty());
     }
 
     @Test
@@ -85,7 +82,7 @@ class DiaryEntryMapperTest {
         int id = diaryEntryMapper.save(entry);
 
         assertEquals(3, id);                                                  // der ligger 2 i forvejen
-        assertEquals(id, entry.getId());                                      // mapperen sætter id'et på objektet
+        assertEquals(id, entry.getId());
         assertEquals("Dag 1", diaryEntryMapper.findByPatient(2).get(0).getTitle());
     }
 
@@ -97,12 +94,12 @@ class DiaryEntryMapperTest {
 
     @Test
     void deleteOtherPatientsEntryDoesNothing() {
-        // Bo (id 2) prøver at slette Annas notat -> WHERE id = ? AND patient_id = ? rammer 0 rækker
+        // Bo (id 2) prøver at slette Annas notat – AND patient_id = ? skal stoppe det
         assertFalse(diaryEntryMapper.delete(1, 2));
         assertEquals(2, diaryEntryMapper.findByPatient(1).size());
     }
 
-    // ---------- regler, der ligger i DATABASEN ----------
+    // ---------- regler, som databasen selv håndhæver ----------
 
     @Test
     void saveWithoutContentThrowsDatabaseException() {
@@ -113,7 +110,7 @@ class DiaryEntryMapperTest {
 
     @Test
     void saveOnUnknownPatientThrowsDatabaseException() {
-        // fremmednøgle: patient 99 findes ikke
+        // patient 99 findes ikke, så fremmednøglen afviser
         DiaryEntry entry = new DiaryEntry(0, 99, LocalDateTime.of(2026, 9, 10, 8, 0), "Titel", "Tekst");
         assertThrows(DatabaseException.class, () -> diaryEntryMapper.save(entry));
     }

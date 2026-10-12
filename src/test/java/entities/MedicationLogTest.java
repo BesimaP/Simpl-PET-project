@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// UNITTEST af MedicationLog: tester getDoseText(), som laver dosis om til pæn tekst på medicin-siden. Ingen database.
+// Unittest af getDoseText(), som formaterer dosis til medicin-siden.
 class MedicationLogTest {
 
     private MedicationLog logWithDose(double dose) {
@@ -15,17 +15,17 @@ class MedicationLogTest {
 
     @Test
     void doseTextRemovesTrailingZeros() {
-        assertEquals("150", logWithDose(150.0).getDoseText());     // 150.0 -> "150"
+        assertEquals("150", logWithDose(150.0).getDoseText());
     }
 
     @Test
     void doseTextKeepsSmallDecimals() {
-        assertEquals("0.25", logWithDose(0.25).getDoseText());     // Orgalutran 0,25 mg
+        assertEquals("0.25", logWithDose(0.25).getDoseText());     // fx Orgalutran 0,25 mg
     }
 
     @Test
     void doseTextIsNotScientific() {
-        // uden toPlainString ville BigDecimal skrive 5000 som "5E+3"
-        assertEquals("5000", logWithDose(5000.0).getDoseText());   // Pregnyl 5000 IE
+        // uden toPlainString skriver BigDecimal 5000 som "5E+3"
+        assertEquals("5000", logWithDose(5000.0).getDoseText());   // fx Pregnyl 5000 IE
     }
 }

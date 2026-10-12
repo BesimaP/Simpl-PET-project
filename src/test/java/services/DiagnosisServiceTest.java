@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af DiagnosisService (diagnoser, US7)
+// Integrationstest af DiagnosisService (diagnoser, US7)
 class DiagnosisServiceTest {
 
     @BeforeAll
@@ -25,7 +25,7 @@ class DiagnosisServiceTest {
     @Test
     void addDiagnosisWithoutDescriptionReturnsOk() {
         int patientId = TestData.newPatient();
-        // beskrivelsen er valgfri – diagnoser hænger på patienten, intet forløb nødvendigt
+        // beskrivelsen er valgfri, og der skal ikke være et forløb
         assertEquals(ServiceResult.OK, new DiagnosisService(TestData.pool()).addDiagnosis(patientId, "PCOS", ""));
     }
 
@@ -35,7 +35,6 @@ class DiagnosisServiceTest {
         DiagnosisService service = new DiagnosisService(TestData.pool());
         service.addDiagnosis(patientId, "PCOS", null);
         service.addDiagnosis(patientId, "Endometriose", "Grad 2");
-        // en patient kan have flere diagnoser
         assertEquals(2, new DiagnosisMapper(TestData.pool()).findByPatient(patientId).size());
     }
 

@@ -18,8 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Forretningslogik for medicin (US8). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
-// Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldigt tal, dato eller ukendt medicin · NO_ACTIVE_JOURNEY · NO_ACTIVE_ROUND
+// Logik for medicin og doser (US8).
 public class MedicationService {
 
     private MedicationMapper medicationMapper;
@@ -32,39 +31,35 @@ public class MedicationService {
         this.roundService = new RoundService(connectionPool);
     }
 
-    // Logger én dosis i patientens aktive runde (en dosis SKAL ligge på en runde – round_id i databasen)
-    // Enheden vælges ikke af patienten – den følger lægemidlet (medication.unit)
+    // Logger en dosis i den aktive runde. Enheden vælger patienten ikke selv – den følger lægemidlet
     public ServiceResult logDose(int patientId, String medicationName, String dose, String date, String time, boolean taken) {
 
-        // 1. regel: alle felter skal være udfyldt
+        // alle felter skal være udfyldt
         if (InputCheck.isBlank(medicationName) || InputCheck.isBlank(dose) || InputCheck.isBlank(date) || InputCheck.isBlank(time)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. tekst fra formularen -> rigtige typer. Ugyldigt input giver INVALID_INPUT i stedet for et crash
+        // ugyldigt tal eller dato giver INVALID_INPUT i stedet for et crash
         double doseValue;
         LocalDateTime scheduled;
         try {
-            doseValue = Double.parseDouble(dose);                                       // "150" -> 150.0
-            scheduled = LocalDateTime.of(LocalDate.parse(date), LocalTime.parse(time)); // dato + klokkeslæt -> ét tidspunkt
+            doseValue = Double.parseDouble(dose);
+            scheduled = LocalDateTime.of(LocalDate.parse(date), LocalTime.parse(time));
         } catch (NumberFormatException | DateTimeParseException e) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 3. regel: dosis skal være et rigtigt tal (ikke "NaN"/"Infinity"), større end 0
-        //    og kunne være i kolonnen NUMERIC(10,2) (højst 8 cifre før kommaet)
+        // dosis skal være over 0 og passe i NUMERIC(10,2). parseDouble accepterer "NaN" og "Infinity", så dem tjekker vi også
         if (!Double.isFinite(doseValue) || doseValue <= 0 || doseValue >= 100_000_000) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 4. find lægemidlet ud fra navnet (dropdownens value)
+        // ukendt lægemiddel = ugyldigt input
         Medication medication = medicationMapper.findByName(medicationName);
         if (medication == null) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 5. find den aktive runde – en dosis hører til en runde.
-        //    findActiveRound kaster, hvis der ikke er forløb eller runde – vi fanger og oversætter til et ServiceResult
         Round round;
         try {
            round = roundService.findActiveRound(patientId);
@@ -74,19 +69,19 @@ public class MedicationService {
             return ServiceResult.NO_ACTIVE_ROUND;
         }
 
-        // 5b. regel: dosen kan ikke ligge før runden startede (den hører så ikke til denne runde)
+        // en dosis før runden startede hører ikke til denne runde
         if (scheduled.toLocalDate().isBefore(round.getStartDate())) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 6. gem – taken = true betyder "allerede taget", false betyder "planlagt"
+        // taken = false betyder, at dosen kun er planlagt
         medicationLogMapper.
                 save(new MedicationLog(0, round.getId(), medication.getId(), scheduled, doseValue, medication.getUnit(), taken));
 
         return ServiceResult.OK;
     }
 
-    // Doser planlagt i DAG i den runde, der er i gang – til listen "I dag" (GET)
+    // Doser i dag i den runde, der er i gang – til listen "I dag"
     public List<MedicationLog> getTodayLogs(int patientId) {
         List<MedicationLog> today = new ArrayList<>();
         for (MedicationLog m : getAll(patientId)) {
@@ -97,7 +92,7 @@ public class MedicationService {
         return today;
     }
 
-    // Doser før i dag – til listen "Tidligere" (GET)
+    // Doser før i dag – til listen "Tidligere"
     public List<MedicationLog> getPastLogs(int patientId) {
         List<MedicationLog> past = new ArrayList<>();
         for (MedicationLog m : getAll(patientId)) {
@@ -108,7 +103,7 @@ public class MedicationService {
         return past;
     }
 
-    // Doser planlagt EFTER i dag (fra i morgen og frem) – til listen "Kommende" (GET)
+    // Doser fra i morgen og frem – til listen "Kommende"
     public List<MedicationLog> getUpcomingLogs(int patientId) {
         List<MedicationLog> upcoming = new ArrayList<>();
         for (MedicationLog m : getAll(patientId)) {
@@ -119,40 +114,39 @@ public class MedicationService {
         return upcoming;
     }
 
-    // Alle lægemidler (navn + enhed) – til dropdownen på medicin-siden, så listen kommer fra databasen
+    // Alle lægemidler til dropdownen på medicin-siden
     public List<Medication> getMedications() {
         return medicationMapper.findAll();
     }
 
-    // Opslag id -> navn (fx 1 -> "Gonal-F"), så skabelonen kan vise navnet. Loggen har kun medicationId
+    // id -> navn (fx 1 -> "Gonal-F"), fordi doserne kun har medicationId
     public Map<Integer, String> getMedicationNames() {
         Map<Integer, String> names = new HashMap<>();
         for (Medication med : medicationMapper.findAll()) {
-            // description = det pæne navn ("Gonal-F"), name = koden ("GONAL_F"). description må være NULL – så bruges koden,
-            // så en påmindelse aldrig hedder "null · 150 IU"
+            // description er det pæne navn, name er koden ("GONAL_F"). Mangler description, bruger vi koden,
+            // så en påmindelse ikke kommer til at hedde "null · 150 IU"
             String name = med.getDescription() != null ? med.getDescription() : med.getName();
             names.put(med.getId(), name);
         }
         return names;
     }
 
-    // Markér én dosis som taget (US8 AC3) – kun patientens egen dosis. Svar: OK · NOT_FOUND
-    // Ejerskabet tjekkes i SQL'en (AND round_id IN patientens runder): 0 rækker ramt = ikke hendes / findes ikke
+    // Markér en dosis som taget (US8 AC3). Ejerskabet tjekkes i SQL'en – ellers NOT_FOUND
     public ServiceResult markTaken(int patientId, int logId) {
         return medicationLogMapper.markTaken(logId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
-    // Fortryd "markér som taget" (sæt dosen tilbage til planlagt) – kun patientens egen dosis. Svar: OK · NOT_FOUND
+    // Fortryd "taget", så dosen er planlagt igen
     public ServiceResult markNotTaken(int patientId, int logId) {
         return medicationLogMapper.markNotTaken(logId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
-    // Sletter én dosis (fx en fejlindtastning) – kun patientens egen dosis. Svar: OK · NOT_FOUND
+    // Sletter en dosis, fx en fejlindtastning
     public ServiceResult deleteDose(int patientId, int logId) {
         return medicationLogMapper.delete(logId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }
 
-    // hjælper: alle doser i den runde, der er i gang. Intet forløb eller ingen runde er ikke en fejl her -> tom liste
+    // alle doser i den runde, der er i gang. Ingen runde giver en tom liste
     private List<MedicationLog> getAll(int patientId) {
         try {
            Round round =  roundService.findActiveRound(patientId);

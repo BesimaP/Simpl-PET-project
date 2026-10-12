@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af DashboardService (forløb, US1)
+// Integrationstest af DashboardService (forløb, US1)
 class DashboardServiceTest {
 
     @BeforeAll
@@ -47,7 +47,7 @@ class DashboardServiceTest {
         int patientId = TestData.newPatient();
         DashboardService service = new DashboardService(TestData.pool());
         service.createJourney(patientId, "2026-09-01");
-        // regel: kun ét aktivt forløb ad gangen
+        // kun ét aktivt forløb ad gangen
         assertEquals(ServiceResult.ALREADY_EXISTS, service.createJourney(patientId, "2026-09-02"));
     }
 

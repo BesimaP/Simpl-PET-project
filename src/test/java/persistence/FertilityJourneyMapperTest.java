@@ -15,14 +15,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af FertilityJourneyMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// Et forløb hænger på en patient, så @BeforeEach lægger først patienter i og derefter forløb.
+// Integrationstest af FertilityJourneyMapper mod schema test (se TestDatabase).
 class FertilityJourneyMapperTest {
 
     private static ConnectionPool connectionPool;
     private static FertilityJourneyMapper journeyMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -30,10 +28,10 @@ class FertilityJourneyMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: tøm tabellerne og indsæt de samme patienter og forløb
+    // før hver test: 2 patienter og 2 forløb til Anna
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -45,8 +43,8 @@ class FertilityJourneyMapperTest {
             ('bo', 'hash2', 'Bo', 'Hansen', '1988-11-20')
             """);
 
-            // Forløb: Anna har et gammelt afsluttet forløb (id 1) og et aktivt (id 2). Bo har ingen forløb.
-            // journey_status_id: 1 = ACTIVE, 2 = COMPLETED (se schema_postgres.sql)
+            // Anna har et afsluttet forløb (id 1) og et aktivt (id 2). Bo har ingen.
+            // journey_status_id: 1 = ACTIVE, 2 = COMPLETED
             stmt.execute("""
             INSERT INTO test.fertility_journey (patient_id, start_date, journey_status_id) VALUES
             (1, '2025-01-10', 2),
@@ -60,7 +58,6 @@ class FertilityJourneyMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -78,7 +75,7 @@ class FertilityJourneyMapperTest {
 
     @Test
     void findActiveByPatientWithoutJourneyReturnsNull() {
-        assertNull(journeyMapper.findActiveByPatient(2)); // Bo har intet forløb
+        assertNull(journeyMapper.findActiveByPatient(2));
     }
 
     @Test
@@ -86,7 +83,7 @@ class FertilityJourneyMapperTest {
         List<FertilityJourney> journeys = journeyMapper.findByPatient(1);
 
         assertEquals(2, journeys.size());
-        // ORDER BY start_date DESC: nyeste først
+        // nyeste først
         assertEquals(2, journeys.get(0).getId());
         assertEquals(JourneyStatus.ACTIVE, journeys.get(0).getStatus());
         assertEquals(JourneyStatus.COMPLETED, journeys.get(1).getStatus());
@@ -94,7 +91,7 @@ class FertilityJourneyMapperTest {
 
     @Test
     void findByPatientWithoutJourneysReturnsEmptyList() {
-        assertTrue(journeyMapper.findByPatient(2).isEmpty()); // Bo har ingen forløb -> tom liste, ikke null
+        assertTrue(journeyMapper.findByPatient(2).isEmpty()); // tom liste, ikke null
     }
 
     @Test
@@ -108,7 +105,7 @@ class FertilityJourneyMapperTest {
 
     @Test
     void saveSecondActiveJourneyThrowsDatabaseException() {
-        // Anna har allerede et aktivt forløb. Det unikke indeks one_active_journey_per_patient afviser et til
+        // Anna har allerede et aktivt forløb, så indekset one_active_journey_per_patient afviser et til
         FertilityJourney journey = new FertilityJourney(0, 1, LocalDate.of(2026, 10, 1), JourneyStatus.ACTIVE);
         assertThrows(DatabaseException.class, () -> journeyMapper.save(journey));
     }
@@ -117,15 +114,15 @@ class FertilityJourneyMapperTest {
     void endJourney() {
         journeyMapper.endJourney(2);
 
-        assertNull(journeyMapper.findActiveByPatient(1)); // Anna har nu intet aktivt forløb
+        assertNull(journeyMapper.findActiveByPatient(1));
         assertEquals(JourneyStatus.COMPLETED, journeyMapper.findByPatient(1).get(0).getStatus());
     }
 
     @Test
     void saveNewActiveJourneyAfterEndJourney() {
-        journeyMapper.endJourney(2);   // Annas aktive forløb afsluttes
+        journeyMapper.endJourney(2);
 
-        // nu må hun gerne få et nyt aktivt forløb: indekset gælder kun ACTIVE-forløb
+        // nu må hun godt få et nyt, fordi indekset kun gælder aktive forløb
         FertilityJourney journey = new FertilityJourney(0, 1, LocalDate.of(2026, 10, 1), JourneyStatus.ACTIVE);
         int id = journeyMapper.save(journey);
 

@@ -5,74 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Simpl – Dagbog</title>
 
-    <!-- skrifttyper og vores css filer -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/tokens.css">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
     <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
-    <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+    <link rel="stylesheet" href="/css/pages.css">      <!-- css til de enkelte sider -->
 
-    <!-- javascript: defer = vent med at køre til hele siden er læst. common.js først, så sidens egen fil -->
+    <!-- defer: scripts kører først, når HTML'en er læst. common.js skal komme først -->
     <script src="/js/common.js" defer></script>
     <script src="/js/dagbog.js" defer></script>
 </head>
 <body class="dashboard">
 
-<!-- menuen hentes fra fragments/menu.html – 'dagbog' = det menupunkt, der lyser op -->
 <nav th:replace="~{fragments/menu :: menu('dagbog')}"></nav>
 
-<!-- selve siden -->
 <main class="content">
 
-    <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
     <header th:replace="~{fragments/topbar :: topbar('Dagbog')}"></header>
 
-    <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>
 
-    <!-- form-layout gør at kortene står i 2 kolonner -->
+    <!-- kortene står i to kolonner -->
     <div class="form-layout">
 
-        <!-- VENSTRE: formular -->
+        <!-- venstre: formular -->
         <section class="card form-card" aria-labelledby="note-title">
             <h2 id="note-title">Skriv dagens note</h2>
             <p class="subtitle">Kun til dig. Du kan altid slette den igen.</p>
 
-            <!-- action = POST /dagbog – controlleren gemmer og sender tilbage til siden med ?gemt= eller ?fejl= -->
             <form action="/dagbog" method="post">
-                <!-- for og id skal være ens, så label og felt hører sammen. type date = kalender -->
                 <label for="date">Dato</label>
                 <input type="date" id="date" name="date" required>
 
-                <!-- title er påkrævet i diary_entry-tabellen -->
+                <!-- title er NOT NULL i diary_entry -->
                 <label for="title">Titel</label>
                 <input type="text" id="title" name="title" placeholder="Fx Scanning i dag" maxlength="100" required>
 
-                <!-- textarea = stort tekstfelt, rows=6 = ca. 6 linjer højt -->
                 <label for="note">Note</label>
                 <textarea id="note" name="note" rows="6" placeholder="Hvordan har dagen været?" required></textarea>
 
-                <!-- knappen sender formularen -->
                 <button type="submit">Gem note</button>
             </form>
 
             <p class="link-line"><a href="/dashboard">Annullér</a></p>
         </section>
 
-        <!-- HØJRE: tidligere noter -->
+        <!-- højre: tidligere noter -->
         <aside class="card helpbox" aria-labelledby="notes-title">
             <h2 id="notes-title" class="eyebrow">Tidligere noter</h2>
-            <!-- hver li = én note: dato i strong, teksten i span -->
             <ul class="notes">
-                <!-- th:each: ét li per note. e = én note ad gangen. #temporals.format = LocalDateTime -> "12. sep 2026" -->
                 <li th:each="e : ${entries}">
                     <strong>
                         <span th:text="${#temporals.format(e.dateTime, 'd. MMM yyyy')}">I dag</span> ·
                         <span th:text="${e.title}">Scanning</span>
                     </strong>
                     <span th:text="${e.content}">Lidt træt efter scanningen, men det ser fint ud.</span>
-                    <!-- slet: en lille formular med notens id i et skjult felt -> POST /dagbog/slet -->
                     <form action="/dagbog/slet" method="post" class="delete-form">
                         <input type="hidden" name="id" th:value="${e.id}">
                         <button type="submit" class="muted-link" th:attr="aria-label='Slet note ' + ${e.title}">Slet</button>

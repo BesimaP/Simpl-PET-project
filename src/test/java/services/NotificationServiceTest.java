@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af NotificationService (notifikationer, US12)
+// Integrationstest af NotificationService (notifikationer, US12)
 class NotificationServiceTest {
 
     @BeforeAll
@@ -67,7 +67,7 @@ class NotificationServiceTest {
     void sameReminderIsNotCreatedTwice() {
         int patientId = TestData.newPatientWithRound();
         new MedicationService(TestData.pool()).logDose(patientId, "MENOPUR", "75", LocalDate.now().toString(), "20:00", false);
-        // dashboard åbnes to gange -> stadig kun én påmindelse
+        // dashboardet åbnes to gange, men der må kun komme én påmindelse
         assertEquals(1, new NotificationService(TestData.pool()).createMedicationReminders(patientId));
         assertEquals(0, new NotificationService(TestData.pool()).createMedicationReminders(patientId));
         assertEquals(1, new NotificationService(TestData.pool()).getNotifications(patientId).size());
@@ -98,7 +98,7 @@ class NotificationServiceTest {
         new NotificationService(TestData.pool()).createMedicationReminders(anna);
         new NotificationService(TestData.pool()).createMedicationReminders(maria);
         new NotificationService(TestData.pool()).markAllRead(anna);
-        assertEquals(1, new NotificationService(TestData.pool()).countUnread(maria)); // Marias er stadig ulæst
+        assertEquals(1, new NotificationService(TestData.pool()).countUnread(maria));
     }
 
     @Test
@@ -109,7 +109,7 @@ class NotificationServiceTest {
         NotificationService service = new NotificationService(TestData.pool());
         assertEquals(1, service.createAppointmentReminders(patientId));
         assertEquals(NotificationType.APPOINTMENT_REMINDER, service.getNotifications(patientId).get(0).getNotificationType());
-        // samme aftale giver ikke en ny påmindelse, når dashboard åbnes igen
+        // samme aftale må ikke give en ny påmindelse, når dashboardet åbnes igen
         assertEquals(0, service.createAppointmentReminders(patientId));
     }
 

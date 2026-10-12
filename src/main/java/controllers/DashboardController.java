@@ -18,8 +18,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
-// Koordinatoren for dashboard, start-runde og rundehistorik.
-// Ruterne er én linje hver. Metoderne læser formularen, kalder service og sender brugeren videre – ingen mappers her.
+// Controller for dashboard, start/afslut runde, forløb og rundehistorik.
+// Den bruger mange services, fordi dashboardet viser lidt fra hver del af appen.
 public class DashboardController {
     private ProfileService profileService;
     private NotificationService notificationService;
@@ -42,18 +42,18 @@ public class DashboardController {
     }
 
     public void setRoutes(JavalinConfig config) {
-        config.routes.get("/dashboard", ctx -> showDashboard(ctx));        // forsiden efter login (Thymeleaf)
-        config.routes.get("/rundehistorik", ctx -> showRounds(ctx));       // alle runder (Thymeleaf)
+        config.routes.get("/dashboard", ctx -> showDashboard(ctx));        // forsiden efter login
+        config.routes.get("/rundehistorik", ctx -> showRounds(ctx));
         config.routes.post("/opret-forloeb", ctx -> createJourney(ctx));   // "Start dit forløb" på dashboard (US1)
-        config.routes.get("/start-runde", ctx -> showStartRound(ctx));     // siden med formularen (Thymeleaf)
-        config.routes.post("/start-runde", ctx -> startRound(ctx));        // "Start runde" på start-runde.html (US10a)
-        config.routes.get("/afslut-runde", ctx -> showEndRound(ctx));      // bekræft-side – bruges, når JavaScript er slået fra
-        config.routes.post("/afslut-runde", ctx -> endRound(ctx));         // bekræft i dialogen på dashboard eller på bekræft-siden (US10a)
-        config.routes.get("/afslut-forloeb", ctx -> showEndJourney(ctx));  // bekræft-side for "Afslut forløb"
-        config.routes.post("/afslut-forloeb", ctx -> endJourney(ctx));     // afslut forløbet (US1: flere forløb over tid)
+        config.routes.get("/start-runde", ctx -> showStartRound(ctx));
+        config.routes.post("/start-runde", ctx -> startRound(ctx));        // US10a
+        config.routes.get("/afslut-runde", ctx -> showEndRound(ctx));      // bekræft-side, hvis JavaScript er slået fra
+        config.routes.post("/afslut-runde", ctx -> endRound(ctx));         // US10a
+        config.routes.get("/afslut-forloeb", ctx -> showEndJourney(ctx));
+        config.routes.post("/afslut-forloeb", ctx -> endJourney(ctx));     // US1: man kan have flere forløb over tid
     }
 
-    // GET /dashboard – samler data fra alle emner og fylder skabelonen. Tre tilstande: intet forløb, forløb uden runde, runde i gang
+    // GET /dashboard – tre tilstande: intet forløb, forløb uden runde eller runde i gang
     private void showDashboard(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -64,59 +64,57 @@ public class DashboardController {
         ctx.attribute("patient", profileService.getPatient(patientId));
         ctx.attribute("today", LocalDate.now());
 
-        // påmindelser om dagens medicin oprettes, når forsiden åbnes (US12). Tallet bruges til prikken på klokken
+        // vi opretter påmindelser, når forsiden åbnes (US12)
         notificationService.createMedicationReminders(patientId);
         notificationService.createAppointmentReminders(patientId);   // aftaler i dag og i morgen
         ctx.attribute("unread", notificationService.countUnread(patientId));
         ctx.attribute("notifications", notificationService.getNotifications(patientId));   // til pop-op'en ved klokken
 
-        // forløb og runde: null, hvis de ikke findes -> skabelonen viser den rigtige tilstand med th:if
+        // null, hvis de ikke findes – skabelonen vælger tilstand med th:if
         FertilityJourney journey = null;
         Round round = null;
         try {
             journey = dashboardService.findActiveJourney(patientId);
             round = roundService.findActiveRound(patientId);
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
-            // ingen fejl – bare en af de to tilstande
+            // ikke en fejl, bare en af tilstandene
         }
         ctx.attribute("journey", journey);
         ctx.attribute("round", round);
         if (round != null) {
-            // dag-nummer i runden: dage siden start + 1
             long dayNumber = ChronoUnit.DAYS.between(round.getStartDate(), LocalDate.now()) + 1;
             ctx.attribute("dayNumber", dayNumber);
-            // ringen om dag-tælleren: hvor mange procent af ca. 28 dage er gået? Mellem 0 og 100
-            // (0 hvis runden starter i fremtiden, højst 100 så ringen ikke "løber over")
+            // hvor langt vi er i en runde på ca. 28 dage, holdt mellem 0 og 100 %
             ctx.attribute("progressPercent", Math.max(0, Math.min(100, dayNumber * 100 / 28)));
         }
 
-        // små kort: dagens medicin, næste aftale, seneste hormonværdi, antal noter
+        // de små bokse: dagens medicin, næste aftale, seneste hormonværdi og antal noter
         ctx.attribute("todayMeds", medicationService.getTodayLogs(patientId));
         ctx.attribute("names", medicationService.getMedicationNames());
         List<Appointment> upcoming = appointmentService.getUpcoming(patientId);
-        ctx.attribute("nextAppointment", upcoming.isEmpty() ? null : upcoming.get(0));   // første = nærmeste
+        ctx.attribute("nextAppointment", upcoming.isEmpty() ? null : upcoming.get(0));   // listen er sorteret, så den første er den næste
         List<HormoneLog> logs = hormoneService.getLogs(patientId);
-        ctx.attribute("latestHormone", logs.isEmpty() ? null : logs.get(0));             // nyeste først
+        ctx.attribute("latestHormone", logs.isEmpty() ? null : logs.get(0));             // nyeste ligger først
         ctx.attribute("noteCount", diaryService.getEntries(patientId).size());
-        ctx.attribute("results", Result.values());   // dropdownen i "Afslut runde"-dialogen bygges af enum'en
+        ctx.attribute("results", Result.values());   // til dropdownen i "Afslut runde"-dialogen
 
-        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        // ?gemt= / ?fejl= fra sidste POST vises af fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("dashboard");
     }
 
-    // GET /rundehistorik – hent alle runder og fyld skabelonen
+    // GET /rundehistorik
     private void showRounds(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        // ALLE forløb (nyeste først) og runderne i hvert af dem – så afsluttede forløb også kan ses
-        ctx.attribute("journeys", dashboardService.getJourneys(patientId));             // requestscope -> ${journeys}
-        ctx.attribute("roundsPerJourney", roundService.getRoundsPerJourney(patientId)); // requestscope -> ${roundsPerJourney[j.id]}
-        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        // alle forløb med deres runder, så de afsluttede også kan ses
+        ctx.attribute("journeys", dashboardService.getJourneys(patientId));
+        ctx.attribute("roundsPerJourney", roundService.getRoundsPerJourney(patientId)); // ${roundsPerJourney[j.id]} i skabelonen
+        // ?gemt= / ?fejl= fra sidste POST vises af fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("rundehistorik");
@@ -130,30 +128,28 @@ public class DashboardController {
             return;
         }
 
-        // åbn kuverten: startdatoen fra formularen
         String startDate = ctx.formParam("startDate");
 
-        // bed service oprette forløbet – den kender reglen "kun ét aktivt"
+        // service tjekker, at der kun er ét aktivt forløb
         ServiceResult result = dashboardService.createJourney(patientId, startDate);
 
-        // dashboard viser selv "start dit forløb"-delen, hvis der stadig intet forløb er
         switch (result) {
             case OK -> ctx.redirect("/dashboard?gemt=forloeb");
-            case ALREADY_EXISTS -> ctx.redirect("/dashboard?fejl=forloeb-findes");   // intet nyt oprettet – dashboard viser det forløb, der findes
+            case ALREADY_EXISTS -> ctx.redirect("/dashboard?fejl=forloeb-findes");
             case INVALID_INPUT -> ctx.redirect("/dashboard?fejl=dato");
             default -> ctx.redirect("/dashboard?fejl=ukendt");
         }
     }
 
-    // GET /start-runde – vis formularen. ?fejl= fra sidste POST vises med fragmentet besked.html
+    // GET /start-runde
     private void showStartRound(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("today", LocalDate.now());   // startdato er udfyldt med dags dato (kan ændres)
-        ctx.attribute("treatmentTypes", TreatmentType.values());   // dropdownen bygges af enum'en (NFR5: ny type = kun ét sted i Java)
+        ctx.attribute("today", LocalDate.now());   // startdatoen er udfyldt med dags dato
+        ctx.attribute("treatmentTypes", TreatmentType.values());   // NFR5: en ny type tilføjes kun i enum'en
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("start-runde");
@@ -167,24 +163,23 @@ public class DashboardController {
             return;
         }
 
-        // åbn kuverten: behandlingstype ("IVF", "ICSI", "IUI", "FET" = value i dropdownen) og startdato
+        // type er fx "IVF" eller "FET" fra dropdownen
         String type = ctx.formParam("type");
         String startDate = ctx.formParam("startDate");
 
         ServiceResult result = roundService.startRound(patientId, type, startDate);
 
-        // vælg side ud fra svaret
         switch (result) {
             case OK -> ctx.redirect("/dashboard?gemt=runde");
-            case NO_ACTIVE_JOURNEY -> ctx.redirect("/dashboard");                    // dashboard viser "start dit forløb"
+            case NO_ACTIVE_JOURNEY -> ctx.redirect("/dashboard");                    // dashboard viser "Start dit forløb"
             case ROUND_IN_PROGRESS -> ctx.redirect("/dashboard?fejl=runde-i-gang");
-            case INVALID_INPUT -> ctx.redirect("/start-runde?fejl=felter");         // tilbage til formularen med en fejlbesked
+            case INVALID_INPUT -> ctx.redirect("/start-runde?fejl=felter");
             default -> ctx.redirect("/dashboard?fejl=ukendt");
         }
     }
 
-    // GET /afslut-runde – bekræft-side uden JavaScript. Med JavaScript åbner dashboard.js i stedet dialogen på dashboard.
-    // Skabelonen bekraeft.html deles med "Afslut forløb" og "Slet konto" – teksterne lægges i request scope her
+    // GET /afslut-runde – bekræft-side, hvis JavaScript er slået fra (ellers åbner dashboard.js en dialog).
+    // bekraeft.html deles med "Afslut forløb" og "Slet konto", så teksterne sættes her
     private void showEndRound(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -195,7 +190,7 @@ public class DashboardController {
         try {
             round = roundService.findActiveRound(patientId);
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
-            ctx.redirect("/dashboard?fejl=ingen-runde");   // der er ingen runde at afslutte
+            ctx.redirect("/dashboard?fejl=ingen-runde");
             return;
         }
         ctx.attribute("title", "Afslut runde " + round.getRoundNumber() + "?");
@@ -203,12 +198,12 @@ public class DashboardController {
         ctx.attribute("action", "/afslut-runde");
         ctx.attribute("button", "Afslut runde");
         ctx.attribute("cancel", "/dashboard");
-        ctx.attribute("showResult", true);   // kun her: vælg resultat (Positiv/Negativ/Ikke afgjort)
-        ctx.attribute("results", Result.values());   // dropdownen bygges af enum'en
+        ctx.attribute("showResult", true);   // kun "Afslut runde" spørger om resultat
+        ctx.attribute("results", Result.values());
         ctx.render("bekraeft");
     }
 
-    // GET /afslut-forloeb – bekræft-side for "Afslut forløb"
+    // GET /afslut-forloeb – bekræft-side, hvis JavaScript er slået fra
     private void showEndJourney(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -232,11 +227,11 @@ public class DashboardController {
             return;
         }
 
-        // bed service afslutte forløbet – den kender reglen "afslut runden først"
+        // service tjekker, at runden er afsluttet først
         ServiceResult result = dashboardService.endJourney(patientId);
 
         switch (result) {
-            case OK -> ctx.redirect("/dashboard?gemt=forloeb-afsluttet");       // dashboard viser nu "Start dit forløb"
+            case OK -> ctx.redirect("/dashboard?gemt=forloeb-afsluttet");
             case ROUND_IN_PROGRESS -> ctx.redirect("/dashboard?fejl=runde-i-gang-forloeb");
             case NO_ACTIVE_JOURNEY -> ctx.redirect("/dashboard");
             default -> ctx.redirect("/dashboard?fejl=ukendt");
@@ -251,8 +246,8 @@ public class DashboardController {
             return;
         }
 
-        // resultatet er valgfrit: "POSITIVE", "NEGATIVE" eller tomt (kan udfyldes senere)
-        // try/catch: en ukendt værdi (fx rettet i browseren) giver en fejlbesked i stedet for en 500-fejl
+        // resultatet er valgfrit (POSITIVE, NEGATIVE eller tomt).
+        // En ukendt værdi giver en fejlbesked i stedet for en 500-fejl
         String resultParam = ctx.formParam("result");
         Result result;
         try {

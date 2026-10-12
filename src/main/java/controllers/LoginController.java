@@ -8,8 +8,7 @@ import persistence.ConnectionPool;
 import services.AuthService;
 import entities.Patient;
 
-// Koordinatoren for login.html og opretprofil.html.
-// Ruterne er én linje hver og peger på en metode nedenunder. Al logik ligger i AuthService.
+// Controller for login, log ud og opret profil. Selve logikken ligger i AuthService.
 public class LoginController {
     private AuthService authService;
 
@@ -17,83 +16,78 @@ public class LoginController {
         this.authService = new AuthService(connectionPool);
     }
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new LoginController(connectionPool).setRoutes(config)
+    // bliver kaldt én gang fra RouteConfig
     public void setRoutes(JavalinConfig config) {
-        // ctx -> login(ctx) = "kald metoden login med den ctx, Javalin rækker os";
         config.routes.get("/login", ctx -> ctx.render("login"));
         config.routes.post("/login", ctx -> login(ctx));
-        config.routes.get("/opretprofil", ctx -> showCreateProfile(ctx));   // siden er nu en Thymeleaf-template (fejlbesked uden JavaScript)
+        config.routes.get("/opretprofil", ctx -> showCreateProfile(ctx));
         config.routes.post("/opretprofil", ctx -> createProfile(ctx));
-        config.routes.post("/logout", ctx -> logout(ctx));   // POST, så en fremmed side ikke kan logge en ud med et link/billede
+        config.routes.post("/logout", ctx -> logout(ctx));   // POST, så en anden side ikke kan logge en ud via et link
     }
 
-    // GET /opretprofil – vis formularen. ?fejl= fra sidste forsøg -> request scope -> ${fejl} i opretprofil.html
+    // GET /opretprofil – ?fejl= fra sidste forsøg vises som ${fejl}
     private void showCreateProfile(Context ctx) {
         ctx.attribute("fejl", ctx.queryParam("fejl"));
-        ctx.attribute("today", java.time.LocalDate.now());   // max på fødselsdato: man kan ikke vælge en dato i fremtiden
+        ctx.attribute("today", java.time.LocalDate.now());   // max på fødselsdato, så man ikke kan vælge en dato i fremtiden
         ctx.render("opretprofil");
     }
 
-    // POST /logout – glem hvem der er logget ind og send til login. Bruges af "Log ud"-knappen i menuen og på Min profil
+    // POST /logout – bruges af "Log ud" i menuen og på Min profil
     private void logout(Context ctx) {
-        ctx.req().getSession().invalidate();   // sletter hele sessionen (patientId og patientName)
+        ctx.req().getSession().invalidate();   // fjerner både patientId og patientName
         ctx.redirect("/login");
     }
 
-    // POST /login – læs kuverten, spørg service, send brugeren videre
+    // POST /login
     private void login(Context ctx) {
-        // 1. åbn kuverten: de to felter (name="username", "password" i login.html)
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
 
         try {
-            // 2. spørg service. Svaret er patientens kort – eller en UserNotFoundException, som fanges nedenfor
+            // forkert brugernavn eller kodeord giver en UserNotFoundException
             Patient patient = authService.login(username, password);
 
-            // 3. sessionscope: husk hvem der er logget ind, til browseren lukkes. Alle andre controllere læser herfra
-            ctx.sessionAttribute("patientId", patient.getId());              // hvem er patienten
+            // vi gemmer patienten i sessionen, så de andre controllere ved, hvem der er logget ind
+            ctx.sessionAttribute("patientId", patient.getId());
             ctx.sessionAttribute("patientName", patient.getName());
 
-            // 4. ind på dashboard
             ctx.redirect("/dashboard");
 
         } catch (UserNotFoundException e) {
-            // requestscope: gælder kun for dette ene svar. Thymeleaf viser det som ${fejl} på login-siden (samme navn som resten af appen)
+            // fejlen vises som ${fejl} på login-siden
             ctx.attribute("fejl", e.getMessage());
-            ctx.attribute("username", username);   // brugernavnet står der stadig, så man kun skal skrive adgangskoden igen
+            ctx.attribute("username", username);   // så man kun skal skrive kodeordet igen
             ctx.render("login");
         }
     }
 
 
-    // POST /opretprofil – læs kuverten, spørg service, send brugeren videre
+    // POST /opretprofil
     private void createProfile(Context ctx) {
-        // 1. åbn kuverten: felterne fra opretprofil.html
         String firstName = ctx.formParam("firstName");
         String lastName = ctx.formParam("lastName");
         String dateOfBirth = ctx.formParam("dateOfBirth");
         String username = ctx.formParam("username");
         String password = ctx.formParam("password");
-        String hasJourney = ctx.formParam("hasJourney");     // "yes" eller "no" (radio-knapperne)
-        String journeyStart = ctx.formParam("journeyStart"); // startdato for forløbet – kun brugt ved "yes"
+        String hasJourney = ctx.formParam("hasJourney");     // "yes" eller "no" fra radioknapperne
+        String journeyStart = ctx.formParam("journeyStart"); // bruges kun ved "yes"
 
-        // 2. bed service oprette patienten (+ forløb ved "yes"). Svar: OK, ellers hvad der gik galt
+        // service opretter patienten og ved "yes" også et forløb
         ServiceResult result = authService.createProfile(firstName, lastName, dateOfBirth, username, password, hasJourney, journeyStart);
 
-        // 3. vælg side ud fra svaret – ét case per udfald
         switch (result) {
             case OK -> {
-                // profilen findes nu – log brugeren ind med det samme, så hun ikke skal skrive det hele igen
+                // vi logger brugeren ind med det samme, så hun ikke skal gøre det selv
                 try {
                     Patient patient = authService.login(username, password);
                     ctx.sessionAttribute("patientId", patient.getId());
                     ctx.sessionAttribute("patientName", patient.getName());
                     ctx.redirect("/dashboard?gemt=oprettet");
                 } catch (UserNotFoundException e) {
-                    ctx.redirect("/login"); // burde ikke ske – men så må hun logge ind manuelt
+                    ctx.redirect("/login"); // burde ikke ske, men så må hun logge ind selv
                 }
             }
-            case ALREADY_EXISTS -> ctx.redirect("/opretprofil?fejl=brugernavn"); // brugernavnet er optaget
+            case ALREADY_EXISTS -> ctx.redirect("/opretprofil?fejl=brugernavn"); // brugernavnet er taget
             case INVALID_INPUT -> ctx.redirect("/opretprofil?fejl=felter");      // tomt felt eller ugyldig dato
             default -> ctx.redirect("/opretprofil?fejl=ukendt");
         }

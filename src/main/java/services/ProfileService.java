@@ -9,25 +9,24 @@ import persistence.ConnectionPool;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
-// Forretningslogik for min-profil (US6b). Kender IKKE Javalin – ProfileController læser formularen og kalder én metode her.
-// Alle tre metoder gemmer/ændrer noget, så de svarer med ServiceResult. Controlleren vælger side ud fra svaret.
+// Logik for min-profil (US6b): ret oplysninger, skift kodeord og slet konto.
 public class ProfileService {
     private PatientMapper patientMapper;
-    private DocumentService documentService;   // til at slette patientens filer på disken, når kontoen slettes
+    private DocumentService documentService;   // til at slette filerne på disken, når kontoen slettes
 
     public ProfileService(ConnectionPool connectionPool) {
         this.patientMapper = new PatientMapper(connectionPool);
         this.documentService = new DocumentService(connectionPool);
     }
 
-    // Henter patientens kort – til at forudfylde felterne på min-profil (GET)
+    // til at udfylde felterne på min-profil
     public Patient getPatient(int patientId) {
         return patientMapper.findById(patientId);
     }
 
     // Retter patientens navn og fødselsdato (US6b AC1)
     public ServiceResult updateProfile(int patientId, String firstName, String lastName, String dateOfBirth) {
-        // 1. regel: ingen tomme felter
+        // ingen tomme felter
         if (InputCheck.isBlank(firstName) || InputCheck.isBlank(lastName) || InputCheck.isBlank(dateOfBirth)) {
             return ServiceResult.INVALID_INPUT;
         }
@@ -36,7 +35,7 @@ public class ProfileService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. fødselsdatoen skal være en rigtig dato – og ikke i fremtiden
+        // fødselsdatoen skal være en rigtig dato og ikke i fremtiden
         LocalDate dob;
         try {
             dob = LocalDate.parse(dateOfBirth);
@@ -47,61 +46,53 @@ public class ProfileService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 3. bed arkivaren rette kortet (UPDATE patient SET first_name = ?, last_name = ?, date_of_birth = ? WHERE id = ?)
         patientMapper.updateProfile(patientId, firstName.trim(), lastName.trim(), dob);
 
-        // 4. gik godt
         return ServiceResult.OK;
     }
 
-    // Skifter kodeord. Alle tjek giver INVALID_INPUT, så man ikke afslører hvad der var galt
+    // Skifter kodeord. Alle fejl giver INVALID_INPUT, så vi ikke afslører, hvad der var galt
     public ServiceResult changePassword(int patientId, String currentPassword, String newPassword, String repeat) {
-        // 1. regel: ingen tomme felter
+        // ingen tomme felter
         if (InputCheck.isBlank(currentPassword) || InputCheck.isBlank(newPassword) || InputCheck.isBlank(repeat)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. regel: det nye kodeord skal være skrevet ens to gange (ellers gemmer vi en stavefejl)
+        // det nye kodeord skal være skrevet ens to gange, så vi ikke gemmer en stavefejl
         if (!newPassword.equals(repeat)) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2b. regel: mindst 8 tegn (samme regel som ved opret profil)
+        // samme længdekrav som ved opret profil
         if (newPassword.length() < AuthService.MIN_PASSWORD_LENGTH || newPassword.length() > AuthService.MAX_PASSWORD_LENGTH) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 3. hent patientens kort fra databasen – null = findes ikke
         Patient patient = patientMapper.findById(patientId);
         if (patient == null) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 4. regel: det gamle kodeord skal passe med det, der ligger i databasen
-        //    samme tjek som ved login (AuthService.passwordMatches) – et ødelagt hash i databasen tæller som "passer ikke"
+        // det nuværende kodeord skal passe – samme tjek som ved login
         if (!AuthService.passwordMatches(currentPassword, patient.getPasswordHash())) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 5. bed arkivaren gemme det nye kodeord
         patientMapper.updatePassword(patientId, BCrypt.hashpw(newPassword, BCrypt.gensalt()));
 
-        // 6. gik godt
         return ServiceResult.OK;
     }
 
-    // Sletter kontoen = patienten – alt under den ryger med (ON DELETE CASCADE i schema_postgres.sql)
+    // Sletter patienten. Alt under hende slettes med i databasen (ON DELETE CASCADE)
     public ServiceResult deleteAccount(int patientId) {
-        // 1. husk hvilke filer patienten har, FØR rækkerne forsvinder. CASCADE sletter kun RÆKKERNE – ikke selve filerne (US6b AC2)
+        // CASCADE sletter kun rækkerne, ikke filerne på disken – derfor henter vi listen først (US6b AC2)
         java.util.List<entities.Document> documents = documentService.getDocuments(patientId);
 
-        // 2. bed arkivaren slette kortet (DELETE FROM patient WHERE id = ?) – alt under patienten ryger med
         patientMapper.delete(patientId);
 
-        // 3. først nu slettes filerne på disken: fejlede trin 2, ville patienten stadig have sine dokumenter
+        // filerne slettes først nu, så de stadig findes, hvis sletningen i databasen fejler
         documentService.deleteFiles(documents);
 
-        // 3. gik godt
         return ServiceResult.OK;
     }
 }

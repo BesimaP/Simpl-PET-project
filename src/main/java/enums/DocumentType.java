@@ -1,7 +1,7 @@
 package enums;
 
-// Dokumenttyper (ordlisten). Matcher CHECK på document.document_type.
-// label = den danske tekst, der vises på siden (Thymeleaf: ${d.documentType.label})
+// Dokumenttyper. Navnene matcher tabellen document_type i schema_postgres.sql.
+// label er den danske tekst, vi viser på siden.
 public enum DocumentType {
     REFERRAL("Henvisning"),
     BLOOD_TEST_RESULT("Blodprøvesvar"),

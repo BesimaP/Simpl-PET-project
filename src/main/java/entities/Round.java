@@ -5,7 +5,7 @@ import enums.RoundStatus;
 import enums.TreatmentType;
 import java.time.LocalDate;
 
-// Ét behandlingsforsøg i et forløb (tabel round, US10a/10b). Ny i v2.
+// Et behandlingsforsøg i et forløb (tabel round, US10a/10b).
 // endDate og result er null, indtil runden afsluttes (UC14).
 public class Round {
 
@@ -18,7 +18,7 @@ public class Round {
     private RoundStatus status;
     private Result result;            // null indtil afsluttet
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public Round(int id, int fertilityJourneyId, int roundNumber, TreatmentType treatmentType,
                  LocalDate startDate, LocalDate endDate, RoundStatus status, Result result) {
         this.id = id;
@@ -31,7 +31,7 @@ public class Round {
         this.result = result;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }

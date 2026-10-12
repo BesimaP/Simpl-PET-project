@@ -9,7 +9,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af ProfileService (min profil, US6b)
+// Integrationstest af ProfileService (min profil, US6b)
 class ProfileServiceTest {
 
     @BeforeAll
@@ -33,7 +33,7 @@ class ProfileServiceTest {
     void updateProfileChangesNameInDatabase() {
         int patientId = TestData.newPatient();
         assertEquals(ServiceResult.OK, new ProfileService(TestData.pool()).updateProfile(patientId, "Nyt", "Navn", "1996-01-01"));
-        // læs navnet direkte fra databasen og se, at det er ændret
+        // vi læser direkte fra databasen for at se, at det faktisk er gemt
         assertEquals("Nyt Navn", findPatientName(patientId));
     }
 
@@ -53,7 +53,7 @@ class ProfileServiceTest {
     @Test
     void changePasswordTooShortReturnsInvalidInput() {
         int patientId = TestData.newPatient();
-        // under 8 tegn afvises – samme regel som ved opret profil
+        // samme regel som ved opret profil: mindst 8 tegn
         assertEquals(ServiceResult.INVALID_INPUT, new ProfileService(TestData.pool()).changePassword(patientId, "hemmelig1", "kort1", "kort1"));
     }
 
@@ -66,7 +66,6 @@ class ProfileServiceTest {
     @Test
     void changePasswordWithMismatchReturnsInvalidInput() {
         int patientId = TestData.newPatient();
-        // de to nye er ikke ens
         assertEquals(ServiceResult.INVALID_INPUT, new ProfileService(TestData.pool()).changePassword(patientId, "hemmelig1", "nyt12345", "nyt54321"));
     }
 
@@ -81,19 +80,18 @@ class ProfileServiceTest {
         int patientId = TestData.newPatient();
         assertEquals(ServiceResult.OK, new ProfileService(TestData.pool()).changePassword(patientId, "hemmelig1", "nyt12345", "nyt12345"));
         String hash = new PatientMapper(TestData.pool()).findById(patientId).getPasswordHash();
-        assertNotEquals("nyt12345", hash);               // kodeordet er IKKE gemt i klartekst
-        assertTrue(BCrypt.checkpw("nyt12345", hash));     // men hashen passer med det nye kodeord
+        assertNotEquals("nyt12345", hash);               // ikke gemt i klartekst
+        assertTrue(BCrypt.checkpw("nyt12345", hash));
     }
 
     @Test
     void deleteAccountRemovesPatient() {
         int patientId = TestData.newPatient();
         assertEquals(ServiceResult.OK, new ProfileService(TestData.pool()).deleteAccount(patientId));
-        // patienten (= kontoen) er væk
         assertNull(new PatientMapper(TestData.pool()).findById(patientId));
     }
 
-    // lille hjælper: patientens navn direkte fra databasen
+    // henter navnet direkte fra databasen uden om servicen
     private static String findPatientName(int patientId) {
         try {
             try (var connection = TestData.pool().getConnection()) {
@@ -108,7 +106,7 @@ class ProfileServiceTest {
 
     @Test
     void getPatientReturnsNameAndDateOfBirth() {
-        int patientId = TestData.newPatient(); // oprettes med "Test Bruger" og 1996-01-01
+        int patientId = TestData.newPatient(); // oprettes som "Test Bruger", født 1996-01-01
         assertEquals("Test Bruger", new ProfileService(TestData.pool()).getPatient(patientId).getName());
         assertEquals("Test", new ProfileService(TestData.pool()).getPatient(patientId).getFirstName());
         assertEquals("Bruger", new ProfileService(TestData.pool()).getPatient(patientId).getLastName());
@@ -124,6 +122,6 @@ class ProfileServiceTest {
         java.nio.file.Path file = java.nio.file.Path.of(documents.getDocuments(patientId).get(0).getFilePath());
         assertTrue(java.nio.file.Files.exists(file));
         new ProfileService(TestData.pool()).deleteAccount(patientId);
-        assertFalse(java.nio.file.Files.exists(file));   // CASCADE sletter rækken – ProfileService sletter filen
+        assertFalse(java.nio.file.Files.exists(file));   // CASCADE sletter kun rækken, så ProfileService skal selv slette filen
     }
 }

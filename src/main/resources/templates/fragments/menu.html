@@ -2,11 +2,8 @@
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!--
-  Fragment = menuen, som er ens på alle sider. Hentes ind i en side sådan:
-  <nav th:replace="~{fragments/menu :: menu('medicin')}"></nav>
-  Parameteren active (ligesom en parameter i en metode) fortæller, hvilket menupunkt der skal lyse op:
-  'dashboard', 'medicin', 'hormoner', 'dagbog', 'aftaler', 'tidslinje', 'dokumenter' eller 'rundehistorik'.
-  Sider uden eget menupunkt (fx min-profil) sender 'ingen'.
+  Menuen, som er ens på alle sider: th:replace="~{fragments/menu :: menu('medicin')}".
+  active bestemmer, hvilket menupunkt der er markeret. Sider uden menupunkt (fx min-profil) sender 'ingen'.
 -->
 <nav class="sidenav" aria-label="Hovedmenu" th:fragment="menu(active)">
     <a class="sidenav__logo" href="/dashboard">
@@ -15,8 +12,7 @@
     </a>
 
     <ul class="sidenav__list">
-        <!-- th:classappend: tilføj is-active, KUN hvis active er dette menupunkt. th:aria-current: skærmlæsere får at vide, hvilken side man er på
-             (står der null, fjerner Thymeleaf attributten helt) -->
+        <!-- aria-current fortæller skærmlæsere, hvilken side man er på. Er værdien null, udelader Thymeleaf attributten -->
         <li><a href="/dashboard" th:classappend="${active == 'dashboard'} ? 'is-active'" th:aria-current="${active == 'dashboard'} ? 'page'">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6 10.5V19h12v-8.5"/></svg>
             <span>Hjem</span></a></li>
@@ -29,7 +25,7 @@
         <li><a href="/dagbog" th:classappend="${active == 'dagbog'} ? 'is-active'" th:aria-current="${active == 'dagbog'} ? 'page'">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19l1-4L16.5 4.5l2.9 2.9L8.9 18 5 19z"/></svg>
             <span>Dagbog</span></a></li>
-        <!-- desktop-only = vises ikke på mobil -->
+        <!-- desktop-only: ikke plads til dem i mobilmenuen -->
         <li class="desktop-only"><a href="/aftaler" th:classappend="${active == 'aftaler'} ? 'is-active'" th:aria-current="${active == 'aftaler'} ? 'page'">
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M4 10h16M8 4v4M16 4v4"/></svg>
             <span>Aftaler</span></a></li>
@@ -44,11 +40,10 @@
             <span>Rundehistorik</span></a></li>
     </ul>
 
-    <!-- nederst i menuen -->
-    <!-- div (ikke p): en <form> må ikke ligge inde i en <p> – så lukker browseren p'en for tidligt -->
+    <!-- div og ikke p, fordi en form ikke må ligge i en p (browseren lukker p'en for tidligt) -->
     <div class="sidenav__footer desktop-only">
         <a href="/min-profil">Min profil</a> ·
-        <!-- log ud er en POST-formular med en knap, der ligner et link -->
+        <!-- log ud er en POST, så det er en form med en knap, der ser ud som et link -->
         <form action="/logout" method="post" class="inline-form"><button type="submit">Log ud</button></form>
     </div>
 </nav>

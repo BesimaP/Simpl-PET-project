@@ -13,15 +13,12 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af PatientMapper: mapperen taler med en RIGTIG PostgreSQL-database.
-// Testene bruger schemaet "test" i databasen Simpl (se TestDatabase), så de aldrig rører de rigtige data i "public".
-// Opskrift fra undervisningen: @BeforeAll laver tabellerne, @BeforeEach lægger frisk, kendt testdata i.
+// Integrationstest af PatientMapper mod schema test (se TestDatabase).
 class PatientMapperTest {
 
     private static ConnectionPool connectionPool;
     private static PatientMapper patientMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -29,15 +26,15 @@ class PatientMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: tøm tabellerne og indsæt de samme 2 patienter, så vi altid ved, hvad der ligger der
+    // før hver test: 2 patienter
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
 
-            // Patienter (id 1 = Anna, id 2 = Bo). password_hash er bare tekst her – mapperen hasher ikke selv
+            // id 1 = Anna, id 2 = Bo. password_hash er bare tekst, fordi det er servicen der hasher
             stmt.execute("""
             INSERT INTO test.patient (username, password_hash, first_name, last_name, date_of_birth) VALUES
             ('anna', 'hash1', 'Anna', 'Jensen', '1990-05-01'),
@@ -51,7 +48,6 @@ class PatientMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -89,13 +85,13 @@ class PatientMapperTest {
         Patient patient = new Patient(0, "carl", "hash3", "Carl", "Nielsen", LocalDate.of(1995, 1, 15));
         int id = patientMapper.save(patient);
 
-        assertEquals(3, id); // der ligger 2 i forvejen, så den nye får id 3
+        assertEquals(3, id); // der ligger 2 i forvejen
         assertEquals("Carl", patientMapper.findById(3).getFirstName());
     }
 
     @Test
     void saveDuplicateUsernameThrowsDatabaseException() {
-        // "anna" findes allerede, og username er UNIQUE
+        // "anna" findes allerede
         Patient patient = new Patient(0, "anna", "hash3", "Anden", "Anna", LocalDate.of(2000, 1, 1));
         assertThrows(DatabaseException.class, () -> patientMapper.save(patient));
     }
@@ -108,20 +104,20 @@ class PatientMapperTest {
         assertEquals("Annette", patient.getFirstName());
         assertEquals("Larsen", patient.getLastName());
         assertEquals(LocalDate.of(1991, 6, 2), patient.getDateOfBirth());
-        assertEquals("anna", patient.getUsername()); // brugernavnet må ikke ændre sig
+        assertEquals("anna", patient.getUsername());
     }
 
     @Test
     void updatePassword() {
         patientMapper.updatePassword(2, "nythash");
         assertEquals("nythash", patientMapper.findById(2).getPasswordHash());
-        assertEquals("hash1", patientMapper.findById(1).getPasswordHash()); // de andre er urørte (WHERE virker)
+        assertEquals("hash1", patientMapper.findById(1).getPasswordHash()); // Annas må ikke ændres
     }
 
     @Test
     void delete() {
         patientMapper.delete(1);
         assertNull(patientMapper.findById(1));
-        assertNotNull(patientMapper.findById(2)); // kun den ene er væk
+        assertNotNull(patientMapper.findById(2));
     }
 }

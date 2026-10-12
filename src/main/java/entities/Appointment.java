@@ -3,7 +3,7 @@ package entities;
 import enums.AppointmentType;
 import java.time.LocalDateTime;
 
-// En aftale på forløbet (tabel appointment, US3). Ligger på forløbet, fordi første konsultation sker før nogen runde.
+// En aftale (tabel appointment, US3). Den ligger på forløbet, fordi første konsultation sker før nogen runde.
 public class Appointment {
 
     private int id;
@@ -12,7 +12,7 @@ public class Appointment {
     private AppointmentType appointmentType;
     private String location;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public Appointment(int id, int fertilityJourneyId, LocalDateTime dateTime, AppointmentType appointmentType, String location) {
         this.id = id;
         this.fertilityJourneyId = fertilityJourneyId;
@@ -21,7 +21,7 @@ public class Appointment {
         this.location = location;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }

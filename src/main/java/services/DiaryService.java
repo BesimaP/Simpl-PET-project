@@ -10,19 +10,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
-// Forretningslogik for dagbogsnoter (US4). Kender IKKE Javalin – controlleren læser formularen og kalder én metode her.
-// Noter hænger på patienten (ikke forløbet) – man kan skrive dagbog før, mellem og efter forløb.
-// Svarer med ServiceResult: OK · INVALID_INPUT = tomt felt/ugyldig dato
+// Logik for dagbogen (US4). Noter hænger på patienten og ikke forløbet, så man kan skrive før, mellem og efter forløb.
 public class DiaryService {
-    private DiaryEntryMapper diaryEntryMapper; // arkivaren for dagbogen
+    private DiaryEntryMapper diaryEntryMapper;
 
     public DiaryService(ConnectionPool connectionPool) {
         this.diaryEntryMapper = new DiaryEntryMapper(connectionPool);
     }
 
-    // Gemmer én note på patienten
+    // Gemmer en note. Svar: OK eller INVALID_INPUT
     public ServiceResult saveEntry(int patientId, String date, String title, String note) {
-        // 0. regel: dato, titel og note skal være udfyldt (serveren stoler ikke på required i HTML)
+        // dato, titel og note skal være udfyldt
         if (InputCheck.isBlank(date) || InputCheck.isBlank(title) || InputCheck.isBlank(note)) {
             return ServiceResult.INVALID_INPUT;
         }
@@ -31,7 +29,7 @@ public class DiaryService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 1. "2026-09-21" -> LocalDateTime (kl. 00:00). try/catch: ugyldig dato giver INVALID_INPUT i stedet for et crash
+        // noten får kl. 00:00, da formularen kun har en dato
         LocalDateTime dateTime;
         try {
             dateTime = LocalDate.parse(date).atStartOfDay();
@@ -39,20 +37,18 @@ public class DiaryService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. byg kortet af felterne og læg det i skuffen diary_entry. trim = mellemrum før/efter titlen fjernes
         DiaryEntry entry = new DiaryEntry(0, patientId, dateTime, title.trim(), note);
         diaryEntryMapper.save(entry);
 
         return ServiceResult.OK;
     }
 
-    // Henter alle patientens noter, nyeste først – til listen på dagbog-siden (GET)
+    // nyeste først
     public List<DiaryEntry> getEntries(int patientId) {
         return diaryEntryMapper.findByPatient(patientId);
     }
 
-    // Sletter én note – men kun hvis den er patientens egen: mapperen sletter med "WHERE id = ? AND patient_id = ?".
-    // Svar: OK · NOT_FOUND = findes ikke / ikke hendes (så blev 0 rækker slettet)
+    // Sletter kun, hvis noten er patientens egen (WHERE id = ? AND patient_id = ?). Ellers NOT_FOUND
     public ServiceResult deleteEntry(int patientId, int entryId) {
         return diaryEntryMapper.delete(entryId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }

@@ -1,12 +1,10 @@
-/* base.css — det, der gælder på ALLE sider:
-   reset, body, typografi, kort, formular, knapper, links. */
+/* base.css – det, der gælder på alle sider: reset, tekst, kort, formularer, knapper og links. */
 
-/* * = ALLE elementer. box-sizing: border-box = padding og border tælles med i bredden, så 100% er 100% */
+/* padding og border tælles med i bredden */
 * {
     box-sizing: border-box;
 }
 
-/* var(--bg) henter farven fra tokens.css */
 body {
     margin: 0;
     background: var(--bg);
@@ -14,10 +12,9 @@ body {
     font-family: var(--font-body);
     font-size: 15px;
     line-height: 1.5;
-    -webkit-font-smoothing: antialiased;   /* gør teksten lidt pænere på Mac */
+    -webkit-font-smoothing: antialiased;
 }
 
-/* komma = reglen gælder for alle tre. margin 0 fjerner browserens standard-luft */
 h1, h2, h3 {
     margin: 0;
     font-family: var(--font-display);
@@ -29,20 +26,19 @@ p {
     margin: 0;
 }
 
-/* text-decoration: none = ingen understregning ... */
+/* ingen understregning, før man holder musen over eller tabber til linket */
 a {
     color: var(--link);
     font-weight: 700;
     text-decoration: none;
 }
 
-/* ... men den kommer på, når man holder musen over (hover) eller tabber til linket (focus-visible) */
 a:hover,
 a:focus-visible {
     text-decoration: underline;
 }
 
-/* Kort — samme form overalt (Nielsen #4) */
+/* Kort – samme form overalt (Nielsen #4) */
 .card {
     background: var(--card);
     border-radius: var(--radius-card);
@@ -51,38 +47,36 @@ a:focus-visible {
 }
 
 /* Formular */
-/* form label = kun labels der ligger inde i en form. display: block = label på sin egen linje */
 form label {
     display: block;
     margin: 16px 0 6px;
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.12em;   /* luft mellem bogstaverne. em = i forhold til skriftstørrelsen */
-    text-transform: uppercase;   /* uppercase = STORE BOGSTAVER */
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
     color: var(--muted);
 }
 
-/* samme udseende på tekstfelter, dropdowns og textarea. width 100% = fylder hele kortet */
+/* samme udseende på tekstfelter, dropdowns og textarea */
 form input,
 form select,
 form textarea {
     display: block;
     width: 100%;
     padding: 12px 14px;
-    font: inherit;   /* inherit = arv skrifttypen fra siden i stedet for browserens standard */
+    font: inherit;
     color: var(--text);
     background: #fff;
     border: 1px solid var(--border);
     border-radius: var(--radius-input);
-    appearance: none;   /* appearance: none = fjern browserens eget udseende (fx pilen på select), så vores css gælder */
+    appearance: none;   /* fjerner browserens eget udseende, fx pilen på select */
 }
 
-/* fieldset + legend = en gruppe af valg (fx "Er du allerede i gang med et forløb?" på opretprofil.html).
-   Browseren giver fieldset en ramme og legend sin egen skrift – det fjernes, så det ligner de andre felter */
+/* fieldset bruges til Ja/Nej på opretprofil. Vi fjerner browserens ramme, så det ligner de andre felter */
 form fieldset {
     border: none;
     padding: 0;
-    margin: 16px 0 0;   /* samme luft over gruppen som over de andre labels (margin på legend virker ikke – den sidder i fieldsets kant) */
+    margin: 16px 0 0;   /* margin på legend virker ikke, så luften kommer her */
 }
 
 form legend {
@@ -95,18 +89,17 @@ form legend {
     color: var(--muted);
 }
 
-/* radio-knapper: lille rund knap med teksten ved siden af – IKKE det brede tekstfelt fra reglen ovenfor.
-   appearance: auto = få browserens egen runde knap tilbage. width: auto = ikke 100 % bred */
+/* radioknapper skal ikke have reglen for tekstfelter ovenfor, så vi sætter dem tilbage */
 form input[type="radio"] {
     display: inline-block;
     width: auto;
     margin: 0;
     padding: 0;
     appearance: auto;
-    accent-color: var(--brand);   /* farven på den valgte knap */
+    accent-color: var(--brand);
 }
 
-/* label omkring en radio: knap og tekst på samme linje, almindelig skrift (ikke uppercase som feltoverskrifterne) */
+/* knap og tekst på samme linje, uden uppercase */
 form fieldset label {
     display: flex;
     align-items: center;
@@ -119,7 +112,7 @@ form fieldset label {
     color: var(--text);
 }
 
-/* [type="file"] = rammer kun fil-vælgeren (dokumenter-siden) */
+/* fil-vælgeren på dokumenter */
 form input[type="file"] {
     padding: 9px 14px;
 }
@@ -137,25 +130,24 @@ form input[type="file"]::file-selector-button {
     cursor: pointer;
 }
 
-/* resize: vertical = man må kun trække feltet højere, ikke bredere */
+/* man må kun gøre feltet højere, ellers kan det gå ud over kortet */
 form textarea {
     resize: vertical;
     min-height: 120px;
 }
 
-/* ::placeholder = den grå eksempeltekst inde i feltet */
 form input::placeholder,
 form textarea::placeholder {
     color: var(--muted);
 }
 
-/* :focus = det felt man skriver i lige nu. vi fjerner browserens blå ramme og laver vores egen brune */
+/* vores egen brune fokus-ring i stedet for browserens blå */
 form input:focus,
 form select:focus,
 form textarea:focus {
-    outline: none;   /* fjern browserens blå ramme ved fokus (vi laver vores egen lige under) */
+    outline: none;
     border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(62, 47, 35, 0.12);   /* en skygge uden forskydning = en blød ring rundt om feltet. rgba = farve med gennemsigtighed (0.12 = 12%) */
+    box-shadow: 0 0 0 3px rgba(62, 47, 35, 0.12);
 }
 
 /* Fejltilstand (Nielsen #9): farve + ikon + tekst, aldrig farve alene */
@@ -171,8 +163,7 @@ form input[aria-invalid="true"] {
     color: var(--error);
 }
 
-/* Knapper — fuld bredde, 50 px høj (Fitts' lov). Gælder alle <button type=submit> i formularer.
-   Små knapper (fx "Start dit forløb", Annullér i pop-op'er) bruger i stedet .btn + .btn--primary/--light/… i components.css */
+/* Submit-knapper: fuld bredde og 50 px høje (Fitts' lov). De små knapper bruger .btn i components.css */
 button[type="submit"] {
     display: block;
     width: 100%;
@@ -189,18 +180,16 @@ button[type="submit"] {
     text-align: center;
 }
 
-/* lidt mørkere brun når musen er over */
 button[type="submit"]:hover {
     background: #2b2318;
 }
 
 button[type="submit"]:focus-visible {
     outline: 3px solid var(--on-brand-muted);
-    outline-offset: 2px;   /* lidt luft mellem knappen og fokus-rammen */
+    outline-offset: 2px;
 }
 
-/* Små hjælpetekster */
-/* .muted bruges på små grå tekster rundt omkring */
+/* små grå hjælpetekster */
 .muted {
     color: var(--muted);
 }

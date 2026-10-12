@@ -1,7 +1,7 @@
 package enums;
 
-// Aftaletyper (ordlisten). Matcher CHECK på appointment.appointment_type.
-// label = den danske tekst, der vises på siderne (Thymeleaf: ${a.appointmentType.label})
+// Aftaletyper. Navnene matcher tabellen appointment_type i schema_postgres.sql.
+// label er den danske tekst, vi viser på siderne.
 public enum AppointmentType {
     CONSULTATION("Konsultation"),
     SCANNING("Scanning"),
@@ -12,7 +12,6 @@ public enum AppointmentType {
 
     private final String label;
 
-    // enum-konstruktør: kaldes én gang per værdi ovenfor med teksten i parentesen
     AppointmentType(String label) {
         this.label = label;
     }

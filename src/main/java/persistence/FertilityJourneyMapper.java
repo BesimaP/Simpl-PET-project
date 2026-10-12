@@ -20,14 +20,14 @@ public class FertilityJourneyMapper {
         this.connectionPool = connectionPool;
     }
 
-    // Gemmer et nyt forløb og returnerer det id, databasen gav det
+    // gemmer et nyt forløb og returnerer det nye id
     public int save(FertilityJourney journey) {
         String sql = "INSERT INTO fertility_journey (patient_id, start_date, journey_status_id) VALUES (?, ?, (SELECT id FROM journey_status WHERE name = ?))";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, journey.getPatientId());
-            statement.setObject(2, journey.getStartDate()); // LocalDate -> DATE
-            statement.setString(3, journey.getStatus().name()); // ordet, fx "ACTIVE" -> databasen finder selv id'et
+            statement.setObject(2, journey.getStartDate());
+            statement.setString(3, journey.getStatus().name()); // id'et slås op i journey_status
             statement.executeUpdate();
 
             try (ResultSet keys = statement.getGeneratedKeys()) {
@@ -42,44 +42,38 @@ public class FertilityJourneyMapper {
         }
     }
 
-    // Finder patientens AKTIVE forløb – returnerer null, hvis der ikke er noget i gang.
-    // Bruges af dashboard: "har patienten et forløb, eller skal vi vise 'opret forløb'-skærmen?"
+    // patientens aktive forløb, eller null hvis der ikke er noget i gang.
+    // Dashboardet bruger det til at vælge, om det skal vise "opret forløb"
     public FertilityJourney findActiveByPatient(int patientId) {
-        // to betingelser: rigtig patient OG status ACTIVE. Afsluttede forløb (COMPLETED) kommer ikke med.
-        // JOIN: læg status-kortet ved siden af, så vi kan spørge på ordet "ACTIVE" i stedet for tallet 1
+        // JOIN på journey_status, så vi kan spørge på 'ACTIVE' i stedet for at hardcode id'et
         String sql = "SELECT fertility_journey.* "
                 + "FROM fertility_journey "
                 + "JOIN journey_status ON journey_status.id = fertility_journey.journey_status_id "
                 + "WHERE fertility_journey.patient_id = ? AND journey_status.name = 'ACTIVE'";
 
-        // låner en nøgle fra nøgleringen og gør SQL'en klar til at køre – begge afleveres automatisk bagefter
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            // fyld ? ud med patientens id (setInt, fordi det er et tal)
             statement.setInt(1, patientId);
 
-            // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
             try (ResultSet rs = statement.executeQuery()) {
-                // if, ikke while: der kan højst være ét aktivt forløb per patient (regel fra US1)
+                // if og ikke while: en patient kan kun have ét aktivt forløb ad gangen (US1)
                 if (rs.next()) {
-                    // rækken -> et FertilityJourney-objekt (kortet). Status er altid ACTIVE her (det spurgte vi efter)
                     return new FertilityJourney(
                             rs.getInt("id"),
                             rs.getInt("patient_id"),
-                            rs.getObject("start_date", LocalDate.class),   // PostgreSQL giver selv en LocalDate
+                            rs.getObject("start_date", LocalDate.class),
                             JourneyStatus.ACTIVE);
                 }
-                return null; // ingen række = patienten har intet aktivt forløb
+                return null;
             }
 
         } catch (SQLException e) {
-            // e sendes med, så den rigtige databasefejl kan ses bagved vores egen besked
             throw new DatabaseException("Could not find active journey for patient " + patientId, e);
         }
     }
 
-    // Henter ALLE patientens forløb – aktive og afsluttede – nyeste først. Bruges af rundehistorik, aftaler og tidslinje,
-    // så patienten også kan se gamle forløb. JOIN: status hentes som ord ("ACTIVE"/"COMPLETED") fra journey_status
+    // både aktive og afsluttede forløb, nyeste først. Bruges af rundehistorik, aftaler og tidslinje,
+    // så patienten også kan se gamle forløb
     public List<FertilityJourney> findByPatient(int patientId) {
         String sql = "SELECT fertility_journey.*, journey_status.name AS journey_status "
                 + "FROM fertility_journey "
@@ -91,13 +85,12 @@ public class FertilityJourneyMapper {
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, patientId);
             try (ResultSet rs = statement.executeQuery()) {
-                // while: en patient kan have mange forløb over tid
                 while (rs.next()) {
                     journeys.add(new FertilityJourney(
                             rs.getInt("id"),
                             rs.getInt("patient_id"),
                             rs.getObject("start_date", LocalDate.class),
-                            JourneyStatus.valueOf(rs.getString("journey_status"))));   // "COMPLETED" -> enum
+                            JourneyStatus.valueOf(rs.getString("journey_status"))));
                 }
                 return journeys;
             }
@@ -107,13 +100,12 @@ public class FertilityJourneyMapper {
         }
     }
 
-    // Afslutter et forløb: status sættes til COMPLETED (UPDATE). Bagefter kan patienten oprette et nyt forløb (US1)
+    // sætter status til COMPLETED, så patienten kan oprette et nyt forløb (US1)
     public void endJourney(int id) {
-        // statussen slås op i typetabellen journey_status ud fra ordet – samme mønster som i save
         String sql = "UPDATE fertility_journey SET journey_status_id = (SELECT id FROM journey_status WHERE name = ?) WHERE id = ?";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, JourneyStatus.COMPLETED.name());   // "COMPLETED"
+            statement.setString(1, JourneyStatus.COMPLETED.name());
             statement.setInt(2, id);
             statement.executeUpdate();
         } catch (SQLException e) {

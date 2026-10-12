@@ -1,7 +1,5 @@
-/* tokens.css — Simpl designsystem i kode.
-   KUN værdier her (farver, fonte, radius). Ingen regler. */
+/* tokens.css – Simpls farver, fonte og former som variabler. Ingen regler her, kun værdier. */
 
-/* :root = hele siden. variabler der defineres her kan bruges alle steder med var(--navn) */
 :root {
     /* Farver */
     --brand: #3e2f23;          /* chokolade: knapper, sidebar, runde-kort */
@@ -18,13 +16,12 @@
     --error: #a84f33;          /* terracotta: fejl (4,7:1) */
 
     /* Typografi */
-    /* body = almindelig tekst, display = overskrifter. det efter kommaet er reserve-fonte hvis Google Fonts ikke loader */
+    /* reserve-fonte, hvis Google Fonts ikke loader */
     --font-body: 'Inter', system-ui, -apple-system, sans-serif;
     --font-display: 'Fraunces', Georgia, serif;
 
     /* Form */
-    /* radius = hvor runde hjørnerne er. shadow = den bløde skygge under kort */
     --radius-card: 20px;
     --radius-input: 14px;
-    --shadow-card: 0 4px 20px rgba(62, 47, 35, 0.08);   /* 0 4px 20px = ingen forskydning til siden, 4px ned, 20px blød. rgba med 0.08 = næsten gennemsigtig */
+    --shadow-card: 0 4px 20px rgba(62, 47, 35, 0.08);
 }

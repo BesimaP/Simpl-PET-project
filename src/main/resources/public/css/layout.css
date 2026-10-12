@@ -1,8 +1,7 @@
-/* layout.css — det der holder siden sammen på ALLE sider med menu:
-   body, indholdsområdet, topbar (overskrift + klokke + avatar) og menuen.
-   Mobil først: menu i bunden. Fra 900 px: menu som sidebar til venstre. Samme HTML. */
+/* layout.css – rammen på alle sider med menu: indhold, topbar og menu.
+   Mobil først med menuen i bunden. Fra 900 px bliver den en sidebar til venstre. */
 
-/* body.dashboard = kun body med class="dashboard" (alle sider med menu). login-siderne har den ikke */
+/* class="dashboard" står på body på alle sider med menu */
 body.dashboard {
     padding-bottom: 88px;   /* plads til bundnav på mobil */
 }
@@ -12,12 +11,12 @@ body.dashboard {
     max-width: 1160px;
 }
 
-/* display: none = skjult. længere nede i @media (min-width: 900px) bliver den vist igen - derfor hedder den desktop-only */
+/* vises igen i @media længere nede */
 .desktop-only {
     display: none;
 }
 
-/* topbar = række øverst: overskrift til venstre, klokke + avatar til højre */
+/* overskrift til venstre, klokke og avatar til højre */
 .topbar {
     display: flex;
     align-items: flex-start;
@@ -36,7 +35,7 @@ body.dashboard {
     align-items: center;
 }
 
-/* iconbtn = den runde knap med klokken. position: relative så den røde prik (.dot) kan placeres oven på den */
+/* position: relative, så den røde prik kan placeres oven på klokken */
 .iconbtn {
     position: relative;
     display: inline-flex;
@@ -54,11 +53,11 @@ body.dashboard {
 .sidenav svg {
     width: 20px;
     height: 20px;
-    fill: none;   /* fill = fyld-farve inde i svg-ikonet. none = kun streger */
-    stroke: currentColor;   /* stroke = stregfarve. currentColor = samme som tekstfarven, så ikonet følger med */
-    stroke-width: 1.7;   /* hvor tyk stregen er */
-    stroke-linecap: round;   /* runde ender på stregerne */
-    stroke-linejoin: round;   /* runde hjørner hvor to streger mødes */
+    fill: none;
+    stroke: currentColor;   /* ikonet får samme farve som teksten */
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .iconbtn .dot {
@@ -68,11 +67,11 @@ body.dashboard {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #d98a72;   /* terracotta-prik: eneste af sin slags (Von Restorff) */
+    background: #d98a72;   /* den eneste terracotta-prik, så den skiller sig ud (Von Restorff) */
 }
 
 .topbar .avatar {
-    display: inline-flex;              /* vises også på mobil: eneste vej til Min profil, Diagnoser og Log ud dér */
+    display: inline-flex;              /* også på mobil, fordi det er eneste vej til min profil, diagnoser og log ud */
     align-items: center;
     justify-content: center;
     width: 40px;
@@ -84,7 +83,7 @@ body.dashboard {
     font-weight: 600;
 }
 
-/* MENU PÅ MOBIL: position fixed + bottom 0 = sidder fast i bunden af skærmen, også når man scroller. z-index = ligger oven på alt andet */
+/* Mobil: menuen sidder fast i bunden, også når man scroller */
 .sidenav {
     position: fixed;
     left: 0;
@@ -95,12 +94,11 @@ body.dashboard {
     border-top: 1px solid #eee7d9;
 }
 
-/* logoet er skjult på mobil (der er ikke plads) */
+/* ikke plads til logoet på mobil */
 .sidenav__logo {
     display: none;
 }
 
-/* space-around = ikonerne fordeles jævnt over bredden */
 .sidenav__list {
     list-style: none;
     margin: 0;
@@ -109,7 +107,7 @@ body.dashboard {
     justify-content: space-around;
 }
 
-/* hvert menupunkt: ikon øverst, tekst nedenunder (column) */
+/* ikon øverst, tekst nedenunder */
 .sidenav__list a {
     display: flex;
     flex-direction: column;
@@ -123,7 +121,7 @@ body.dashboard {
     text-decoration: none;
 }
 
-/* a.is-active = det menupunkt der har class is-active i html, altså den side man er på */
+/* den side, man er på */
 .sidenav__list a.is-active {
     color: var(--brand);
     font-weight: 700;
@@ -134,7 +132,7 @@ body.dashboard {
     height: 24px;
 }
 
-/* DESKTOP (fra 900px): menuen flyttes til venstre side, og body får padding-left så indholdet ikke ligger under den */
+/* Desktop (fra 900 px): menuen til venstre, og padding-left så indholdet ikke ligger under den */
 @media (min-width: 900px) {
     body.dashboard {
         padding-bottom: 0;
@@ -215,7 +213,7 @@ body.dashboard {
         font-weight: 400;
     }
 
-    /* "Log ud" er en knap i en formular (POST), men skal se ud som linket ved siden af */
+    /* log ud er en knap (POST), men skal ligne linket ved siden af */
     .sidenav__footer .inline-form {
         display: inline;
     }
@@ -223,14 +221,14 @@ body.dashboard {
     .sidenav__footer button[type=submit] {
         display: inline;
         width: auto;
-        min-height: 0;          /* base.css giver submit-knapper 50 px – ikke her */
+        min-height: 0;          /* overskriver de 50 px fra base.css */
         margin: 0;
         padding: 0;
         background: none;
         border: none;
         color: inherit;
         font: inherit;
-        font-weight: 400;       /* samme som linket "Min profil" */
+        font-weight: 400;
         cursor: pointer;
     }
 

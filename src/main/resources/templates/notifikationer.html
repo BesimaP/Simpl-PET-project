@@ -5,48 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simpl – Notifikationer</title>
 
-  <!-- skrifttyper og vores css filer (absolutte stier med / foran, fordi siden nu er en template) -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
   <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
-  <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+  <link rel="stylesheet" href="/css/pages.css">      <!-- css til de enkelte sider -->
 
-  <!-- javascript: defer = vent med at køre til hele siden er læst -->
   <script src="/js/common.js" defer></script>
 </head>
 <body class="dashboard">
 
-<!-- menuen hentes fra fragments/menu.html – 'ingen' = det menupunkt, der lyser op -->
 <nav th:replace="~{fragments/menu :: menu('ingen')}"></nav>
 
-<!-- selve siden -->
 <main class="content">
 
-  <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
   <header th:replace="~{fragments/topbar :: topbar('Notifikationer')}"></header>
 
-  <!-- besked fra controlleren, fx en fejl ved "Markér som læst". Fragmentet ligger i templates/fragments/besked.html -->
   <div th:replace="~{fragments/besked :: besked}"></div>
 
-  <!-- Notifikationer som .rounds-underkort, samme mønster som rundehistorik. is-read = læst (grå) -->
+  <!-- samme liste-layout som rundehistorik. Læste bliver grå (is-read) -->
   <section class="card" aria-labelledby="notif-title">
     <div class="section-head">
       <h2 id="notif-title">Alle notifikationer</h2>
-      <!-- th:if: knappen vises kun, når der faktisk er noget ulæst. En lille formular -> POST /notifikationer/laest-alle -->
+      <!-- vises kun, når der er noget ulæst -->
       <form th:if="${unread > 0}" action="/notifikationer/laest-alle" method="post">
         <button type="submit" class="muted-link">Markér alle som læst</button>
       </form>
     </div>
     <ul class="rounds">
-      <!-- th:each: én notifikation per li. th:classappend: is-read når den er læst -->
       <li th:each="n : ${notifications}" th:classappend="${n.read} ? 'is-read'">
         <div class="round__info">
           <strong th:text="${n.title}">Scanning i morgen</strong>
           <span th:text="${n.message} + ' · ' + ${#temporals.format(n.dateTime, 'd. MMM HH:mm')}">5. september kl. 9.30 · Vitanova</span>
         </div>
-        <!-- th:unless: "Ny"-pillen og knappen vises kun på ulæste. Lille formular -> POST /notifikationer/laest med id i et skjult felt -->
+        <!-- "Ny" og knappen vises kun på ulæste -->
         <span class="pill" th:unless="${n.read}">Ny</span>
         <form th:unless="${n.read}" action="/notifikationer/laest" method="post">
           <input type="hidden" name="id" th:value="${n.id}">

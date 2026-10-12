@@ -5,34 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simpl – Aftaler</title>
 
-  <!-- skrifttyper og vores css filer -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
   <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
-  <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+  <link rel="stylesheet" href="/css/pages.css">      <!-- css til de enkelte sider -->
 
-  <!-- javascript: defer = vent med at køre til hele siden er læst. common.js først, så sidens egen fil -->
+  <!-- defer: scripts kører først, når HTML'en er læst. common.js skal komme først -->
   <script src="/js/common.js" defer></script>
   <script src="/js/aftaler.js" defer></script>
 </head>
 <body class="dashboard">
 
-<!-- menuen hentes fra fragments/menu.html – 'aftaler' = det menupunkt, der lyser op -->
 <nav th:replace="~{fragments/menu :: menu('aftaler')}"></nav>
 
-  <!-- selve siden -->
   <main class="content">
 
-    <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
     <header th:replace="~{fragments/topbar :: topbar('Aftaler')}"></header>
 
-    <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>
 
-    <!-- hvilket forløb vises? Kun når patienten har mere end ét forløb: links til hvert af dem (?forloeb=id).
-         Virker uden JavaScript. ${shown} = det forløb, siden viser lige nu -->
+    <!-- har patienten flere forløb, kan man skifte mellem dem med ?forloeb=id. ${shown} er det forløb, der vises nu -->
     <nav class="card journey-picker" th:if="${journeys.size() > 1}" aria-label="Vælg forløb">
       <p class="eyebrow">Forløb</p>
       <p>
@@ -46,62 +40,57 @@
       </p>
     </nav>
 
-    <!-- form-layout gør at kortene står i 2 kolonner (samme som hormoner.html) -->
+    <!-- kortene står i to kolonner -->
     <div class="form-layout">
 
-      <!-- VENSTRE: formular til at oprette en aftale – kun på det aktive forløb (${canAdd} fra AppointmentController) -->
+      <!-- venstre: ny aftale. Kan kun oprettes på det aktive forløb -->
       <section class="card form-card" aria-labelledby="aftale-title" th:if="${canAdd}">
         <h2 id="aftale-title">Ny aftale</h2>
         <p class="subtitle">Skriv aftalen ind, så den dukker op i din oversigt.</p>
 
-        <!-- action = ruten POST /aftaler i AppointmentController -->
         <form action="/aftaler" method="post">
-          <!-- value = det navn databasen bruger (tabellen appointment_type i schema_postgres.sql), teksten er den danske visning -->
           <label for="type">Type</label>
           <select id="type" name="type" required>
             <option value="">Vælg…</option>
-            <!-- th:each: én option pr. værdi i enum'en (sat af controlleren). Ny type = tilføj den i enum'en + typetabellen -->
+            <!-- én option pr. enum-værdi. En ny type skal også tilføjes i typetabellen i databasen -->
             <option th:each="t : ${appointmentTypes}" th:value="${t.name()}" th:text="${t.label}">Type</option>
           </select>
 
-          <!-- hedder location i databasen (appointment.location) -->
+          <!-- hedder location i databasen -->
           <label for="location">Klinik</label>
           <input type="text" id="location" name="location" placeholder="Fx Vitanova" maxlength="100" required>
 
-          <!-- type date = kalender -->
           <label for="date">Dato</label>
           <input type="date" id="date" name="date" required>
 
           <label for="time">Klokkeslæt</label>
           <input type="time" id="time" name="time" required>
 
-          <!-- note på aftalen er valgt fra (ingen kolonne i databasen) – står under "fremtidige features" -->
+          <!-- note på aftalen har vi valgt fra, den står under fremtidige features -->
 
-          <!-- knappen sender formularen -->
           <button type="submit">Gem aftale</button>
         </form>
 
         <p class="link-line"><a href="/dashboard">Annullér</a></p>
       </section>
 
-      <!-- i stedet for formularen, når patienten slet ikke har et forløb (en aftale skal høre til et forløb) -->
+      <!-- vises i stedet, hvis der ikke er et forløb, fordi en aftale skal høre til et -->
       <section class="card form-card" th:if="${shown == null}">
         <h2>Intet forløb</h2>
         <p class="subtitle">En aftale hører til et forløb. Start dit forløb på forsiden, så kan du tilføje aftaler.</p>
         <p class="link-line"><a href="/dashboard">Til forsiden</a></p>
       </section>
 
-      <!-- i stedet for formularen, når man kigger på et afsluttet forløb -->
+      <!-- vises i stedet, når man kigger på et afsluttet forløb -->
       <section class="card form-card" th:if="${!canAdd and shown != null}">
         <h2>Afsluttet forløb</h2>
         <p class="subtitle" th:text="'Du kigger på aftalerne fra forløbet, der startede ' + ${#temporals.format(shown.startDate, 'd. MMMM yyyy')} + '. Nye aftaler kan kun tilføjes til forløbet, der er i gang.'">Du kigger på et afsluttet forløb.</p>
         <p class="link-line"><a href="/aftaler">Tilbage til forløbet, der er i gang</a></p>
       </section>
 
-      <!-- HØJRE: kommende og tidligere aftaler, som .rounds-underkort med datebox (samme mønster som rundehistorik/dashboard) -->
+      <!-- højre: kommende og tidligere aftaler, samme layout som rundehistorik -->
       <aside class="card helpbox" aria-labelledby="list-title">
         <h2 id="list-title" class="eyebrow">Kommende aftaler</h2>
-        <!-- th:each: ét li per aftale. a = én aftale ad gangen. #temporals.format: dag, måned, klokkeslæt ud af dateTime -->
         <ul class="rounds">
           <li th:each="a : ${upcoming}">
             <div class="datebox">
@@ -114,7 +103,6 @@
             </div>
           </li>
         </ul>
-        <!-- th:if: vises kun, når listen er tom -->
         <p class="muted" th:if="${upcoming.isEmpty()}">Ingen kommende aftaler.</p>
 
         <h2 class="eyebrow">Tidligere aftaler</h2>

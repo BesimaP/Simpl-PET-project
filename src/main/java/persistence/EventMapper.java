@@ -20,15 +20,15 @@ public class EventMapper {
         this.connectionPool = connectionPool;
     }
 
-    // gemmer ét trin og returnerer det id, databasen gav det
+    // gemmer trinnet og returnerer det nye id
     public int save(Event event) {
         String sql = "INSERT INTO event (round_id, date_time, event_type_id, description) VALUES (?, ?, (SELECT id FROM event_type WHERE name = ?), ?)";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, event.getRoundId());
             statement.setObject(2, event.getDateTime());
-            statement.setString(3, event.getEventType().name());        // ordet, fx "EGG_RETRIEVAL" -> databasen finder selv id'et
-            statement.setString(4, event.getDescription());             // må være null
+            statement.setString(3, event.getEventType().name());        // id'et slås op i event_type
+            statement.setString(4, event.getDescription());             // må gerne være null
             statement.executeUpdate();
 
             try (ResultSet keys = statement.getGeneratedKeys()) {
@@ -43,7 +43,7 @@ public class EventMapper {
         }
     }
 
-    // henter alle trin i én runde i tidsrækkefølge – det ER tidslinjen
+    // alle trin i runden i tidsrækkefølge – det er det, tidslinjen viser
     public List<Event> findByRound(int roundId) {
         String sql = "SELECT event.*, event_type.name AS event_type "
                 + "FROM event "
@@ -66,7 +66,6 @@ public class EventMapper {
         }
     }
 
-    // én række fra databasen -> ét Event-objekt
     private Event mapRow(ResultSet rs) throws SQLException {
         return new Event(
                 rs.getInt("id"),

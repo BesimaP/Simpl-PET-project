@@ -21,21 +21,21 @@ public class RoundMapper {
         this.connectionPool = connectionPool;
     }
 
-    // Gemmer en ny runde og returnerer det id, databasen gav den. end_date og result er tomme, til runden afsluttes.
+    // gemmer en ny runde og returnerer det nye id. end_date og result er tomme, indtil runden afsluttes
     public int save(Round round) {
         String sql = "INSERT INTO round (fertility_journey_id, round_number, treatment_type_id, start_date) VALUES (?, ?, (SELECT id FROM treatment_type WHERE name = ?), ?)";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, round.getFertilityJourneyId());
             statement.setInt(2, round.getRoundNumber());
-            statement.setString(3, round.getTreatmentType().name()); // enum -> "IVF"
+            statement.setString(3, round.getTreatmentType().name()); // id'et slås op i treatment_type
             statement.setObject(4, round.getStartDate());
 
             statement.executeUpdate();
 
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
-                    round.setId(keys.getInt(1)); // objektet får rækkens id
+                    round.setId(keys.getInt(1));
                 }
             }
             return round.getId();
@@ -45,23 +45,21 @@ public class RoundMapper {
         }
     }
 
-    // Finder den runde, der er i gang i et forløb – returnerer null, hvis ingen runde er i gang.
-    // Bruges af dashboard ("hvilken runde viser vi?") og af alle sider, der gemmer noget på runden.
+    // runden der er i gang, eller null. Bruges af dashboardet og af de sider, der gemmer noget på runden
     public Round findActiveByJourney(int fertilityJourneyId) {
-        // round_overview = view i schema_postgres.sql (runde + navnene på behandlingstype og resultat)
+        // round_overview er et view i schemaet, der også har navnene på behandlingstype og resultat
         String sql = "SELECT * FROM round_overview WHERE fertility_journey_id = ? AND end_date IS NULL";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, fertilityJourneyId);
 
 
-            // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
             try (ResultSet rs = statement.executeQuery()) {
-                // if, ikke while: der kan højst være én runde i gang per forløb
+                // der kan kun være én runde i gang per forløb
                 if (rs.next()) {
-                    return mapRow(rs); // rækken -> et Round-objekt (kortet)
+                    return mapRow(rs);
                 }
-                return null; // ingen række = ingen runde i gang
+                return null;
             }
 
         } catch (SQLException e) {
@@ -69,15 +67,14 @@ public class RoundMapper {
         }
     }
 
-    // Henter alle runder i et forløb, ældste først – til rundehistorik og til at finde næste rundenummer
+    // ældste først – til rundehistorik og til at finde næste rundenummer
     public List<Round> findByJourney(int fertilityJourneyId) {
         String sql = "SELECT * FROM round_overview WHERE fertility_journey_id = ? ORDER BY round_number";
-        List<Round> rounds = new ArrayList<>(); // tom liste, som fyldes op
+        List<Round> rounds = new ArrayList<>();
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, fertilityJourneyId);
             try (ResultSet rs = statement.executeQuery()) {
-                // while: der kan være mange runder – én tur i løkken per række
                 while (rs.next()) {
                     rounds.add(mapRow(rs));
                 }
@@ -89,14 +86,13 @@ public class RoundMapper {
         }
     }
 
-    // Afslutter en runde: sætter slutdato og resultat (US10b). Der er ingen status-kolonne – når end_date er udfyldt, er runden afsluttet.
-    // UPDATE ændrer en række, der findes.
+    // afslutter runden (US10b). Vi har ingen status-kolonne – runden er afsluttet, når end_date er udfyldt
     public void endRound(int id, LocalDate endDate, Result result) {
         String sql = "UPDATE round SET end_date = ?, result_id = (SELECT id FROM result WHERE name = ?) WHERE id = ?";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setObject(1, endDate);
-            statement.setString(2, result == null ? null : result.name()); // resultat må være tomt
+            statement.setString(2, result == null ? null : result.name()); // resultat må gerne være tomt
             statement.setInt(3, id);
             statement.executeUpdate();
         } catch (SQLException e) {
@@ -104,10 +100,9 @@ public class RoundMapper {
         }
     }
 
-    // én række fra databasen -> ét Round-objekt. Bruges af begge find-metoder, så oversættelsen kun står ét sted.
-    // end_date og result er NULL, mens runden er i gang – derfor tjekkes de, før de oversættes (ellers crasher parse/valueOf)
+    // end_date og result er NULL, mens runden er i gang, så vi tjekker dem før valueOf
     private Round mapRow(ResultSet rs) throws SQLException {
-        LocalDate endDate = rs.getObject("end_date", LocalDate.class);   // null, hvis runden er i gang
+        LocalDate endDate = rs.getObject("end_date", LocalDate.class);
         String result = rs.getString("result");
         return new Round(
                 rs.getInt("id"),

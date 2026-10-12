@@ -18,7 +18,7 @@ public class MedicationMapper {
         this.connectionPool = connectionPool;
     }
 
-    // henter alle lægemidler, alfabetisk efter det pæne navn – til dropdownen "Medicin" på medicin-siden
+    // sorteret efter description (det navn brugeren ser) til dropdownen på medicin-siden
     public List<Medication> findAll() {
         String sql = "SELECT * FROM medication ORDER BY description";
         List<Medication> medications = new ArrayList<>();
@@ -36,14 +36,14 @@ public class MedicationMapper {
         }
     }
 
-    // henter ét lægemiddel ud fra navnet – returnerer null, hvis det ikke findes
+    // returnerer null, hvis lægemidlet ikke findes
     public Medication findByName(String name) {
         String sql = "SELECT * FROM medication WHERE name = ?";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, name);
             try (ResultSet rs = statement.executeQuery()) {
-                // if i stedet for while: der kan højst være én række, fordi name er UNIQUE
+                // if og ikke while, fordi name er UNIQUE
                 if (rs.next()) {
                     return mapRow(rs);
                 }
@@ -55,7 +55,6 @@ public class MedicationMapper {
         }
     }
 
-    // én række fra databasen -> ét Medication-objekt
     private Medication mapRow(ResultSet rs) throws SQLException {
         return new Medication(
                 rs.getInt("id"),

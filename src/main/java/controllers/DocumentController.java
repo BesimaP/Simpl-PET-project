@@ -11,7 +11,7 @@ import entities.Document;
 
 import java.io.IOException;
 
-// Koordinatoren for dokumenter.html (US11). Læser formularen, kalder DocumentService og sender brugeren videre.
+// Controller for dokumenter.html (US11). Læser formularen, kalder DocumentService og sender brugeren videre.
 public class DocumentController {
     private DocumentService documentService;
 
@@ -22,11 +22,11 @@ public class DocumentController {
     public void setRoutes(JavalinConfig config) {
         config.routes.get("/dokumenter", ctx -> showDocuments(ctx));
         config.routes.post("/dokumenter", ctx -> uploadDocument(ctx));
-        config.routes.get("/dokumenter/{id}", ctx -> openDocument(ctx));   // "Åbn" på listen – {id} = path-parameter
-        config.routes.post("/dokumenter/slet", ctx -> deleteDocument(ctx));   // "Slet" på ét dokument (id i et skjult felt)
+        config.routes.get("/dokumenter/{id}", ctx -> openDocument(ctx));   // {id} er en path-parameter
+        config.routes.post("/dokumenter/slet", ctx -> deleteDocument(ctx));
     }
 
-    // POST /dokumenter/slet – slet ét dokument (rækken + filen). Service tjekker, at det er patientens eget
+    // POST /dokumenter/slet – sletter både rækken og filen. Service tjekker, at det er patientens eget
     private void deleteDocument(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -44,7 +44,7 @@ public class DocumentController {
         ctx.redirect(result == ServiceResult.OK ? "/dokumenter?gemt=slettet" : "/dokumenter?fejl=ukendt");
     }
 
-    // GET /dokumenter/{id} – send selve filen tilbage til browseren (PDF vises, billeder vises)
+    // GET /dokumenter/{id} – sender selve filen, så browseren kan vise PDF'en eller billedet
     private void openDocument(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -52,7 +52,6 @@ public class DocumentController {
             return;
         }
 
-        // 1. id fra URL'en: /dokumenter/7 -> 7. Ikke et tal -> 404
         int documentId;
         try {
             documentId = Integer.parseInt(ctx.pathParam("id"));
@@ -61,15 +60,14 @@ public class DocumentController {
             return;
         }
 
-        // 2. kun patientens egne dokumenter – ellers null
+        // null, hvis dokumentet ikke findes eller tilhører en anden patient
         Document document = documentService.findDocument(patientId, documentId);
         if (document == null) {
             ctx.status(404);
             return;
         }
 
-        // 3. hent filen gennem servicen (FileStorage læser den fra disken) og send den.
-        //    contentType fortæller browseren, om det er PDF eller billede
+        // FileStorage læser filen fra disken. contentType fortæller browseren, om det er PDF eller billede
         try {
             ctx.contentType(documentService.contentType(document));
             ctx.result(documentService.readFile(document));
@@ -78,22 +76,22 @@ public class DocumentController {
         }
     }
 
-    // GET /dokumenter – hent rundens dokumenter og fyld skabelonen
+    // GET /dokumenter – alle patientens dokumenter
     private void showDocuments(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("documents", documentService.getDocuments(patientId));  // requestscope -> ${documents}
-        ctx.attribute("documentTypes", DocumentType.values());   // dropdownen bygges af enum'en
-        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("documents", documentService.getDocuments(patientId));
+        ctx.attribute("documentTypes", DocumentType.values());   // dropdownen bygges ud fra enum'en
+        // ?gemt= / ?fejl= fra sidste POST vises af fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("dokumenter");
     }
 
-    // POST /dokumenter – når brugeren trykker "Upload". Filen læses med ctx.uploadedFile("file")
+    // POST /dokumenter – når brugeren trykker "Upload"
     private void uploadDocument(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {

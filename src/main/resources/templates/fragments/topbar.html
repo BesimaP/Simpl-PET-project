@@ -2,10 +2,8 @@
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!--
-  Fragment = topbaren (overskrift + klokke + avatar), som er ens på alle sider med menu. Hentes ind i en side sådan:
-  <header th:replace="~{fragments/topbar :: topbar('Medicin')}"></header>
-  Parameteren title (ligesom en parameter i en metode) er sidens overskrift.
-  Dashboardet har sin egen topbar (hilsen + dato, og klokken åbner en pop-op), så den bruger ikke fragmentet.
+  Topbaren med overskrift, klokke og avatar: th:replace="~{fragments/topbar :: topbar('Medicin')}".
+  Dashboardet har sin egen topbar (hilsen, dato og pop-op ved klokken), så det bruger ikke den her.
 -->
 <header class="topbar" th:fragment="topbar(title)">
   <div>
@@ -15,11 +13,11 @@
     <a href="/notifikationer" class="iconbtn" aria-label="Notifikationer"
        th:attr="aria-label=${unread != null and unread > 0} ? 'Notifikationer, ' + ${unread} + ' ulæste' : 'Notifikationer'">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>
-      <!-- th:attr ovenfor: skærmlæseren siger antallet, da den røde prik kun kan ses -->
-      <!-- th:if: rød prik ved ulæste påmindelser. ${unread} sættes for alle sider i RouteConfig (before-handler) -->
+      <!-- aria-label ovenfor får antallet med, fordi den røde prik kun kan ses -->
+      <!-- rød prik ved ulæste påmindelser. ${unread} sættes i before-handleren i RouteConfig -->
       <span class="dot" th:if="${unread != null and unread > 0}"></span>
     </a>
-    <!-- første bogstav i patientens fornavn (gemt i sessionen ved login) -->
+    <!-- første bogstav i fornavnet, som ligger i sessionen fra login -->
     <a href="/min-profil" class="avatar" aria-label="Min profil"
        th:text="${#strings.toUpperCase(#strings.substring(session.patientName, 0, 1))}">A</a>
   </div>

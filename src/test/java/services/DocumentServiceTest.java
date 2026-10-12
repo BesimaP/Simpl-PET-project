@@ -16,18 +16,17 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af DocumentService (dokumenter, US11)
+// Integrationstest af DocumentService (dokumenter, US11)
 class DocumentServiceTest {
 
-    private static List<Integer> patients = new ArrayList<>(); // alle patienter, testene har uploadet for – til oprydning
+    private static List<Integer> patients = new ArrayList<>(); // så vi kan rydde deres filer op bagefter
 
     @BeforeAll
     static void setup() {
         TestData.freshDatabase();
     }
 
-    // Kører én gang efter alle tests: sletter de små testfiler, uploadDocument har skrevet i uploads/,
-    // så mappen kun indeholder rigtige uploads. Stien står i databasen (filePath)
+    // sletter testfilerne i uploads/ bagefter, så der kun ligger rigtige uploads
     @AfterAll
     static void deleteTestFiles() throws IOException {
         for (int patientId : patients) {
@@ -37,14 +36,14 @@ class DocumentServiceTest {
         }
     }
 
-    // hjælper: patient med runde, som huskes til oprydningen
+    // patient med runde, som huskes til oprydningen
     private static int patientWithRound() {
         int patientId = TestData.newPatientWithRound();
         patients.add(patientId);
         return patientId;
     }
 
-    // lille hjælper: en "fil" i hukommelsen, så testen ikke behøver en rigtig fil på disken
+    // en "fil" i hukommelsen, så vi ikke behøver en rigtig fil
     private static InputStream fakeFile() {
         return new ByteArrayInputStream("indhold".getBytes());
     }
@@ -77,9 +76,9 @@ class DocumentServiceTest {
 
     @Test
     void uploadWithoutJourneyIsAllowed() {
-        // dokumentet ligger på patienten – en henvisning kan uploades, før der er noget forløb eller nogen runde
+        // en henvisning skal kunne uploades, før der er et forløb
         int patientId = TestData.newPatient();
-        patients.add(patientId); // husk til oprydningen
+        patients.add(patientId);
         assertEquals(ServiceResult.OK, new DocumentService(TestData.pool()).uploadDocument(patientId, "Henvisning", "REFERRAL", "henvisning.pdf", fakeFile(), 100));
         assertEquals(1, new DocumentService(TestData.pool()).getDocuments(patientId).size());
     }
@@ -99,7 +98,7 @@ class DocumentServiceTest {
         new DocumentService(TestData.pool()).uploadDocument(anna, "Annas plan", "TREATMENT_PLAN", "plan.pdf", fakeFile(), 100);
         int documentId = new DocumentService(TestData.pool()).getDocuments(anna).get(0).getId();
         assertNotNull(new DocumentService(TestData.pool()).findDocument(anna, documentId));
-        assertNull(new DocumentService(TestData.pool()).findDocument(maria, documentId)); // Maria må ikke kunne åbne Annas dokument
+        assertNull(new DocumentService(TestData.pool()).findDocument(maria, documentId));
     }
 
     @Test
@@ -111,7 +110,7 @@ class DocumentServiceTest {
         assertTrue(Files.exists(Path.of(d.getFilePath())));
         assertEquals(ServiceResult.OK, service.deleteDocument(patientId, d.getId()));
         assertTrue(service.getDocuments(patientId).isEmpty());
-        assertFalse(Files.exists(Path.of(d.getFilePath())));   // filen på disken er også væk
+        assertFalse(Files.exists(Path.of(d.getFilePath())));   // filen på disken skal også være væk
     }
 
     @Test
@@ -122,6 +121,6 @@ class DocumentServiceTest {
         service.uploadDocument(anna, "Annas plan", "TREATMENT_PLAN", "plan.pdf", fakeFile(), 100);
         int documentId = service.getDocuments(anna).get(0).getId();
         assertEquals(ServiceResult.NOT_FOUND, service.deleteDocument(maria, documentId));
-        assertEquals(1, service.getDocuments(anna).size());   // stadig der
+        assertEquals(1, service.getDocuments(anna).size());   // Annas dokument er der stadig
     }
 }

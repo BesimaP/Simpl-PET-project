@@ -1,6 +1,6 @@
 package entities;
 
-// En diagnose registreret af patienten selv (tabel diagnosis, US7). En patient kan have flere.
+// En diagnose, som patienten selv har registreret (tabel diagnosis, US7). En patient kan have flere.
 public class Diagnosis {
 
     private int id;
@@ -8,7 +8,7 @@ public class Diagnosis {
     private String name;
     private String description;  // må være null
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public Diagnosis(int id, int patientId, String name, String description) {
         this.id = id;
         this.patientId = patientId;
@@ -16,7 +16,7 @@ public class Diagnosis {
         this.description = description;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getPatientId() { return patientId; }

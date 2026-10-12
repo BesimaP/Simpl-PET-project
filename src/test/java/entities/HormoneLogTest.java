@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// UNITTEST af HormoneLog: tester getValueText(), som laver tallet om til pæn tekst på hormon-siden. Ingen database.
+// Unittest af getValueText(), som formaterer værdien til hormon-siden.
 class HormoneLogTest {
 
     private HormoneLog logWithValue(double value) {
@@ -16,7 +16,7 @@ class HormoneLogTest {
 
     @Test
     void valueTextRemovesTrailingZeros() {
-        assertEquals("8", logWithValue(8.0).getValueText());       // 8.0 -> "8"
+        assertEquals("8", logWithValue(8.0).getValueText());
     }
 
     @Test
@@ -26,12 +26,12 @@ class HormoneLogTest {
 
     @Test
     void valueTextForLargeValueIsNotScientific() {
-        // toPlainString: 1200 skal ikke blive til "1.2E+3"
+        // 1200 må ikke blive til "1.2E+3"
         assertEquals("1200", logWithValue(1200.0).getValueText());
     }
 
     @Test
     void valueTextForZero() {
-        assertEquals("0", logWithValue(0.0).getValueText());       // grænseværdi: 0 er tilladt i databasen
+        assertEquals("0", logWithValue(0.0).getValueText());       // grænseværdi: 0 er tilladt
     }
 }

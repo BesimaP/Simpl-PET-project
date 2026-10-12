@@ -6,7 +6,7 @@ import persistence.DiagnosisMapper;
 
 import java.util.List;
 
-// Forretningslogik for diagnoser (US7). Kender IKKE Javalin. Diagnoser hænger på patienten – ingen forløb/runde.
+// Logik for diagnoser (US7). Diagnoser hænger direkte på patienten, ikke på et forløb.
 public class DiagnosisService {
 
     private final DiagnosisMapper diagnosisMapper;
@@ -16,7 +16,7 @@ public class DiagnosisService {
     }
 
     public ServiceResult addDiagnosis(int patientId, String name, String description) {
-        // 1. regel: en diagnose skal have et navn (serveren stoler ikke på required i HTML)
+        // en diagnose skal have et navn
         if (InputCheck.isBlank(name)) {
             return ServiceResult.INVALID_INPUT;
         }
@@ -25,23 +25,20 @@ public class DiagnosisService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 2. beskrivelsen er valgfri – tom tekst gemmes som null, så databasen ikke fyldes med ""
+        // beskrivelsen er valgfri – tom tekst gemmes som null
         String desc = InputCheck.isBlank(description) ? null : description.trim();
 
-        // 3. byg kortet og gem – diagnosen hænger direkte på patienten (patient_id). trim = mellemrum før/efter fjernes
         Diagnosis diagnosis = new Diagnosis(0, patientId, name.trim(), desc);
         diagnosisMapper.save(diagnosis);
 
         return ServiceResult.OK;
     }
 
-    // Henter alle patientens diagnoser – til listen på diagnoser-siden (GET)
     public List<Diagnosis> getDiagnoses(int patientId) {
         return diagnosisMapper.findByPatient(patientId);
     }
 
-    // Sletter én diagnose – men kun hvis den er patientens egen: mapperen sletter med "WHERE id = ? AND patient_id = ?".
-    // Svar: OK · NOT_FOUND = findes ikke / ikke hendes. Samme mønster som DiaryService.deleteEntry
+    // Sletter kun, hvis diagnosen er patientens egen (WHERE id = ? AND patient_id = ?). Ellers NOT_FOUND
     public ServiceResult deleteDiagnosis(int patientId, int diagnosisId) {
         return diagnosisMapper.delete(diagnosisId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }

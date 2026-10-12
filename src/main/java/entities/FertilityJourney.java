@@ -3,8 +3,7 @@ package entities;
 import enums.JourneyStatus;
 import java.time.LocalDate;
 
-// Patientens overordnede forløb (tabel fertility_journey, US1).
-// Indeholder ikke længere rundedata — det ligger i Round (v2).
+// Patientens forløb (tabel fertility_journey, US1). De enkelte behandlingsforsøg ligger i Round.
 public class FertilityJourney {
 
     private int id;
@@ -12,7 +11,7 @@ public class FertilityJourney {
     private LocalDate startDate;
     private JourneyStatus status;
 
-    // konstruktør: id = 0 når kortet er nyt (databasen giver det rigtige id ved save)
+    // id = 0 for en ny række – databasen giver det rigtige id ved save
     public FertilityJourney(int id, int patientId, LocalDate startDate, JourneyStatus status) {
         this.id = id;
         this.patientId = patientId;
@@ -20,7 +19,7 @@ public class FertilityJourney {
         this.status = status;
     }
 
-    // gettere: læs felterne. setId bruges af mapperen efter save; resten kan ikke ændres udefra
+    // setId bruges af mapperen efter save. Resten kan kun læses.
     public int getId() {
         return id;
     }

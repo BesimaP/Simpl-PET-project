@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <!--
-  Fragment = et stykke HTML, som andre templates kan hente ind (genbrug, ligesom en metode).
-  Bruges sådan i en side:  <div th:replace="~{fragments/besked :: besked}"></div>
-  Controlleren lægger ${gemt} og ${fejl} i request scope ud fra URL'en (?gemt=1 / ?fejl=felter).
+  Fælles beskeder, når noget er gemt eller gået galt. Hentes ind med th:replace="~{fragments/besked :: besked}".
+  Controlleren lægger ?gemt= og ?fejl= fra URL'en i ${gemt} og ${fejl}.
 -->
 <body>
 
 <div th:fragment="besked">
 
-  <!-- grøn besked: noget blev gemt. th:if: kun når ?gemt= er sat. Forsvinder af sig selv (CSS-animation, ingen JavaScript) -->
+  <!-- grøn besked når noget er gemt. Forsvinder selv via en CSS-animation -->
   <p class="toast" role="status" th:if="${gemt != null}">
     <span th:switch="${gemt}">
       <span th:case="'runde'">Runden er startet ✓</span>
@@ -23,7 +22,7 @@
     </span>
   </p>
 
-  <!-- rød besked: noget gik galt. th:switch/th:case: én tekst per fejlkode fra controlleren -->
+  <!-- rød besked med én tekst pr. fejlkode -->
   <p class="toast toast--error" role="alert" th:if="${fejl != null}">
     <span th:switch="${fejl}">
       <span th:case="'felter'">Udfyld alle felter – og tjek at dato og tal er gyldige.</span>

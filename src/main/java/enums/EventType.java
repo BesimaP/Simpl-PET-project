@@ -1,7 +1,6 @@
 package enums;
 
-// Trin i en runde, som vises på tidslinjen (ordlisten). Matcher CHECK på event.event_type.
-// label = den danske tekst, der vises på tidslinjen (Thymeleaf: ${e.eventType.label})
+// Trin i en runde, som vises på tidslinjen. Navnene matcher tabellen event_type i schema_postgres.sql.
 public enum EventType {
     STIMULATION_START("Runde startet"),
     EGG_RETRIEVAL("Ægudtagning"),
@@ -11,7 +10,6 @@ public enum EventType {
 
     private final String label;
 
-    // enum-konstruktør: kaldes én gang per værdi ovenfor med teksten i parentesen
     EventType(String label) {
         this.label = label;
     }

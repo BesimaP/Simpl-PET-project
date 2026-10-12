@@ -5,44 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simpl – Tidslinje</title>
 
-  <!-- skrifttyper og vores css filer -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
   <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
-  <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+  <link rel="stylesheet" href="/css/pages.css">      <!-- css til de enkelte sider -->
 </head>
 <body class="dashboard">
 
-<!-- menuen hentes fra fragments/menu.html – 'tidslinje' = det menupunkt, der lyser op -->
 <nav th:replace="~{fragments/menu :: menu('tidslinje')}"></nav>
 
-<!-- selve siden -->
 <main class="content">
 
-  <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
   <header th:replace="~{fragments/topbar :: topbar('Tidslinje')}"></header>
 
-  <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
   <div th:replace="~{fragments/besked :: besked}"></div>
 
-  <!-- Tidslinjen genbruger .rounds-mønsteret (samme som rundehistorik), da der ikke findes en separat timeline-klasse -->
   <section class="card" aria-labelledby="tidslinje-title">
     <div class="section-head">
-      <!-- overskriften viser, hvilken runde tidslinjen hører til (${round} fra TimelineController – null = ingen runde) -->
+      <!-- ${round} er null, hvis der ingen runde er -->
       <h2 id="tidslinje-title" th:text="${round != null} ? 'Runde ' + ${round.roundNumber} + ' · ' + ${round.treatmentType} : 'Dit forløb'">Runde 2 · IVF</h2>
-      <!-- tidligere runder (også fra afsluttede forløb) vælges i rundehistorik -->
+      <!-- gamle runder vælges i rundehistorik -->
       <a href="/rundehistorik">Andre runder →</a>
     </div>
     <p class="muted" th:if="${round != null and round.endDate != null}"
        th:text="'Afsluttet runde (' + ${#temporals.format(round.startDate, 'd. MMM')} + ' – ' + ${#temporals.format(round.endDate, 'd. MMM yyyy')} + ').'">Afsluttet runde.</p>
     <p class="muted">Vigtige begivenheder i runden, i rækkefølge.</p>
 
-    <!-- th:each: ét li per begivenhed (Event) i den runde, der er i gang. e = én begivenhed ad gangen -->
-    <!-- TIDSLINJE: lodret linje med én prik per begivenhed (CSS-klassen .timeline i pages.css).
-         th:classappend: is-past = er sket (udfyldt prik), is-today = i dag, ellers kommende (hul prik).
-         ${today} kommer fra TimelineController; e.dateTime.toLocalDate() = kun datoen, uden klokkeslæt -->
+    <!-- én prik pr. event. is-past giver en udfyldt prik, is-today markerer i dag, og kommende får en hul prik.
+         Vi sammenligner kun datoen, ikke klokkeslættet -->
     <ol class="timeline">
       <li th:each="e : ${events}"
           th:classappend="${e.dateTime.toLocalDate().isBefore(today)} ? 'is-past' : (${e.dateTime.toLocalDate().equals(today)} ? 'is-today' : '')">

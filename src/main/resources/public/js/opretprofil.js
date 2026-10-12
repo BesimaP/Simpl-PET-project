@@ -1,26 +1,22 @@
-// opretprofil.js — JavaScript kun til opretprofil.html (US6a)
+// opretprofil.js – til opretprofil.html (US6a)
 
-// --- 1. Vis/skjul "Forløbet startede" alt efter Ja/Nej ---
+// --- Vis datofeltet kun, når man har svaret Ja ---
 
-// FIND de to radio-knapper og div'en med datofeltet
 const journeyRadios = document.querySelectorAll('input[name="hasJourney"]');
 const journeyFields = document.getElementById("journey-fields");
 const journeyStart = document.getElementById("journeyStart");
 
-// NÅR man vælger Ja eller Nej ("change" = værdien blev ændret):
 journeyRadios.forEach(function (radio) {
     radio.addEventListener("change", function () {
 
-        // er det "Ja", der er valgt nu?
         const yes = radio.value === "yes" && radio.checked;
 
-        // hidden = true skjuler div'en, hidden = false viser den
         journeyFields.hidden = !yes;
 
-        // datoen skal kun udfyldes, når "Ja" er valgt – så sætter vi required til/fra
+        // datoen er kun påkrævet ved Ja
         journeyStart.required = yes;
 
-        // ved "Ja": skriv dagens dato i feltet som forslag (opskriften fra common.js)
+        // dagens dato som forslag
         if (yes && journeyStart.value === "") {
             setTodayIn(journeyStart);
         }
@@ -28,10 +24,7 @@ journeyRadios.forEach(function (radio) {
 });
 
 
-// --- 2. Skjul datofeltet, når siden åbner ---
-// I HTML'en er feltet synligt, så siden også virker uden JavaScript.
-// Her (med JavaScript) skjuler vi det fra start, hvis "Nej" er valgt – og viser det igen ved "Ja" (punkt 1 ovenfor)
+// I HTML'en er feltet synligt, så siden virker uden JavaScript. Her skjuler vi det fra start, hvis Nej er valgt
 const yesChecked = document.querySelector('input[name="hasJourney"][value="yes"]').checked;
 journeyFields.hidden = !yesChecked;
 
-// (Fejlbeskeden fra serveren, fx "Brugernavnet er optaget", skrives nu af Thymeleaf i opretprofil.html – ingen JavaScript nødvendig)

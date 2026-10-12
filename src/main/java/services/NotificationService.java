@@ -15,12 +15,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-// Forretningslogik for påmindelser (US12). Kender IKKE Javalin.
-// Påmindelser hænger direkte på patienten – ingen forløb/runde at slå op.
+// Logik for påmindelser (US12). Påmindelser hænger direkte på patienten.
 public class NotificationService {
-    private NotificationMapper notificationMapper; // arkivaren for påmindelser
-    private MedicationService medicationService;   // til at finde dagens doser (påmindelser om medicin)
-    private AppointmentService appointmentService; // til at finde de næste aftaler (påmindelser om aftaler)
+    private NotificationMapper notificationMapper;
+    private MedicationService medicationService;
+    private AppointmentService appointmentService;
 
     public NotificationService(ConnectionPool connectionPool) {
         this.notificationMapper = new NotificationMapper(connectionPool);
@@ -28,30 +27,29 @@ public class NotificationService {
         this.appointmentService = new AppointmentService(connectionPool);
     }
 
-    // Henter alle patientens påmindelser, nyeste først – til notifikationer.html
+    // nyeste først
     public List<Notification> getNotifications(int patientId) {
         return notificationMapper.findByPatient(patientId);
     }
 
-    // Tæller ulæste – til den røde prik på klokken i topbaren
+    // til den røde prik på klokken i topbaren
     public int countUnread(int patientId) {
         return notificationMapper.countUnread(patientId);
     }
 
-    // Opretter én MEDICATION_REMINDER per planlagt (ikke taget) dosis i dag (US12). Kaldes når dashboard åbnes.
-    // Samme påmindelse oprettes ikke to gange: hvis der allerede findes en fra i dag med samme besked, springes den over.
-    // Returnerer antal nye påmindelser – praktisk i tests
+    // Laver en påmindelse for hver dosis i dag, der ikke er taget. Kaldes, når dashboardet åbnes,
+    // så vi springer over, hvis samme besked allerede er lavet i dag. Returnerer antal nye (bruges i tests)
     public int createMedicationReminders(int patientId) {
-        Map<Integer, String> names = medicationService.getMedicationNames();   // id -> "Gonal-F"
+        Map<Integer, String> names = medicationService.getMedicationNames();
         List<Notification> existing = getNotifications(patientId);
 
         int created = 0;
 
         for (MedicationLog dose : medicationService.getTodayLogs(patientId)) {
             if (dose.isTaken()) {
-                continue; // allerede taget = ingen grund til at minde om den
+                continue;
             }
-            // beskeden er også "nøglen" til at undgå dubletter, fx "Gonal-F · 150 IU · kl. 20:00"
+            // beskeden bruges også til at finde dubletter, fx "Gonal-F · 150 IU · kl. 20:00"
             String message = names.get(dose.getMedicationId()) + " · " + dose.getDoseText() + " " + dose.getUnit()
                     + " · kl. " + dose.getScheduledDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
 
@@ -66,10 +64,8 @@ public class NotificationService {
         return created;
     }
 
-    // Opretter én APPOINTMENT_REMINDER per aftale i dag eller i morgen, der ikke er overstået endnu (US12: "medicin eller aftaler").
-    // Kaldes når dashboard åbnes, ligesom medicin-påmindelserne.
-    // Dubletter: beskeden indeholder aftalens dato, så den samme aftale kun giver én påmindelse – uanset hvor mange gange dashboard åbnes.
-    // Returnerer antal nye påmindelser – praktisk i tests
+    // Laver en påmindelse for hver aftale i dag eller i morgen. Beskeden indeholder aftalens dato,
+    // så samme aftale kun giver én påmindelse, selvom dashboardet åbnes flere gange. Returnerer antal nye (bruges i tests)
     public int createAppointmentReminders(int patientId) {
         List<Notification> existing = getNotifications(patientId);
         LocalDate tomorrow = LocalDate.now().plusDays(1);
@@ -77,12 +73,12 @@ public class NotificationService {
 
         int created = 0;
 
-        // getUpcoming = aftaler efter "nu", nærmeste først
+        // getUpcoming er sorteret med nærmeste først
         for (Appointment a : appointmentService.getUpcoming(patientId)) {
             if (a.getDateTime().toLocalDate().isAfter(tomorrow)) {
-                break; // listen er sorteret – resten ligger endnu længere ude i fremtiden
+                break; // resten ligger endnu længere ude
             }
-            // fx "Scanning · Vitanova · 8. okt. 2026 kl. 10:30" (årstallet med, så en aftale samme dag næste år ikke ligner en dublet)
+            // fx "Scanning · Vitanova · 8. okt. 2026 kl. 10:30" – årstallet er med, så en aftale næste år ikke ligner en dublet
             String message = a.getAppointmentType().getLabel() + " · " + a.getLocation() + " · " + a.getDateTime().format(format);
 
             if (alreadyExists(existing, message)) {
@@ -95,7 +91,7 @@ public class NotificationService {
         return created;
     }
 
-    // hjælper: findes der allerede en påmindelse med præcis denne besked (uanset dato)?
+    // findes der allerede en påmindelse med denne besked (uanset dato)?
     private boolean alreadyExists(List<Notification> existing, String message) {
         for (Notification n : existing) {
             if (message.equals(n.getMessage())) {
@@ -105,7 +101,7 @@ public class NotificationService {
         return false;
     }
 
-    // hjælper: findes der allerede en påmindelse fra i dag med præcis denne besked?
+    // findes der allerede en påmindelse fra i dag med denne besked?
     private boolean alreadyExistsToday(List<Notification> existing, String message) {
         for (Notification n : existing) {
             if (n.getDateTime().toLocalDate().equals(LocalDate.now()) && message.equals(n.getMessage())) {
@@ -115,14 +111,13 @@ public class NotificationService {
         return false;
     }
 
-    // Markér alle patientens påmindelser som læst – knappen øverst på notifikationer-siden
+    // knappen "Markér alle som læst" på notifikationer-siden
     public ServiceResult markAllRead(int patientId) {
         notificationMapper.markAllRead(patientId);
         return ServiceResult.OK;
     }
 
-    // Markér én påmindelse som læst (UC7) – kun patientens egen: mapperen opdaterer med "WHERE id = ? AND patient_id = ?",
-    // så man ikke kan ændre andres ved at rette id'et i det skjulte felt. Svar: OK · NOT_FOUND
+    // Markér en påmindelse som læst (UC7). Kun patientens egen, så man ikke kan ændre andres ved at rette id'et
     public ServiceResult markRead(int patientId, int notificationId) {
         return notificationMapper.markRead(notificationId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
     }

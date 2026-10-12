@@ -5,48 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Simpl – Dokumenter</title>
 
-  <!-- skrifttyper og vores css filer -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/tokens.css">
   <link rel="stylesheet" href="/css/base.css">
   <link rel="stylesheet" href="/css/layout.css">     <!-- menu, topbar, sidens ramme -->
   <link rel="stylesheet" href="/css/components.css"> <!-- knapper, kort, lister, pop-op -->
-  <link rel="stylesheet" href="/css/pages.css">      <!-- det der er specielt for denne side -->
+  <link rel="stylesheet" href="/css/pages.css">      <!-- css til de enkelte sider -->
 
-  <!-- javascript: defer = vent med at køre til hele siden er læst. common.js først, så sidens egen fil -->
+  <!-- defer: scripts kører først, når HTML'en er læst. common.js skal komme først -->
   <script src="/js/common.js" defer></script>
   <script src="/js/dokumenter.js" defer></script>
 </head>
 <body class="dashboard">
 
-<!-- menuen hentes fra fragments/menu.html – 'dokumenter' = det menupunkt, der lyser op -->
 <nav th:replace="~{fragments/menu :: menu('dokumenter')}"></nav>
 
-  <!-- selve siden -->
   <main class="content">
 
-    <!-- overskrift + klokke + avatar: fælles fragment i templates/fragments/topbar.html -->
     <header th:replace="~{fragments/topbar :: topbar('Dokumenter')}"></header>
 
-    <!-- besked fra controlleren: "Gemt ✓" eller en fejl. Fragmentet ligger i templates/fragments/besked.html -->
     <div th:replace="~{fragments/besked :: besked}"></div>
 
-    <!-- form-layout gør at kortene står i 2 kolonner -->
+    <!-- kortene står i to kolonner -->
     <div class="form-layout">
 
-      <!-- kort 1: liste over uploadede dokumenter -->
+      <!-- uploadede dokumenter -->
       <section class="card">
         <h2 class="eyebrow">Dokumenter</h2>
-        <!-- rounds-listen genbruges fra rundehistorik, så det ser ens ud -->
+        <!-- samme liste-layout som rundehistorik -->
         <ul class="rounds" th:if="${!documents.isEmpty()}">
           <li th:each="d : ${documents}">
             <div class="round__info">
               <strong th:text="${d.title}">Behandlingsplan.pdf</strong>
-              <!-- type + upload-dato (US11 AC1: titel, type og upload-dato) -->
+              <!-- US11 AC1: titel, type og upload-dato -->
               <span th:text="${d.documentType.label} + ' · ' + ${#temporals.format(d.uploadDate, 'd. MMM yyyy')}">Behandlingsplan · 3. okt 2026</span>
             </div>
             <a th:href="'/dokumenter/' + ${d.id}">Åbn</a>
-            <!-- slet: en lille formular med dokumentets id i et skjult felt -> POST /dokumenter/slet (sletter også filen) -->
+            <!-- sletter også filen på disken -->
             <form action="/dokumenter/slet" method="post" class="delete-form">
               <input type="hidden" name="id" th:value="${d.id}">
               <button type="submit" class="muted-link" th:attr="aria-label='Slet ' + ${d.title}">Slet</button>
@@ -56,31 +51,27 @@
         <p class="muted" th:if="${documents.isEmpty()}">Ingen dokumenter uploadet endnu.</p>
       </section>
 
-      <!-- kort 2: upload et nyt dokument -->
+      <!-- upload nyt dokument -->
       <aside class="card helpbox" aria-labelledby="upload-title">
         <h2 id="upload-title" class="eyebrow">Upload</h2>
-        <!-- action = POST /dokumenter – controlleren gemmer og sender tilbage til siden med ?gemt= eller ?fejl= -->
+        <!-- multipart, ellers kommer filen ikke med -->
         <form action="/dokumenter" method="post" enctype="multipart/form-data">
-          <!-- type file = åbner fil-vælgeren på computeren -->
           <label for="file">Vælg fil</label>
           <input type="file" id="file" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
           <p id="file-error" class="field-error"></p>
-          <!-- type="button" = sender IKKE formularen. Knappen tømmer fil-feltet (se js/dokumenter.js) -->
+          <!-- type="button", så den ikke sender formularen. dokumenter.js tømmer fil-feltet -->
           <button type="button" id="remove-file" class="muted-link">Fjern fil</button>
 
-          <!-- title er påkrævet i document-tabellen -->
           <label for="title">Titel</label>
           <input type="text" id="title" name="title" placeholder="Fx Behandlingsplan" maxlength="100" required>
 
-          <!-- value = databasens navn (tabellen document_type i schema_postgres.sql), teksten er dansk -->
           <label for="documentType">Type</label>
           <select id="documentType" name="documentType" required>
             <option value="">Vælg…</option>
-            <!-- th:each: én option pr. værdi i enum'en (sat af controlleren). Ny type = tilføj den i enum'en + typetabellen -->
+            <!-- én option pr. enum-værdi. En ny type skal også tilføjes i typetabellen i databasen -->
             <option th:each="t : ${documentTypes}" th:value="${t.name()}" th:text="${t.label}">Type</option>
           </select>
 
-          <!-- knappen sender formularen -->
           <button type="submit">Upload</button>
         </form>
         <p class="muted">PDF, JPG, PNG · maks 10 MB</p>

@@ -1,15 +1,13 @@
 -- =========================================================
--- SIMPL – testdata til PostgreSQL (genereret, 2026-10-05)
--- Kør EFTER schema_postgres.sql, i pgAdmin Query Tool (F5).
--- 25 patienter · forløb, runder, aftaler, hormonmålinger, medicin, noter, diagnoser, dokumenter, notifikationer.
--- OVERRIDING SYSTEM VALUE: vi sætter id'erne selv, så fremmednøglerne passer – og nulstiller tællerne til sidst.
--- Alle testbrugere har kodeordet  test1234  (rigtigt BCrypt-hash, samme for alle) – fx brugernavn mette1990 / test1234.
--- Data er kun til udvikling.
--- Typer gemmes som id (fx treatment_type_id 1 = IVF) – se kommentarerne ved typetabellerne i schema_postgres.sql.
+-- Simpl – testdata til PostgreSQL (genereret 2026-10-05). Køres efter schema_postgres.sql.
+-- 25 patienter med forløb, runder, aftaler, målinger, medicin, noter, diagnoser, dokumenter og notifikationer.
+-- Vi sætter id'erne selv (OVERRIDING SYSTEM VALUE), så fremmednøglerne passer, og nulstiller tællerne til sidst.
+-- Alle testbrugere har kodeordet test1234, fx mette1990 / test1234. Kun til udvikling.
+-- Typer gemmes som id (fx treatment_type_id 1 = IVF), se schema_postgres.sql.
 -- =========================================================
 
 
--- Patient — login og persondata i én tabel (UserAccount og Patient er samlet)
+-- Patienter
 INSERT INTO patient (id, username, password_hash, first_name, last_name, date_of_birth) OVERRIDING SYSTEM VALUE VALUES
     (1, 'mette1990', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Mette', 'Jensen', '1986-01-01'),
     (2, 'anna1991', '$2a$10$GHZcfIWeP9w8gGeqQRhVi.EcfocxOPNrqk7MT/celQLNrVwTp1YBm', 'Anna', 'Sørensen', '1987-06-12'),
@@ -1119,7 +1117,7 @@ INSERT INTO notification (id, patient_id, date_time, notification_type_id, title
     (18, 23, '2026-10-03 07:30:00', 1, 'Husk din medicin', 'Gonal-F · 150 IU · kl. 20:00', TRUE),
     (19, 24, '2026-10-05 07:30:00', 1, 'Husk din medicin', 'Gonal-F · 150 IU · kl. 20:00', FALSE);
 
--- Nulstil id-tællerne, så nye rækker fra appen fortsætter efter testdataene
+-- Nulstiller id-tællerne, så nye rækker fra appen ikke får et id, der allerede er brugt
 SELECT setval(pg_get_serial_sequence('patient', 'id'), COALESCE((SELECT MAX(id) FROM patient), 1));
 SELECT setval(pg_get_serial_sequence('diagnosis', 'id'), COALESCE((SELECT MAX(id) FROM diagnosis), 1));
 SELECT setval(pg_get_serial_sequence('fertility_journey', 'id'), COALESCE((SELECT MAX(id) FROM fertility_journey), 1));
@@ -1132,5 +1130,5 @@ SELECT setval(pg_get_serial_sequence('medication_log', 'id'), COALESCE((SELECT M
 SELECT setval(pg_get_serial_sequence('document', 'id'), COALESCE((SELECT MAX(id) FROM document), 1));
 SELECT setval(pg_get_serial_sequence('notification', 'id'), COALESCE((SELECT MAX(id) FROM notification), 1));
 
--- Tjek: antal rækker per tabel
+-- Tjek: antal rækker pr. tabel
 SELECT 'patient' AS tabel, COUNT(*) FROM patient UNION ALL SELECT 'fertility_journey', COUNT(*) FROM fertility_journey UNION ALL SELECT 'round', COUNT(*) FROM round UNION ALL SELECT 'appointment', COUNT(*) FROM appointment UNION ALL SELECT 'diary_entry', COUNT(*) FROM diary_entry UNION ALL SELECT 'hormone_log', COUNT(*) FROM hormone_log UNION ALL SELECT 'medication_log', COUNT(*) FROM medication_log UNION ALL SELECT 'event', COUNT(*) FROM event UNION ALL SELECT 'document', COUNT(*) FROM document UNION ALL SELECT 'notification', COUNT(*) FROM notification UNION ALL SELECT 'diagnosis', COUNT(*) FROM diagnosis;

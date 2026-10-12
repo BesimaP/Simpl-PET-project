@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af TimelineService (tidslinje, US2)
+// Integrationstest af TimelineService (tidslinje, US2)
 class TimelineServiceTest {
 
     @BeforeAll
@@ -19,14 +19,14 @@ class TimelineServiceTest {
     @Test
     void getEventsForUnknownRoundReturnsEmptyList() {
         int patientId = TestData.newPatientWithRound();
-        // en runde, der ikke findes (fx et forkert id i adressen ?runde=) er ikke en fejl – bare ingenting at vise
+        // et forkert id i ?runde= skal ikke give fejl, bare en tom tidslinje
         assertTrue(new TimelineService(TestData.pool()).getEvents(patientId, 99999).isEmpty());
     }
 
     @Test
     void getEventsWithNewRoundReturnsStartEvent() throws Exception {
         int patientId = TestData.newPatientWithRound();
-        // start runde opretter automatisk ét trin: STIMULATION_START
+        // start runde laver automatisk trinnet STIMULATION_START
         assertEquals(1, TestData.eventsInActiveRound(patientId).size());
     }
 
@@ -48,7 +48,7 @@ class TimelineServiceTest {
     void eventsAreSortedByDateOldestFirst() throws Exception {
         int patientId = TestData.newPatientWithRound(); // runden starter 2026-09-10
         Round round = new RoundService(TestData.pool()).findActiveRound(patientId);
-        // gemmes i "forkert" rækkefølge – DAO'en sorterer efter date_time
+        // gemmes i "forkert" rækkefølge – mapperen sorterer efter date_time
         new TimelineService(TestData.pool()).addEvent(round.getId(), LocalDateTime.of(2026, 9, 30, 9, 0), EventType.PREGNANCY_TEST, null);
         new TimelineService(TestData.pool()).addEvent(round.getId(), LocalDateTime.of(2026, 9, 20, 9, 0), EventType.EGG_RETRIEVAL, null);
         assertEquals(EventType.STIMULATION_START, TestData.eventsInActiveRound(patientId).get(0).getEventType());
@@ -69,7 +69,7 @@ class TimelineServiceTest {
         int anna = TestData.newPatientWithRound();
         int maria = TestData.newPatientWithRound();
         int annasRound = new RoundService(TestData.pool()).findActiveRound(anna).getId();
-        assertFalse(new TimelineService(TestData.pool()).getEvents(anna, annasRound).isEmpty());   // start-runde-trinnet
+        assertFalse(new TimelineService(TestData.pool()).getEvents(anna, annasRound).isEmpty());   // trinnet fra start runde
         assertTrue(new TimelineService(TestData.pool()).getEvents(maria, annasRound).isEmpty());
     }
 }

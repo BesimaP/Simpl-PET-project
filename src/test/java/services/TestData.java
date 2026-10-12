@@ -10,38 +10,33 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-// Hjælper til alle testklasser: sætter testdatabasen op og laver de "kort", en test skal bruge (patient, forløb, runde).
-// Ligger i src/test – er ikke med i selve programmet.
-//
-// Testene kører mod schemaet "test" i databasen Simpl (ikke "public"), så testene aldrig rører jeres rigtige data.
-// Samme opsætning som mapper-testene (src/test/java/persistence/TestDatabase.java).
-// Schemaet og tabellerne laver testene selv (de kører schema_postgres.sql før hver testklasse).
+// Fælles hjælper til service-testene: sætter testdatabasen op og laver patient, forløb og runde.
+// Kører mod schema test ligesom TestDatabase i persistence, så vores rigtige data i public ikke bliver rørt.
 class TestData {
 
-    // samme opsætning som i Main – kun schemaet er anderledes (test i stedet for public)
+    // samme som i Main, bare med currentSchema=test
     private static final String USER = "postgres";
     private static final String PASSWORD = "postgres";
     private static final String URL = "jdbc:postgresql://localhost:5432/%s?currentSchema=test";
     private static final String DB = "Simpl";
 
-    // schemaet, der laver alle 20 tabeller (stien er fra projektets rod – der kører IntelliJ/Maven testene fra)
+    // stien er relativ til projektets rod, hvor Maven og IntelliJ kører testene fra
     private static final Path SCHEMA = Path.of("doc", "database", "schema_postgres.sql");
 
-    private static int counter = 0; // tæller op, så hvert kald får et nyt, unikt brugernavn
+    private static int counter = 0; // så hver testpatient får sit eget brugernavn
 
-    // nøgleringen til TESTdatabasen. Laves første gang, den skal bruges
     static ConnectionPool pool() {
         return ConnectionPool.getInstance(USER, PASSWORD, URL, DB);
     }
 
-    // tomt schema test: kør schema_postgres.sql (DROP + CREATE af alle tabeller). Kaldes fra @BeforeAll i hver testklasse
+    // kører schema_postgres.sql, så alle tabeller laves forfra. Kaldes fra @BeforeAll i hver testklasse
     static void freshDatabase() {
         try (Connection connection = pool().getConnection();
              Statement statement = connection.createStatement()) {
             statement.execute("CREATE SCHEMA IF NOT EXISTS test");
-            statement.execute("SET search_path TO test");   // sikkerhed: så scriptet ALDRIG rammer public
+            statement.execute("SET search_path TO test");   // så scriptet ikke kommer til at ramme public
             String sql = Files.readString(SCHEMA);
-            statement.execute(sql);   // PostgreSQL kan køre hele filen (mange sætninger adskilt af ;) på én gang
+            statement.execute(sql);   // PostgreSQL kan køre hele filen på én gang
         } catch (IOException | SQLException e) {
             throw new RuntimeException("Kunne ikke lave testtabellerne i schemaet test i databasen Simpl", e);
         }
@@ -61,20 +56,20 @@ class TestData {
         return patientId;
     }
 
-    // patient med aktivt forløb OG en runde i gang
+    // patient med aktivt forløb og en runde i gang
     static int newPatientWithRound() {
         int patientId = newPatientWithJourney();
         new RoundService(pool()).startRound(patientId, "IVF", "2026-09-10");
         return patientId;
     }
 
-    // Tidslinjen for runden, der er i gang – samme to kald som TimelineController (findActiveRound + getEvents(patientId, roundId))
+    // tidslinjen for runden i gang – samme to kald som TimelineController laver
     static java.util.List<entities.Event> eventsInActiveRound(int patientId) throws Exception {
         entities.Round round = new RoundService(pool()).findActiveRound(patientId);
         return new TimelineService(pool()).getEvents(patientId, round.getId());
     }
 
-    // id på det aktive forløb – bruges, når en test skal kalde de samme metoder som AppointmentController (getPast(patientId, journeyId))
+    // til tests, der kalder getPast(patientId, journeyId) ligesom AppointmentController
     static int activeJourneyId(int patientId) throws Exception {
         return new DashboardService(pool()).findActiveJourney(patientId).getId();
     }

@@ -19,8 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-// Forretningslogik for runder (Round, US10a/10b). Kender IKKE Javalin.
-// Metoderne svarer med ServiceResult. Controlleren vælger side ud fra svaret.
+// Logik for runder (US10a/10b): start og afslut en runde og find den, der er i gang.
 public class RoundService {
 
     private RoundMapper roundMapper;
@@ -33,17 +32,16 @@ public class RoundService {
         this.timelineService = new TimelineService(connectionPool);
     }
 
-    // Starter en ny runde i patientens aktive forløb.
-    // Svar: OK · INVALID_INPUT = tomme felter · NO_ACTIVE_JOURNEY = intet aktivt forløb · ROUND_IN_PROGRESS = der er allerede en runde
+    // Starter en ny runde i det aktive forløb.
+    // Svar: OK, INVALID_INPUT, NO_ACTIVE_JOURNEY eller ROUND_IN_PROGRESS
     public ServiceResult startRound(int patientId, String type, String startDate) {
-        // 0. regel: begge felter skal være udfyldt
+        // begge felter skal være udfyldt
         if (type == null || type.isBlank() || startDate == null || startDate.isBlank()) {
             return ServiceResult.INVALID_INPUT;
         }
 
 
-        // 1. find det aktive forløb – uden forløb er der ingen skuffe at lægge runden i.
-        //    findActiveJourney kaster, hvis der ikke er et – vi fanger og oversætter til et ServiceResult
+        // en runde skal ligge i et forløb
         FertilityJourney journey;
         try {
             journey = dashboardService.findActiveJourney(patientId);
@@ -51,15 +49,15 @@ public class RoundService {
             return ServiceResult.NO_ACTIVE_JOURNEY;
         }
 
-        // 2. regel: kun én runde i gang ad gangen
+        // kun én runde i gang ad gangen
         if (roundMapper.findActiveByJourney(journey.getId()) != null) {
             return ServiceResult.ROUND_IN_PROGRESS;
         }
 
-        // 3. rundenummer = antal runder i forløbet + 1 (første runde bliver nr. 1)
+        // første runde bliver nr. 1
         int roundNumber = roundMapper.findByJourney(journey.getId()).size() + 1;
 
-        // 4. tekst fra formularen -> enum og dato. try/catch: ukendt type eller ugyldig dato giver INVALID_INPUT i stedet for et crash
+        // ukendt type eller ugyldig dato giver INVALID_INPUT i stedet for et crash
         TreatmentType treatmentType;
         LocalDate start;
         try {
@@ -69,17 +67,17 @@ public class RoundService {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 4b. regel: runden kan ikke starte før forløbet eller i fremtiden.
-        //     (Ellers kunne slutdatoen – dags dato, når runden afsluttes – ligge før startdatoen, og det afviser databasen)
+        // runden må ikke starte før forløbet eller i fremtiden. Slutdatoen bliver dags dato,
+        // og databasen afviser en slutdato før startdatoen
         if (start.isBefore(journey.getStartDate()) || start.isAfter(LocalDate.now())) {
             return ServiceResult.INVALID_INPUT;
         }
 
-        // 5. byg kortet og gem. end_date og result er null, til runden afsluttes
+        // end_date og result er null, til runden afsluttes
         Round round = new Round(0, journey.getId(), roundNumber, treatmentType, start, null, RoundStatus.IN_PROGRESS, null);
-        //    try/catch: ved dobbeltklik afviser databasens unikke indeks (one_active_round_per_journey) den anden runde
+        // ved dobbeltklik afviser databasens unikke indeks (one_active_round_per_journey) den anden runde
         try {
-            roundMapper.save(round); // save sætter round.id til det id, databasen gav
+            roundMapper.save(round); // save sætter round.id, som vi bruger nedenfor
         } catch (DatabaseException e) {
             if (e.isDuplicate()) {
                 return ServiceResult.ROUND_IN_PROGRESS;
@@ -87,35 +85,34 @@ public class RoundService {
             throw e;
         }
 
-        // 6. første trin på tidslinjen: runden er startet (US2). Startdato kl. 00:00, fordi Event bruger LocalDateTime
+        // første trin på tidslinjen (US2). Kl. 00:00, fordi Event bruger LocalDateTime
         timelineService.addEvent(round.getId(), start.atStartOfDay(), EventType.STIMULATION_START, treatmentType.name());
 
-        return ServiceResult.OK; // ok
+        return ServiceResult.OK;
     }
 
 
-    // Afslutter den runde, der er i gang. result må være null (kan udfyldes senere).
-    // Svar: OK · NO_ACTIVE_ROUND = der var ikke nogen runde at afslutte
+    // Afslutter runden, der er i gang. result må være null, hvis svaret ikke er kommet endnu.
+    // Svar: OK eller NO_ACTIVE_ROUND
     public ServiceResult endRound(int patientId, Result result) {
 
-        // 1. find den runde, der er i gang – findActiveRound kaster, hvis der ikke er forløb eller runde
         Round round;
         try {
             round = findActiveRound(patientId);
         } catch (NoActiveJourneyException | NoActiveRoundException e) {
-            return ServiceResult.NO_ACTIVE_ROUND; // intet forløb = heller ingen runde at afslutte
+            return ServiceResult.NO_ACTIVE_ROUND; // intet forløb betyder heller ingen runde
         }
 
-        // 2. afslut den: slutdato = i dag (UPDATE i databasen). Status er afledt: med en slutdato er runden COMPLETED
+        // slutdato = i dag. Der er ingen status-kolonne – med en slutdato er runden afsluttet
         roundMapper.endRound(round.getId(), LocalDate.now(), result);
 
-        return ServiceResult.OK; // ok
+        return ServiceResult.OK;
     }
 
-    // Finder den runde, der er i gang i patientens aktive forløb. KASTER, hvis der ikke er et forløb (NoActiveJourneyException)
-    // eller ingen runde i gang (NoActiveRoundException). Bruges af hormoner, medicin, tidslinje og endRound
+    // Finder runden, der er i gang. Kaster en exception, hvis der ikke er et forløb eller en runde.
+    // Bruges af hormoner, medicin, aftaler og endRound
     public Round findActiveRound(int patientId) throws NoActiveJourneyException, NoActiveRoundException {
-        FertilityJourney journey = dashboardService.findActiveJourney(patientId); // kaster videre, hvis intet forløb
+        FertilityJourney journey = dashboardService.findActiveJourney(patientId);
         Round round = roundMapper.findActiveByJourney(journey.getId());
         if (round == null) {
             throw new NoActiveRoundException("Der er ingen runde i gang");
@@ -123,8 +120,7 @@ public class RoundService {
         return round;
     }
 
-    // Startdatoen på den runde, der er i gang – eller null, hvis der ingen runde er.
-    // Bruges som min på datofelterne i hormoner.html og medicin.html (man kan ikke vælge en dag før runden)
+    // Startdatoen på runden, der er i gang, eller null. Bruges som min på datofelterne i hormoner.html og medicin.html
     public LocalDate getActiveRoundStart(int patientId) {
         try {
             return findActiveRound(patientId).getStartDate();
@@ -133,8 +129,7 @@ public class RoundService {
         }
     }
 
-    // Runderne for ALLE patientens forløb: forløbets id -> dets runder (ældste først).
-    // LinkedHashMap husker rækkefølgen, så forløbene står nyeste først, ligesom getJourneys
+    // forløbets id -> dets runder. LinkedHashMap holder rækkefølgen, så forløbene står nyeste først
     public Map<Integer, List<Round>> getRoundsPerJourney(int patientId) {
         Map<Integer, List<Round>> rounds = new LinkedHashMap<>();
         for (FertilityJourney journey : dashboardService.getJourneys(patientId)) {
@@ -143,8 +138,8 @@ public class RoundService {
         return rounds;
     }
 
-    // Finder én af patientens EGNE runder ud fra id (i alle hendes forløb) – null, hvis den ikke findes eller er en andens.
-    // Bruges af tidslinjen, så man kan se en gammel rundes tidslinje (?runde= i adressen)
+    // Finder en af patientens egne runder – null, hvis den ikke findes eller er en andens.
+    // Bruges af tidslinjen, så man kan se en gammel runde (?runde= i adressen)
     public Round findRound(int patientId, int roundId) {
         for (List<Round> list : getRoundsPerJourney(patientId).values()) {
             for (Round r : list) {

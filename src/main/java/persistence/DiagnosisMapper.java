@@ -18,17 +18,17 @@ public class DiagnosisMapper {
         this.connectionPool = connectionPool;
     }
 
-    // gemmer én diagnose og returnerer det id, databasen gav den
+    // gemmer diagnosen og returnerer det nye id
     public int save(Diagnosis diagnosis) {
         String sql = "INSERT INTO diagnosis (patient_id, name, description) VALUES (?, ?, ?)";
-        try (Connection connection = connectionPool.getConnection();   // ← lån en forbindelse
-             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) { // ← bed om det nye id
+        try (Connection connection = connectionPool.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, diagnosis.getPatientId());
             statement.setString(2, diagnosis.getName());
-            statement.setString(3, diagnosis.getDescription()); // må være null – kolonnen er ikke NOT NULL
+            statement.setString(3, diagnosis.getDescription()); // må gerne være null
             statement.executeUpdate();
 
-            try (ResultSet keys = statement.getGeneratedKeys()) {        // ← hent det nye id
+            try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
                     diagnosis.setId(keys.getInt(1));
                 }
@@ -40,11 +40,11 @@ public class DiagnosisMapper {
         }
     }
 
-    // henter alle patientens diagnoser, alfabetisk – til listen på diagnoser-siden
+    // alfabetisk til diagnoser-siden
     public List<Diagnosis> findByPatient(int patientId) {
         String sql = "SELECT * FROM diagnosis WHERE patient_id = ? ORDER BY name";
         List<Diagnosis> diagnoses = new ArrayList<>();
-        try (Connection connection = connectionPool.getConnection();                                   // ← lån en forbindelse
+        try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, patientId);
             try (ResultSet rs = statement.executeQuery()) {
@@ -59,26 +59,25 @@ public class DiagnosisMapper {
         }
     }
 
-    // sletter én diagnose – men kun hvis den er patientens egen (AND patient_id = ?). true = slettet (US7)
+    // AND patient_id = ? så man kun kan slette sine egne diagnoser (US7)
     public boolean delete(int id, int patientId) {
         String sql = "DELETE FROM diagnosis WHERE id = ? AND patient_id = ?";
-        try (Connection connection = connectionPool.getConnection();                                   // ← lån en forbindelse
+        try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             statement.setInt(2, patientId);
-            return statement.executeUpdate() > 0;   // antal rækker, der blev ramt: 0 = ikke fundet / ikke hendes
+            return statement.executeUpdate() > 0;   // 0 rækker = findes ikke eller ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not delete diagnosis " + id, e);
         }
     }
 
-    // én række fra databasen -> ét Diagnosis-objekt
     private Diagnosis mapRow(ResultSet rs) throws SQLException {
         return new Diagnosis(
                 rs.getInt("id"),
                 rs.getInt("patient_id"),
                 rs.getString("name"),
-                rs.getString("description") // bliver null, hvis feltet er tomt i databasen
+                rs.getString("description")
         );
     }
 }

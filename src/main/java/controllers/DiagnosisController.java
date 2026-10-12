@@ -6,58 +6,51 @@ import io.javalin.http.Context;
 import persistence.ConnectionPool;
 import services.DiagnosisService;
 
-// Koordinatoren for /diagnoser (US7). Læser formularen, kalder DiagnosisService og sender brugeren videre.
+// Controller for /diagnoser (US7). Læser formularen, kalder DiagnosisService og sender brugeren videre.
 public class DiagnosisController {
-    private DiagnosisService diagnosisService; // "den der bestemmer" for diagnoser
+    private DiagnosisService diagnosisService;
 
-    // nøgleringen gives med fra RouteConfig og videre til DiagnosisService
     public DiagnosisController(ConnectionPool connectionPool) {
         this.diagnosisService = new DiagnosisService(connectionPool);
     }
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new DiagnosisController(connectionPool).setRoutes(config)
+    // bliver kaldt én gang fra RouteConfig
     public void setRoutes(JavalinConfig config) {
-        // "når der kommer POST til /diagnoser (formularen på diagnoser.html), så kald addDiagnosis med den ctx, Javalin rækker os"
         config.routes.post("/diagnoser", ctx -> addDiagnosis(ctx));
         config.routes.get("/diagnoser", ctx -> showDiagnoses(ctx));
         config.routes.post("/diagnoser/slet", ctx -> deleteDiagnosis(ctx));   // "Slet" på én diagnose
     }
 
-    // GET /diagnoser – hent listen og fyld skabelonen
+    // GET /diagnoser
     private void showDiagnoses(Context ctx) {
-        // 1. hvem er logget ind? (sat i sessionen ved login). Integer, fordi den er null, hvis ingen er logget ind
+        // Integer og ikke int, fordi den er null, hvis ingen er logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
-            ctx.redirect("/login");   // ikke logget ind -> til login
+            ctx.redirect("/login");
             return;
         }
-        // 2. bed service om listen, og læg den i requestscope – Thymeleaf læser den som ${diagnoses}
         ctx.attribute("diagnoses", diagnosisService.getDiagnoses(patientId));
 
-        // 3. vis skabelonen templates/diagnoser.html
-        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        // ?gemt= / ?fejl= fra sidste POST vises af fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("diagnoser");
     }
 
-    // POST /diagnoser – når brugeren trykker "Gem diagnose". ctx = kuverten fra Javalin
+    // POST /diagnoser – når brugeren trykker "Gem diagnose"
     private void addDiagnosis(Context ctx) {
-        // 1. hvem er logget ind? (sat i sessionen ved login)
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
 
-        // 2. åbn kuverten: læs de to felter (name="diagnosis", "description" i diagnoser.html)
-        String name = ctx.formParam("diagnosis");         // fx "PCOS"
+        String name = ctx.formParam("diagnosis");
         String description = ctx.formParam("description"); // må være tom
 
-        // 3. bed service gemme diagnosen – den hænger direkte på patienten, så ingen forløb/runde at finde
+        // diagnoser hænger direkte på patienten, så der kræves hverken forløb eller runde
         ServiceResult result = diagnosisService.addDiagnosis(patientId, name, description);
 
-        // 4. vælg side ud fra svaret – redirect til RUTEN /diagnoser (ikke .html – filen ligger i templates nu)
         switch (result) {
             case OK -> ctx.redirect("/diagnoser?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/diagnoser?fejl=felter"); // navnet var tomt
@@ -65,7 +58,7 @@ public class DiagnosisController {
         }
     }
 
-    // POST /diagnoser/slet – slet én diagnose (id i et skjult felt). Service tjekker, at diagnosen er patientens egen
+    // POST /diagnoser/slet – id kommer fra et skjult felt. Service tjekker, at diagnosen er patientens egen
     private void deleteDiagnosis(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {

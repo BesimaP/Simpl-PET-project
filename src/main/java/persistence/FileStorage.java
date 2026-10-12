@@ -9,39 +9,38 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
-// Gemmer, læser og sletter de uploadede filer på disken (mappen uploads/ i projektmappen).
-// Samme rolle som en mapper – bare for disken i stedet for databasen. DocumentService har reglerne,
-// DocumentMapper har rækken i tabellen document, og FileStorage har selve filen (SRP: én klasse, ét job)
+// Gemmer, læser og sletter uploadede filer i mappen uploads/. Svarer til en mapper, bare for disken:
+// DocumentMapper tager sig af rækken i document, FileStorage af selve filen.
 public class FileStorage {
 
     private static final String UPLOAD_DIR = "uploads";
 
-    // Gemmer filen under et unikt navn: UUID + endelsen (fx "3f2a….pdf") og returnerer stien, som gemmes i databasen.
-    // Det oprindelige filnavn bruges ikke – det kan være for langt til file_path (VARCHAR(255)) og indeholde mærkelige tegn
+    // Vi bruger UUID + endelse som filnavn i stedet for det oprindelige navn, som kan være for langt
+    // til file_path (VARCHAR(255)) eller have mærkelige tegn. Returnerer stien, der gemmes i databasen
     public String save(InputStream content, String extension) {
         Path target = Path.of(UPLOAD_DIR, UUID.randomUUID() + extension);
         try {
             Files.createDirectories(target.getParent());
             Files.copy(content, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new FileStorageException("Filen kunne ikke gemmes på disken", e);   // fanges af ExceptionConfig -> fejlsiden
+            throw new FileStorageException("Filen kunne ikke gemmes på disken", e);   // ExceptionConfig viser fejlsiden
         }
         return target.toString();
     }
 
-    // Læser hele filen – til "Åbn" på dokumentsiden. IOException = filen er væk (controlleren svarer 404)
+    // bruges af "Åbn" på dokumentsiden. Hvis filen er væk, svarer controlleren 404
     public byte[] read(String filePath) throws IOException {
         return Files.readAllBytes(Path.of(filePath));
     }
 
-    // Filtypen, så browseren ved, om det er PDF eller billede.
-    // probeContentType kan give null (computeren kender ikke filtypen) – så bruges en standardtype ud fra endelsen
+    // så browseren ved, om det er PDF eller billede.
+    // probeContentType kan give null på nogle maskiner, så falder vi tilbage på endelsen
     public String contentType(String filePath) {
         String contentType = null;
         try {
             contentType = Files.probeContentType(Path.of(filePath));
         } catch (IOException e) {
-            // typen kunne ikke læses – endelsen bruges nedenfor
+            // så bruger vi endelsen nedenfor
         }
         if (contentType != null) {
             return contentType;
@@ -52,15 +51,15 @@ public class FileStorage {
         } else if (name.endsWith(".png")) {
             return "image/png";
         }
-        return "image/jpeg";   // .jpg / .jpeg – de eneste andre typer, upload tillader
+        return "image/jpeg";   // .jpg/.jpeg er de eneste andre typer, vi tillader
     }
 
-    // Sletter én fil. deleteIfExists = ingen fejl, hvis filen allerede er væk
+    // deleteIfExists, så det ikke giver fejl, hvis filen allerede er væk
     public void delete(String filePath) {
         try {
             Files.deleteIfExists(Path.of(filePath));
         } catch (IOException e) {
-            // filen kunne ikke slettes (fx låst) – rækken er allerede væk, så patienten ser den ikke mere
+            // rækken er allerede slettet, så patienten ser ikke filen – vi logger bare fejlen
             System.err.println("Kunne ikke slette filen " + filePath + ": " + e.getMessage());
         }
     }

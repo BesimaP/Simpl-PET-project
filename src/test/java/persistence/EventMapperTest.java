@@ -15,14 +15,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af EventMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// En hændelse (fx ægudtagning) hænger på RUNDEN. Bruges til tidslinjen.
+// Integrationstest af EventMapper mod schema test (se TestDatabase). Hændelserne hører til en runde.
 class EventMapperTest {
 
     private static ConnectionPool connectionPool;
     private static EventMapper eventMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -30,10 +28,10 @@ class EventMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: kæden patient -> forløb -> runde -> 2 hændelser
+    // før hver test: patient -> forløb -> runde -> 2 hændelser
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -70,7 +68,6 @@ class EventMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -81,8 +78,8 @@ class EventMapperTest {
         List<Event> events = eventMapper.findByRound(1);
 
         assertEquals(2, events.size());
-        assertEquals(EventType.STIMULATION_START, events.get(0).getEventType());   // ældste først (ORDER BY date_time)
-        assertNull(events.get(0).getDescription());                                 // description må være NULL
+        assertEquals(EventType.STIMULATION_START, events.get(0).getEventType());   // ældste først
+        assertNull(events.get(0).getDescription());
         assertEquals("8 æg", events.get(1).getDescription());
     }
 
@@ -100,18 +97,18 @@ class EventMapperTest {
         assertEquals(EventType.EMBRYO_TRANSFER, eventMapper.findByRound(1).get(2).getEventType());
     }
 
-    // ---------- regler, der ligger i DATABASEN ----------
+    // ---------- regler, som databasen selv håndhæver ----------
 
     @Test
     void saveOnUnknownRoundThrowsDatabaseException() {
-        // fremmednøgle: runde 99 findes ikke
+        // runde 99 findes ikke, så fremmednøglen afviser
         Event event = new Event(0, 99, LocalDateTime.of(2026, 9, 17, 11, 0), EventType.EMBRYO_TRANSFER, null);
         assertThrows(DatabaseException.class, () -> eventMapper.save(event));
     }
 
     @Test
     void deletingPatientDeletesEvents() {
-        // ON DELETE CASCADE: slettes patienten, forsvinder forløb -> runde -> hændelser også (NFR2)
+        // sletter vi patienten, skal forløb, runde og hændelser forsvinde med (ON DELETE CASCADE, NFR2)
         new PatientMapper(connectionPool).delete(1);
         assertTrue(eventMapper.findByRound(1).isEmpty());
     }

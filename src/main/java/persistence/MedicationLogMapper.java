@@ -19,16 +19,16 @@ public class MedicationLogMapper {
         this.connectionPool = connectionPool;
     }
 
-    // gemmer én dosis og returnerer det id, databasen gav den. Enheden gemmes IKKE her – den står på medication (3NF)
+    // gemmer dosen og returnerer det nye id. Enheden gemmes ikke her, den står på medication (3NF)
     public int save(MedicationLog log) {
         String sql = "INSERT INTO medication_log (round_id, medication_id, scheduled_date_time, dose, taken) VALUES (?, ?, ?, ?, ?)";
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
             statement.setInt(1, log.getRoundId());
-            statement.setInt(2, log.getMedicationId());                      // id fra medication-tabellen, ikke navnet
+            statement.setInt(2, log.getMedicationId());
             statement.setObject(3, log.getScheduledDateTime());
-            statement.setDouble(4, log.getDose());                           // tal, fx 150.0
-            statement.setBoolean(5, log.isTaken());                          // boolean -> BOOLEAN i PostgreSQL
+            statement.setDouble(4, log.getDose());
+            statement.setBoolean(5, log.isTaken());
             statement.executeUpdate();
 
             try (ResultSet keys = statement.getGeneratedKeys()) {
@@ -43,8 +43,8 @@ public class MedicationLogMapper {
         }
     }
 
-    // henter alle doser i én runde, ældste først – til listen på medicin-siden og "dagens medicin" på dashboardet.
-    // JOIN: enheden hentes fra medication-tabellen (den står kun ét sted)
+    // ældste først – til medicin-siden og "dagens medicin" på dashboardet.
+    // Enheden hentes med JOIN fra medication
     public List<MedicationLog> findByRound(int roundId) {
         String sql = "SELECT medication_log.*, medication.unit "
                 + "FROM medication_log "
@@ -66,53 +66,50 @@ public class MedicationLogMapper {
         }
     }
 
-    // runderne, der tilhører patienten: round -> fertility_journey -> patient_id.
-    // Sættes bag "WHERE id = ? AND", så databasen selv sikrer, at man kun rammer sine egne rækker
+    // medication_log har ikke selv patient_id, så vi finder patientens runder via fertility_journey.
+    // Bruges efter "WHERE id = ? AND", så man kun kan ramme sine egne doser
     private static final String OWN_ROUNDS = "round_id IN (SELECT round.id FROM round "
             + "JOIN fertility_journey ON fertility_journey.id = round.fertility_journey_id "
             + "WHERE fertility_journey.patient_id = ?)";
 
-    // sætter taken = TRUE på én dosis (US8 AC3: "markér som taget"). UPDATE ændrer en række, der allerede findes.
-    // Kun patientens egen dosis. true = opdateret
+    // "markér som taget" (US8 AC3)
     public boolean markTaken(int id, int patientId) {
         String sql = "UPDATE medication_log SET taken = TRUE WHERE id = ? AND " + OWN_ROUNDS;
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             statement.setInt(2, patientId);
-            return statement.executeUpdate() > 0;   // 0 = ikke fundet / ikke hendes
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DatabaseException("Could not mark medication log " + id + " as taken", e);
         }
     }
 
-    // sætter taken = FALSE på én dosis (fortryd "markér som taget"). Kun patientens egen dosis. true = opdateret
+    // fortryder "markér som taget"
     public boolean markNotTaken(int id, int patientId) {
         String sql = "UPDATE medication_log SET taken = FALSE WHERE id = ? AND " + OWN_ROUNDS;
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             statement.setInt(2, patientId);
-            return statement.executeUpdate() > 0;   // 0 = ikke fundet / ikke hendes
+            return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new DatabaseException("Could not mark medication log " + id + " as not taken", e);
         }
     }
 
-    // sletter én dosis – men kun hvis den ligger i en af patientens egne runder. true = slettet
     public boolean delete(int id, int patientId) {
         String sql = "DELETE FROM medication_log WHERE id = ? AND " + OWN_ROUNDS;
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, id);
             statement.setInt(2, patientId);
-            return statement.executeUpdate() > 0;   // antal rækker, der blev ramt: 0 = ikke fundet / ikke hendes
+            return statement.executeUpdate() > 0;   // 0 rækker = findes ikke eller ikke hendes
         } catch (SQLException e) {
             throw new DatabaseException("Could not delete medication log " + id, e);
         }
     }
 
-    // én række fra databasen -> ét MedicationLog-objekt
     private MedicationLog mapRow(ResultSet rs) throws SQLException {
         return new MedicationLog(
                 rs.getInt("id"),
@@ -120,7 +117,7 @@ public class MedicationLogMapper {
                 rs.getInt("medication_id"),
                 rs.getObject("scheduled_date_time", LocalDateTime.class),
                 rs.getDouble("dose"),
-                rs.getString("unit"),       // fra medication (JOIN)
+                rs.getString("unit"),       // fra medication via JOIN
                 rs.getBoolean("taken")
         );
     }

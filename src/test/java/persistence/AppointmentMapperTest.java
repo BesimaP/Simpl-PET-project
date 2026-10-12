@@ -15,14 +15,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstest af AppointmentMapper mod schemaet "test" i databasen Simpl (se TestDatabase).
-// En aftale hænger på FORLØBET (ikke runden) – den første konsultation sker, før der er nogen runde.
+// Integrationstest af AppointmentMapper mod schema test (se TestDatabase).
+// Aftaler hører til forløbet og ikke runden, så der er ingen runder i testdataene.
 class AppointmentMapperTest {
 
     private static ConnectionPool connectionPool;
     private static AppointmentMapper appointmentMapper;
 
-    // Køres ÉN gang før alle testene: laver alle 20 tabeller i schemaet test
     @BeforeAll
     static void setUpClass() {
         connectionPool = TestDatabase.pool();
@@ -30,10 +29,10 @@ class AppointmentMapperTest {
         TestDatabase.createTables();
     }
 
-    // Køres før HVER test: kæden patient -> forløb -> 2 aftaler
+    // før hver test: patient -> forløb -> aftaler
     @BeforeEach
     void setUp() {
-        TestDatabase.clearData();   // tom + id starter forfra på 1
+        TestDatabase.clearData();   // id'erne starter forfra på 1
 
         try (Connection connection = connectionPool.getConnection();
              Statement stmt = connection.createStatement()) {
@@ -64,7 +63,6 @@ class AppointmentMapperTest {
 
     @Test
     void testConnection() throws SQLException {
-        // try ( … ): forbindelsen afleveres igen bagefter, så testen ikke "stjæler" en fra nøgleringen
         try (Connection connection = connectionPool.getConnection()) {
             assertNotNull(connection);
         }
@@ -75,7 +73,7 @@ class AppointmentMapperTest {
         List<Appointment> appointments = appointmentMapper.findByJourney(1);
 
         assertEquals(2, appointments.size());
-        assertEquals(AppointmentType.CONSULTATION, appointments.get(0).getAppointmentType()); // ældste først (ORDER BY date_time)
+        assertEquals(AppointmentType.CONSULTATION, appointments.get(0).getAppointmentType()); // ældste først
         assertEquals("Rigshospitalet", appointments.get(0).getLocation());
         assertEquals(LocalDateTime.of(2026, 9, 10, 10, 0), appointments.get(1).getDateTime());
     }
@@ -93,14 +91,14 @@ class AppointmentMapperTest {
         assertEquals(3, id);
         List<Appointment> appointments = appointmentMapper.findByJourney(1);
         assertEquals(3, appointments.size());
-        assertEquals(AppointmentType.EGG_RETRIEVAL, appointments.get(2).getAppointmentType()); // den seneste dato står sidst
+        assertEquals(AppointmentType.EGG_RETRIEVAL, appointments.get(2).getAppointmentType()); // den nye har den seneste dato
     }
 
-    // ---------- regler, der ligger i DATABASEN ----------
+    // ---------- regler, som databasen selv håndhæver ----------
 
     @Test
     void saveOnUnknownJourneyThrowsDatabaseException() {
-        // fremmednøgle: forløb 99 findes ikke
+        // forløb 99 findes ikke, så fremmednøglen afviser
         Appointment appointment = new Appointment(0, 99, LocalDateTime.of(2026, 9, 20, 8, 30), AppointmentType.SCANNING, "Vitanova");
         assertThrows(DatabaseException.class, () -> appointmentMapper.save(appointment));
     }

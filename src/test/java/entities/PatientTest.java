@@ -6,13 +6,13 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// UNITTEST af Patient: kun ren Java-logik – ingen database. Det eneste med logik i klassen er getName().
+// Unittest af Patient. getName() er det eneste med logik i klassen.
 class PatientTest {
 
     @Test
     void getNameCombinesFirstAndLastName() {
         Patient patient = new Patient(1, "anna", "hash1", "Anna", "Jensen", LocalDate.of(1990, 5, 1));
-        assertEquals("Anna Jensen", patient.getName());   // vises fx i topbaren
+        assertEquals("Anna Jensen", patient.getName());   // bruges fx i topbaren
     }
 
     @Test

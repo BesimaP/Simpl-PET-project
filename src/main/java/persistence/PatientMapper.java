@@ -11,20 +11,19 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 
 
-// Al SQL for tabellen patient. Arkivaren: den eneste, der taler SQL med patient-skuffen
+// SQL for tabellen patient.
 public class PatientMapper {
 
-    private ConnectionPool connectionPool; // nøgleringen (gives med udefra)
+    private ConnectionPool connectionPool;
 
     public PatientMapper(ConnectionPool connectionPool) {
         this.connectionPool = connectionPool;
     }
 
-    // Gemmer en ny patient og returnerer det id, databasen gav den
+    // gemmer en ny patient og returnerer det nye id
     public int save(Patient patient) {
         String sql = "INSERT INTO patient (username, password_hash, first_name, last_name, date_of_birth) VALUES (?, ?, ?, ?, ?)";
 
-        // try ( … ): lån en forbindelse fra nøgleringen – den afleveres automatisk, når blokken er færdig
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
@@ -32,10 +31,9 @@ public class PatientMapper {
             statement.setString(2, patient.getPasswordHash());
             statement.setString(3, patient.getFirstName());
             statement.setString(4, patient.getLastName());
-            statement.setObject(5, patient.getDateOfBirth()); // LocalDate -> DATE i PostgreSQL
+            statement.setObject(5, patient.getDateOfBirth());
             statement.executeUpdate();
 
-            // RETURN_GENERATED_KEYS: databasen sender det nye id tilbage
             try (ResultSet keys = statement.getGeneratedKeys()) {
                 if (keys.next()) {
                     patient.setId(keys.getInt(1));
@@ -48,26 +46,21 @@ public class PatientMapper {
         }
     }
 
-    // Finder én patient ud fra brugernavnet – returnerer null, hvis den ikke findes (bruges ved login og opret profil)
+    // bruges ved login og opret profil. Returnerer null, hvis brugernavnet ikke findes
     public Patient findByUsername(String username) {
-        // ? = pladsholder for brugernavnet, som sættes nedenfor (aldrig lim tekst ind i SQL-strengen selv)
-        // LOWER på begge sider: "Anna" og "anna" er samme bruger (passer med det unikke indeks på LOWER(username) i schemaet)
+        // LOWER på begge sider, så "Anna" og "anna" er samme bruger (passer med det unikke indeks på LOWER(username))
         String sql = "SELECT * FROM patient WHERE LOWER(username) = LOWER(?)";
 
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            // fyld ? ud – setString, fordi username er tekst
             statement.setString(1, username);
 
-            // executeQuery = SELECT (giver rækker tilbage). executeUpdate = INSERT/UPDATE/DELETE
             try (ResultSet rs = statement.executeQuery()) {
-                // if, ikke while: der kan højst være én række, fordi username er unikt (uanset store/små bogstaver)
                 if (rs.next()) {
-                    // rækken -> et Patient-objekt (kortet). date_of_birth er en DATE, som hentes direkte som LocalDate
                     return new Patient(rs.getInt("id"), rs.getString("username"), rs.getString("password_hash"), rs.getString("first_name"), rs.getString("last_name"), rs.getObject("date_of_birth", LocalDate.class));
                 }
-                return null; // ingen række = brugeren findes ikke
+                return null;
             }
 
         } catch (SQLException e) {
@@ -75,26 +68,25 @@ public class PatientMapper {
         }
     }
 
-    // Retter patientens navn og fødselsdato (min-profil). UPDATE ændrer en række, der findes
+    // retter navn og fødselsdato fra min-profil
     public void updateProfile(int id, String firstName, String lastName, LocalDate dateOfBirth) {
-        // SET = hvad der ændres, WHERE = hvilken række. Uden WHERE ville ALLE patienter få det nye navn!
         String sql = "UPDATE patient SET first_name = ?, last_name = ?, date_of_birth = ? WHERE id = ?";
 
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, firstName);      // første ? = nyt fornavn
-            statement.setString(2, lastName);       // andet ? = nyt efternavn
-            statement.setObject(3, dateOfBirth);    // tredje ? = ny fødselsdato (LocalDate -> DATE)
-            statement.setInt(4, id);                // fjerde ? = patientens id
-            statement.executeUpdate();              // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
+            statement.setString(1, firstName);
+            statement.setString(2, lastName);
+            statement.setObject(3, dateOfBirth);
+            statement.setInt(4, id);
+            statement.executeUpdate();
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not update patient " + id, e);
         }
     }
 
-    // Finder én patient ud fra id – returnerer null, hvis den ikke findes (bruges af min-profil)
+    // bruges af min-profil. Returnerer null, hvis patienten ikke findes
     public Patient findById(int id) {
         String sql = "SELECT * FROM patient WHERE id = ?";
 
@@ -103,7 +95,6 @@ public class PatientMapper {
 
             statement.setInt(1, id);
             try (ResultSet rs = statement.executeQuery()) {
-                // if, ikke while: id er PRIMARY KEY, så der er højst én række
                 if (rs.next()) {
                     return new Patient(rs.getInt("id"), rs.getString("username"), rs.getString("password_hash"), rs.getString("first_name"), rs.getString("last_name"), rs.getObject("date_of_birth", LocalDate.class));
                 }
@@ -115,32 +106,30 @@ public class PatientMapper {
         }
     }
 
-    // Skifter kodeordet (min-profil). UPDATE ændrer en række, der allerede findes – ingen ny række, intet id tilbage
+    // skifter kodeord fra min-profil – det er hashen, der gemmes
     public void updatePassword(int id, String passwordHash) {
-        // SET = hvad der ændres, WHERE = hvilken række. Uden WHERE ville ALLE patienter få det nye kodeord!
         String sql = "UPDATE patient SET password_hash = ? WHERE id = ?";
 
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setString(1, passwordHash); // første ? = det nye kodeord (hash)
-            statement.setInt(2, id);              // andet ? = patientens id
-            statement.executeUpdate();            // executeUpdate = INSERT/UPDATE/DELETE (ingen rækker tilbage)
+            statement.setString(1, passwordHash);
+            statement.setInt(2, id);
+            statement.executeUpdate();
 
         } catch (SQLException e) {
             throw new DatabaseException("Could not update password for patient " + id, e);
         }
     }
 
-    // Sletter patienten (slet konto på min-profil).
-    // Alt under patienten (forløb, runder, målinger, dagbog …) slettes automatisk, fordi schema_postgres.sql har ON DELETE CASCADE
+    // slet konto på min-profil. Forløb, runder, målinger osv. forsvinder med, fordi schemaet har ON DELETE CASCADE
     public void delete(int id) {
         String sql = "DELETE FROM patient WHERE id = ?";
 
         try (Connection connection = connectionPool.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setInt(1, id); // ? = patientens id
+            statement.setInt(1, id);
             statement.executeUpdate();
 
         } catch (SQLException e) {

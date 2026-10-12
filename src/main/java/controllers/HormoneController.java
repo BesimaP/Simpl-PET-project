@@ -8,10 +8,10 @@ import persistence.ConnectionPool;
 import services.HormoneService;
 import services.RoundService;
 
-// Koordinatoren for hormoner.html (US9). Læser formularen, kalder HormoneService og sender brugeren videre.
-// Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
+// Controller for hormoner.html (US9). Læser formularen, kalder HormoneService og sender brugeren videre.
+// SQL og mappers ligger i service- og persistence-laget.
 public class HormoneController {
-    private HormoneService hormoneService; // "den der bestemmer" for hormoner
+    private HormoneService hormoneService;
     private RoundService roundService;     // kun til rundens startdato (min på datofeltet)
 
     public HormoneController(ConnectionPool connectionPool) {
@@ -19,44 +19,42 @@ public class HormoneController {
         this.roundService = new RoundService(connectionPool);
     }
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new HormoneController(connectionPool).setRoutes(config)
+    // bliver kaldt én gang fra RouteConfig
     public void setRoutes(JavalinConfig config) {
-        // "når der kommer POST til /hormoner (formularen på hormoner.html), så kald saveLog med den ctx, Javalin rækker os"
         config.routes.post("/hormoner", ctx -> saveLog(ctx));
         config.routes.get("/hormoner", ctx -> showLogs(ctx));
         config.routes.post("/hormoner/slet", ctx -> deleteLog(ctx));   // "Slet" på én måling
     }
 
-    // GET /hormoner – hent rundens målinger og fyld skabelonen
+    // GET /hormoner – målingerne i den aktive runde
     public void showLogs(Context ctx) {
-        // hvem er logget ind? (sat i sessionen ved login) – null = ikke logget ind
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("logs", hormoneService.getLogs(patientId));   // requestscope -> ${logs}
+        ctx.attribute("logs", hormoneService.getLogs(patientId));
 
-        // kurven: ?hormon=E2_OESTRADIOL vælger hormonet (knapperne over kurven). Ingen/ukendt værdi -> null -> nyeste måling bestemmer
+        // ?hormon=E2_OESTRADIOL vælger hormonet til kurven. Er den tom eller ukendt, bruger vi den nyeste måling
         HormoneType chosen = null;
         try {
             if (ctx.queryParam("hormon") != null) {
                 chosen = HormoneType.valueOf(ctx.queryParam("hormon"));
             }
         } catch (IllegalArgumentException e) {
-            // ukendt hormon i URL'en – ignorér, vis standard
+            // ukendt hormon i URL'en – vi viser standard
         }
-        ctx.attribute("curve", hormoneService.getCurve(patientId, chosen));   // requestscope -> ${curve}
-        ctx.attribute("units", HormoneService.UNITS);                  // requestscope -> ${units} (enheds-dropdownen, samme liste som tjekket i service)
-        ctx.attribute("hormoneTypes", HormoneType.values());           // requestscope -> ${hormoneTypes} (knapperne)
+        ctx.attribute("curve", hormoneService.getCurve(patientId, chosen));
+        ctx.attribute("units", HormoneService.UNITS);                  // samme liste, som service tjekker imod
+        ctx.attribute("hormoneTypes", HormoneType.values());           // knapperne over kurven
         ctx.attribute("roundStart", roundService.getActiveRoundStart(patientId)); // min på datofeltet (null = ingen runde)
-        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        // ?gemt= / ?fejl= fra sidste POST vises af fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
-        ctx.render("hormoner");                                            // templates/hormoner.html
+        ctx.render("hormoner");
     }
 
-    // POST /hormoner – når brugeren trykker "Gem måling". ctx = kuverten fra Javalin: felterne ligger i den, og svaret sendes gennem den
+    // POST /hormoner – når brugeren trykker "Gem måling"
     public void saveLog(Context ctx) {
         String hormone = ctx.formParam("hormone");
         String value = ctx.formParam("value");
@@ -80,7 +78,7 @@ public class HormoneController {
         }
     }
 
-    // POST /hormoner/slet – slet én måling (id i et skjult felt). Service tjekker, at målingen er patientens egen
+    // POST /hormoner/slet – id kommer fra et skjult felt. Service tjekker, at målingen er patientens egen
     private void deleteLog(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {

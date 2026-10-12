@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af MedicationService (medicin, US8). Medicin-stamdata (GONAL_F …) kommer fra INSERT i schema_postgres.sql
+// Integrationstest af MedicationService (medicin, US8). Præparaterne (GONAL_F osv.) kommer fra schema_postgres.sql
 class MedicationServiceTest {
 
     @BeforeAll
@@ -31,7 +31,7 @@ class MedicationServiceTest {
     @Test
     void logDoseWithZeroDoseReturnsInvalidInput() {
         int patientId = TestData.newPatientWithRound();
-        // regel: dosis skal være større end 0
+        // dosis skal være større end 0
         assertEquals(ServiceResult.INVALID_INPUT, new MedicationService(TestData.pool()).logDose(patientId, "GONAL_F", "0", "2026-09-12", "08:00", false));
     }
 
@@ -87,7 +87,7 @@ class MedicationServiceTest {
 
     @Test
     void getMedicationNamesContainsSeededMedications() {
-        // schema_postgres.sql lægger de faste præparater ind – opslaget id -> navn bruges af medicin.html
+        // medicin.html slår navnet op ud fra id
         assertTrue(new MedicationService(TestData.pool()).getMedicationNames().containsValue("Gonal-F"));
         assertTrue(new MedicationService(TestData.pool()).getMedicationNames().size() >= 4);
     }
@@ -113,7 +113,7 @@ class MedicationServiceTest {
         new MedicationService(TestData.pool()).logDose(patientId, "GONAL_F", "150", LocalDate.now().toString(), "08:00", false);
         new MedicationService(TestData.pool()).logDose(patientId, "OVITRELLE", "0.25", LocalDate.now().toString(), "09:00", false);
         var today = new MedicationService(TestData.pool()).getTodayLogs(patientId);
-        assertEquals("150", today.get(0).getDoseText());    // ikke "150.0"
+        assertEquals("150", today.get(0).getDoseText());
         assertEquals("0.25", today.get(1).getDoseText());
     }
 
@@ -121,7 +121,7 @@ class MedicationServiceTest {
     void deleteDoseRemovesOwnDose() {
         int patientId = TestData.newPatientWithRound();
         MedicationService service = new MedicationService(TestData.pool());
-        service.logDose(patientId, "GONAL_F", "1500", LocalDate.now().toString(), "08:00", false);   // fejlindtastning
+        service.logDose(patientId, "GONAL_F", "1500", LocalDate.now().toString(), "08:00", false);   // fejlindtastning, som skal slettes
         int id = service.getTodayLogs(patientId).get(0).getId();
         assertEquals(ServiceResult.OK, service.deleteDose(patientId, id));
         assertTrue(service.getTodayLogs(patientId).isEmpty());
@@ -135,7 +135,7 @@ class MedicationServiceTest {
         service.logDose(anna, "GONAL_F", "150", LocalDate.now().toString(), "08:00", false);
         int id = service.getTodayLogs(anna).get(0).getId();
         assertEquals(ServiceResult.NOT_FOUND, service.deleteDose(maria, id));
-        assertEquals(1, service.getTodayLogs(anna).size());   // stadig der
+        assertEquals(1, service.getTodayLogs(anna).size());   // Annas dosis er der stadig
     }
 
     @Test

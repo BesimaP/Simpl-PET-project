@@ -1,8 +1,6 @@
-/* pages.css — det der kun findes på én bestemt side:
-   dashboard (runde-kort, ring, dagens medicin, statistik-kort),
-   formular-sider (form-layout) og den tomme tilstand på dashboardet ("Start dit forløb"). */
+/* pages.css – css til de enkelte sider: dashboard, formular-siderne, hormonkurven, tidslinjen og aftaler. */
 
-/* runde-kortet: flex = ring og tekst side om side, gap = luft imellem */
+/* runde-kortet: ring og tekst side om side */
 .round {
     display: flex;
     align-items: center;
@@ -18,7 +16,7 @@
     font-size: 12.5px;
 }
 
-/* ring = dag-tælleren. flex: 0 0 80px = altid præcis 80px bred */
+/* dag-tælleren, altid 80 px bred */
 .ring {
     position: relative;
     flex: 0 0 80px;
@@ -29,14 +27,14 @@
 .ring svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg);   /* start i toppen */
+    transform: rotate(-90deg);   /* så ringen starter i toppen og ikke til højre */
 }
 
-/* track = den grå cirkel bagved, value = den farvede der viser hvor langt man er */
+/* track er den grå cirkel bagved, value er den farvede del */
 .ring__track,
 .ring__value {
-    fill: none;   /* kun stregen, ikke fyld i cirklen */
-    stroke-width: 7;   /* tyk streg = ringen */
+    fill: none;
+    stroke-width: 7;
 }
 
 .ring__track {
@@ -50,7 +48,7 @@
 
 .ring__label {
     position: absolute;
-    inset: 0;   /* inset: 0 = top/right/bottom/left = 0, dvs. fyld hele forælderen (.ring). kræver position: absolute */
+    inset: 0;   /* teksten lægges midt i ringen */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -76,7 +74,7 @@
 }
 
 .round__meta {
-    display: none;                     /* kun på desktop */
+    display: none;
     font-size: 13px;
     color: #d8c9b4;
     margin: -6px 0 10px;
@@ -88,23 +86,21 @@
     flex-wrap: wrap;
 }
 
-/* grid = nederste kort. 1fr 1fr = to lige brede kolonner */
+/* de tre små kort nederst */
 .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;   /* mobil: statistik-kort side om side */
+    grid-template-columns: 1fr 1fr;   /* på mobil står de to statistik-kort side om side */
     gap: 12px;
 }
 
-/* 1 / -1 = fra første til sidste kolonne, dvs. fuld bredde */
 .grid .next {
-    grid-column: 1 / -1;              /* aftale i fuld bredde */
+    grid-column: 1 / -1;              /* aftalen fylder hele bredden */
 }
 
 /* Medicin */
-/* list-style: none + margin/padding 0 = fjerner prikker og indrykning fra ul */
 .meds {
     list-style: none;
-    margin: 0 0 24px;     /* luft ned til næste overskrift ("Tidligere") */
+    margin: 0 0 24px;
     padding: 0;
     display: grid;
     gap: 10px;
@@ -117,31 +113,30 @@
     padding: 6px 0;
 }
 
-/* med__check = cirklen til venstre. border-radius 50% = rund */
-/* button[type="submit"] i base.css gør alle submit-knapper mørke, 100 % brede, 50 px høje med margin.
-   Selektoren her er derfor button.med__check (samme specificitet, senere i rækkefølgen), så cirklen vinder */
+/* cirklen til venstre, som man trykker på */
+/* button.med__check har samme specificitet som submit-reglen i base.css og kommer senere, så den vinder */
 .med__check,
 button.med__check {
     flex: 0 0 24px;
     width: 24px;
     height: 24px;
-    min-height: 0;                     /* nulstil 50px fra base.css */
-    margin: 0;                         /* nulstil margin-top 24px fra base.css */
+    min-height: 0;
+    margin: 0;
     border-radius: 50%;
-    border: 2.5px solid var(--wait);   /* planlagt = sennep-ring */
-    background: transparent;           /* nulstil den mørke knap-baggrund */
+    border: 2.5px solid var(--wait);   /* planlagt: sennep-ring */
+    background: transparent;
     color: var(--brand);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0;                        /* knapper har ellers standard-padding */
-    min-width: 0;                      /* knapper kan have en min-width fra components.css */
+    padding: 0;
+    min-width: 0;
     font: inherit;
-    cursor: pointer;                   /* viser, at den er klikbar */
+    cursor: pointer;
 }
 
 button.med__check:hover {
-    background: #f0e2c8;               /* let sennep ved hover – nulstiller også base.css' mørke hover */
+    background: #f0e2c8;               /* overskriver også den mørke hover fra base.css */
 }
 
 .med form {
@@ -152,12 +147,12 @@ button.med__check:hover {
 .med--taken .med__check,
 .med--taken button.med__check {
     border: none;
-    background: var(--ok);             /* taget = grøn + flueben */
+    background: var(--ok);             /* taget: grøn med flueben */
     color: #fff;
 }
 
 .med--taken button.med__check:hover {
-    background: #4a6350;               /* lidt mørkere grøn ved hover = "fortryd" */
+    background: #4a6350;               /* mørkere ved hover, fordi et klik fortryder */
 }
 
 .med__check svg {
@@ -180,7 +175,7 @@ button.med__check:hover {
 .med--taken .med__name {
     font-weight: 500;
     color: var(--muted);
-    text-decoration: line-through;     /* ikke farve alene */
+    text-decoration: line-through;     /* ikke kun farve, også et flueben */
 }
 
 .med__text .muted {
@@ -258,7 +253,7 @@ button.med__check:hover {
     color: var(--muted);
 }
 
-/* round-grid = øverste række (runde-kort + dagens medicin). på mobil under hinanden, på desktop side om side */
+/* øverste række: runde-kort og dagens medicin. Under hinanden på mobil */
 .round-grid {
     display: grid;
     gap: 24px;
@@ -293,7 +288,7 @@ button.med__check:hover {
         font-size: 13px;
     }
 
-    /* Runde-kort + I dag side om side; tre kort nedenunder */
+    /* desktop: runde-kort og I dag side om side, tre kort nedenunder */
     .ring {
         flex-basis: 104px;
         width: 104px;
@@ -319,7 +314,6 @@ button.med__check:hover {
         grid-column: span 1;
     }
 
-    /* I dag-sektionen bliver ét kort med linje mellem doserne */
     .today {
         background: var(--card);
         border-radius: var(--radius-card);
@@ -339,7 +333,7 @@ button.med__check:hover {
     .meds { gap: 0; }
 }
 
-/* form-layout = bruges på alle formular-sider (dagbog, hormoner, start-runde, dokumenter, min-profil). mobil: kortene under hinanden */
+/* form-layout bruges på alle siderne med en formular. Under hinanden på mobil */
 .form-layout {
     display: grid;
     gap: 16px;
@@ -347,14 +341,14 @@ button.med__check:hover {
 
 @media (min-width: 900px) {
     .form-layout {
-        /* desktop: to kolonner, formular max 480px og hjælpeboks max 360px */
+        /* desktop: to kolonner */
         grid-template-columns: minmax(0, 480px) minmax(0, 360px);
         gap: 20px;
         align-items: start;
     }
 }
 
-/* empty = tom-tilstanden på dashboardet ("Start dit forløb" / "Ingen runde i gang"): alt centreret */
+/* dashboardet uden forløb eller uden runde */
 .dashboard .empty {
     display: flex;
     flex-direction: column;
@@ -379,7 +373,7 @@ button.med__check:hover {
     color: var(--on-brand-muted);
 }
 
-/* "Afslut forløb" under "Start runde" på det mørke kort: lille, lys og understreget, så den kan ses, men ikke trykkes ved et uheld */
+/* "Afslut forløb" er lille, så man ikke trykker på det ved et uheld */
 .empty p:last-child {
     margin: 16px 0 0;
 }
@@ -390,35 +384,34 @@ button.med__check:hover {
 }
 
 
-/* HORMONKURVE (hormoner.html). SVG'en skalerer med bredden – viewBox i HTML'en bestemmer forholdet */
+/* Hormonkurve (hormoner.html) */
 .chart {
     width: 100%;
-    max-width: 480px;   /* SVG'en skalerer med bredden – men ikke ud over 480 px, ellers bliver stregerne for tykke */
+    max-width: 480px;   /* højst 480 px, ellers bliver stregerne for tykke */
     height: auto;
     margin-top: 8px;
 }
 
 .chart__axis { stroke: var(--border); stroke-width: 1; }
-.chart__grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 3; }   /* stiplet toplinje */
-.chart__avg  { stroke: var(--link); stroke-width: 1; stroke-dasharray: 4 3; }   /* okker, stiplet: gennemsnit */
+.chart__grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart__avg  { stroke: var(--link); stroke-width: 1; stroke-dasharray: 4 3; }   /* gennemsnittet */
 .chart__line { fill: none; stroke: var(--brand); stroke-width: 2; stroke-linejoin: round; }
 .chart__dot  { fill: var(--card); stroke: var(--brand); stroke-width: 2; }
 .chart__label { font-size: 7px; fill: var(--muted); }
 .chart__value { font-size: 7px; font-weight: 600; fill: var(--text); }
 
-/* knapperne over kurven: én pille per hormon. is-active = det valgte */
+/* knapperne over kurven, én pr. hormon */
 .chart-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
 .chart-tabs .pill { text-decoration: none; }
 .chart-tabs .pill.is-active { background: var(--brand); color: var(--on-brand); }
 
 
-/* TIDSLINJE (tidslinje.html). Lodret linje til venstre, én prik per begivenhed.
-   is-past = sket (udfyldt), is-today = i dag (okker ring), ellers kommende (hul prik) */
+/* Tidslinje (tidslinje.html): lodret linje med én prik pr. event */
 .timeline {
     list-style: none;
     margin: 8px 0 0;
     padding: 4px 0 4px 28px;
-    position: relative;   /* så linjen (::before) kan placeres absolut inde i listen */
+    position: relative;
 }
 
 .timeline::before {
@@ -428,7 +421,7 @@ button.med__check:hover {
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--border);   /* selve den lodrette linje */
+    background: var(--border);   /* den lodrette linje */
 }
 
 .timeline li {
@@ -438,7 +431,7 @@ button.med__check:hover {
 
 .timeline__dot {
     position: absolute;
-    left: -25px;             /* ud på linjen: -28px padding + lidt */
+    left: -25px;             /* flyttes ud på linjen */
     top: 12px;
     width: 12px;
     height: 12px;
@@ -454,7 +447,7 @@ button.med__check:hover {
 .timeline li.is-today .timeline__dot {
     background: var(--link);           /* i dag: okker */
     border-color: var(--link);
-    box-shadow: 0 0 0 4px #f0e2c8;     /* lys ring omkring, så den springer i øjnene */
+    box-shadow: 0 0 0 4px #f0e2c8;
 }
 
 .timeline__body {
@@ -472,13 +465,12 @@ button.med__check:hover {
     color: var(--muted);               /* kommende: lidt dæmpet tekst */
 }
 
-/* VÆLG FORLØB (aftaler.html): kortet med links til patientens forløb.
-   margin-bottom = samme luft (16px) som mellem kortene i form-layout nedenunder */
+/* Vælg forløb (aftaler.html) */
 .journey-picker {
     margin-bottom: 16px;
 }
 
-/* det forløb, siden viser lige nu: fed og uden understregning, så man kan se, hvor man er */
+/* det forløb, der vises nu */
 .journey-picker a.is-current {
     font-weight: 600;
     text-decoration: none;

@@ -6,19 +6,17 @@ import io.javalin.http.Context;
 import persistence.ConnectionPool;
 import services.DiaryService;
 
-// Koordinatoren for dagbog.html (US4). Læser formularen, kalder DiaryService og sender brugeren videre.
-// Ingen SQL og ingen mappers her – det bor i service- og persistence-laget.
+// Controller for dagbog.html (US4). Læser formularen, kalder DiaryService og sender brugeren videre.
+// SQL og mappers ligger i service- og persistence-laget.
 public class DiaryController {
-    private DiaryService diaryService; // "den der bestemmer" for dagbogen
+    private DiaryService diaryService;
 
-    // nøgleringen gives med fra RouteConfig og videre til DiaryService
     public DiaryController(ConnectionPool connectionPool) {
         this.diaryService = new DiaryService(connectionPool);
     }
 
-    // Skriver ruterne på Javalins liste. Kaldes én gang fra RouteConfig: new DiaryController(connectionPool).setRoutes(config)
+    // bliver kaldt én gang fra RouteConfig
     public void setRoutes(JavalinConfig config) {
-        // "når der kommer POST til /dagbog (formularen på dagbog.html), så kald saveEntry med den ctx, Javalin rækker os"
         config.routes.post("/dagbog", ctx -> saveEntry(ctx));
         config.routes.get("/dagbog", ctx -> showEntries(ctx));
         config.routes.post("/dagbog/slet", ctx -> deleteEntry(ctx));   // "Slet" på én note
@@ -30,20 +28,19 @@ public class DiaryController {
             ctx.redirect("/login");
             return;
         }
-        ctx.attribute("entries", diaryService.getEntries(patientId));   // requestscope -> ${entries}
-        // besked fra sidste POST (?gemt= / ?fejl= i URL'en) -> request scope -> fragmentet besked.html
+        ctx.attribute("entries", diaryService.getEntries(patientId));
+        // ?gemt= / ?fejl= fra sidste POST vises af fragmentet besked.html
         ctx.attribute("gemt", ctx.queryParam("gemt"));
         ctx.attribute("fejl", ctx.queryParam("fejl"));
         ctx.render("dagbog");
 
     }
 
-    // POST /dagbog – når brugeren trykker "Gem note". ctx = kuverten fra Javalin
+    // POST /dagbog – når brugeren trykker "Gem note"
     public void saveEntry(Context ctx) {
-        // 1. åbn kuverten: læs de tre felter (name="date", "title", "note" i dagbog.html)
-        String date = ctx.formParam("date");     // fx "2026-09-21"
-        String title = ctx.formParam("title");   // fx "Scanning i dag"
-        String note = ctx.formParam("note");     // selve teksten fra textarea
+        String date = ctx.formParam("date");
+        String title = ctx.formParam("title");
+        String note = ctx.formParam("note");
 
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {
@@ -51,10 +48,9 @@ public class DiaryController {
             return;
         }
 
-        // 2. bed service gemme noten – den finder selv forløbet. Svar: OK = ok, ellers hvad der gik galt
         ServiceResult result = diaryService.saveEntry(patientId, date, title, note);
 
-        // 3. vælg side ud fra svaret – ét case per udfald (noter hænger på patienten, så der kræves hverken forløb eller runde)
+        // noter hænger på patienten, så der kræves hverken forløb eller runde
         switch (result) {
             case OK -> ctx.redirect("/dagbog?gemt=1");
             case INVALID_INPUT -> ctx.redirect("/dagbog?fejl=felter"); // et felt var tomt
@@ -62,7 +58,7 @@ public class DiaryController {
         }
     }
 
-    // POST /dagbog/slet – slet én note (id i et skjult felt). Service tjekker, at noten er patientens egen
+    // POST /dagbog/slet – id kommer fra et skjult felt. Service tjekker, at noten er patientens egen
     private void deleteEntry(Context ctx) {
         Integer patientId = ctx.sessionAttribute("patientId");
         if (patientId == null) {

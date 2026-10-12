@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af DiaryService (dagbog, US4)
+// Integrationstest af DiaryService (dagbog, US4)
 class DiaryServiceTest {
 
     @BeforeAll
@@ -29,7 +29,7 @@ class DiaryServiceTest {
     @Test
     void saveEntryWithoutJourneyIsAllowed() {
         int patientId = TestData.newPatient();
-        // dagbog hører til patienten – man kan skrive før første forløb
+        // dagbogen hører til patienten, så man kan skrive før første forløb
         assertEquals(ServiceResult.OK, new DiaryService(TestData.pool()).saveEntry(patientId, "2026-09-12", "Før forløbet", "Venter på henvisning."));
         assertEquals(1, new DiaryService(TestData.pool()).getEntries(patientId).size());
     }
@@ -37,7 +37,7 @@ class DiaryServiceTest {
     @Test
     void saveEntryReturnsOk() {
         int patientId = TestData.newPatientWithJourney();
-        // noter hænger på forløbet – ingen runde nødvendig
+        // det virker også, når der er et forløb uden runde
         assertEquals(ServiceResult.OK, new DiaryService(TestData.pool()).saveEntry(patientId, "2026-09-12", "Scanning i dag", "Alt så fint ud"));
     }
 
@@ -81,6 +81,6 @@ class DiaryServiceTest {
         new DiaryService(TestData.pool()).saveEntry(anna, "2026-09-12", "Annas note", "Privat");
         int id = new DiaryService(TestData.pool()).getEntries(anna).get(0).getId();
         assertEquals(ServiceResult.NOT_FOUND, new DiaryService(TestData.pool()).deleteEntry(maria, id));
-        assertEquals(1, new DiaryService(TestData.pool()).getEntries(anna).size()); // stadig der
+        assertEquals(1, new DiaryService(TestData.pool()).getEntries(anna).size()); // Annas note er der stadig
     }
 }

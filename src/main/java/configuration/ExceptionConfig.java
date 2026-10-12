@@ -3,21 +3,20 @@ package configuration;
 import exceptions.DatabaseException;
 import io.javalin.config.JavalinConfig;
 
-// Samlet håndtering af exceptions, der ikke fanges i controllerne. Kaldes én gang fra Main: ExceptionConfig.register(config)
-// Brugeren ser en pæn fejlside (templates/fejl.html) – den rigtige fejl skrives i konsollen i IntelliJ, så I kan finde den.
+// Vi håndterer de exceptions, som controllerne ikke fanger, ét sted.
+// Brugeren ser fejl.html, mens selve fejlen bliver skrevet i konsollen, så vi kan finde den.
 public class ExceptionConfig {
 
     public static void register(JavalinConfig config) {
-        // kaster en mapper en DatabaseException (fx er databasen ikke startet i Docker)
+        // fx hvis databasen ikke kører i Docker
         config.routes.exception(DatabaseException.class, (e, ctx) -> {
-            e.printStackTrace();   // hele fejlen (også SQLException bagved) i konsollen
+            e.printStackTrace();   // viser også den SQLException, der ligger bagved
             ctx.status(500);
             ctx.attribute("message", "Vi kunne ikke få fat i databasen. Prøv igen om lidt.");
             ctx.render("fejl");
         });
 
-        // alle andre fejl, vi ikke har forudset (fx en fil, der ikke kunne gemmes). Javalin vælger den mest præcise handler,
-        // så en DatabaseException ender stadig i den ovenfor
+        // alle andre uventede fejl. Javalin vælger den mest præcise handler, så DatabaseException rammer stadig den ovenfor
         config.routes.exception(Exception.class, (e, ctx) -> {
             e.printStackTrace();
             ctx.status(500);

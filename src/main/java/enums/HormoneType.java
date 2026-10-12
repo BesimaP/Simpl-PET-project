@@ -1,7 +1,7 @@
 package enums;
 
-// Hormontyper (ordlisten). Matcher CHECK på hormone_log.hormone_type.
-// label = den danske tekst, der vises på siderne (Thymeleaf: ${h.hormoneType.label})
+// Hormontyper. Navnene matcher tabellen hormone_type i schema_postgres.sql.
+// label er den danske tekst, vi viser på siderne.
 public enum HormoneType {
     FSH("FSH"),
     LH("LH"),
@@ -11,7 +11,6 @@ public enum HormoneType {
 
     private final String label;
 
-    // enum-konstruktør: kaldes én gang per værdi ovenfor med teksten i parentesen
     HormoneType(String label) {
         this.label = label;
     }

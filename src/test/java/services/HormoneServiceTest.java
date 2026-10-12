@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// Integrationstests af HormoneService (hormonlog, US9)
+// Integrationstest af HormoneService (hormonlog, US9)
 class HormoneServiceTest {
 
     @BeforeAll
@@ -70,7 +70,7 @@ class HormoneServiceTest {
 
     @Test
     void hormoneTypeLabelIsDanish() {
-        // labels bruges i Thymeleaf: ${h.hormoneType.label}
+        // label bruges i Thymeleaf som ${h.hormoneType.label}
         assertEquals("Østradiol", HormoneType.E2_OESTRADIOL.getLabel());
         assertEquals("Progesteron", HormoneType.PROGESTERONE.getLabel());
     }
@@ -96,19 +96,19 @@ class HormoneServiceTest {
         int patientId = TestData.newPatientWithRound();
         new HormoneService(TestData.pool()).saveLog(patientId, "E2_OESTRADIOL", "200", "pmol/L", "2026-09-11");
         new HormoneService(TestData.pool()).saveLog(patientId, "E2_OESTRADIOL", "800", "pmol/L", "2026-09-13");
-        new HormoneService(TestData.pool()).saveLog(patientId, "LH", "5", "IU/L", "2026-09-12");   // andet hormon – skal ikke med
+        new HormoneService(TestData.pool()).saveLog(patientId, "LH", "5", "IU/L", "2026-09-12");   // andet hormon, skal ikke med på kurven
         HormoneCurve curve = new HormoneService(TestData.pool()).getCurve(patientId, HormoneType.E2_OESTRADIOL);
         assertEquals(2, curve.getPoints().size());
-        assertEquals("800", curve.getMaxText());   // samme tekst, som står ved kurven på hormoner.html
+        assertEquals("800", curve.getMaxText());
         assertEquals(200.0, curve.getPoints().get(0).getValue());   // ældste først
         assertEquals("13/9", curve.getPoints().get(1).getDateLabel());
-        // største værdi ligger øverst (y = PADDING = 20), og x vokser mod højre
+        // største værdi ligger øverst (y = PADDING = 20)
         assertEquals(20.0, curve.getPoints().get(1).getY());
         assertTrue(curve.getPoints().get(0).getX() < curve.getPoints().get(1).getX());
         assertEquals("20.0,95.0 300.0,20.0", curve.getPolyline());
-        // gennemsnit af 200 og 800 = 500 -> 500/800 = 62,5 % op: y = 120 - 62,5 = 57,5 -> afrundet 58
+        // gennemsnit 500 af max 800 = 62,5 % op: y = 120 - 62,5 = 57,5, afrundet 58
         assertEquals("500", curve.getAverageText());
-        assertEquals(58.0, curve.getAverageY());   // 200 af 800 = 25 % op ad de 100 px: y = 120 - 25 = 95
+        assertEquals(58.0, curve.getAverageY());
     }
 
     @Test
@@ -134,14 +134,14 @@ class HormoneServiceTest {
     void curveSkipsMeasurementsInAnotherUnit() {
         int patientId = TestData.newPatientWithRound();
         HormoneService service = new HormoneService(TestData.pool());
-        service.saveLog(patientId, "E2_OESTRADIOL", "300", "pg/mL", "2026-09-11");   // ældste – fx fra et udenlandsk laboratorie
+        service.saveLog(patientId, "E2_OESTRADIOL", "300", "pg/mL", "2026-09-11");   // fx fra et udenlandsk laboratorium
         service.saveLog(patientId, "E2_OESTRADIOL", "450", "pmol/L", "2026-09-12");
-        service.saveLog(patientId, "E2_OESTRADIOL", "900", "pmol/L", "2026-09-13");  // nyeste bestemmer enheden
+        service.saveLog(patientId, "E2_OESTRADIOL", "900", "pmol/L", "2026-09-13");  // den nyeste bestemmer enheden på kurven
         var curve = service.getCurve(patientId, enums.HormoneType.E2_OESTRADIOL);
         assertEquals("pmol/L", curve.getUnit());
-        assertEquals(2, curve.getPoints().size());   // kun de to i pmol/L
-        assertEquals(1, curve.getSkipped());         // den i pg/mL er sprunget over
-        assertEquals(3, service.getLogs(patientId).size());   // men alle tre står stadig i listen
+        assertEquals(2, curve.getPoints().size());
+        assertEquals(1, curve.getSkipped());
+        assertEquals(3, service.getLogs(patientId).size());   // listen viser stadig alle tre
     }
 
     @Test
