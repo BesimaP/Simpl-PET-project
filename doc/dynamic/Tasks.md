@@ -148,6 +148,9 @@
 - [x]  Hormonkurven tegner kun målinger i samme enhed som den nyeste – målinger i en anden enhed (fx fra et udenlandsk laboratorie) står i listen, og siden skriver "X målinger i en anden enhed … er ikke med på kurven" (HormoneService.getCurve, HormoneServiceTest)
 - [x]  Afsluttede forløb kan ses: rundehistorik viser alle forløb med deres runder (FertilityJourneyMapper.findByPatient, RoundService.getRoundsPerJourney); aftaler kan vises for et valgt forløb (`/aftaler?forloeb=id`) og tidslinjen for en valgt runde (`/tidslinje?runde=id`) – kun patientens egne (RoundServiceTest, AppointmentServiceTest, TimelineServiceTest)
 
+## Refaktorering (12. okt 2026)
+- [x]  `isBlank` og `isTooLong` stod som private kopier i 8 services → samlet i hjælpeklassen `services/InputCheck` med `static` metoder (SRP: én ting ét sted). Kald: `InputCheck.isBlank(name)`. Klassediagram 4c-oversigt og UC2 opdateret. Alle 256 tests grønne bagefter
+
 ## Rettelser efter gennemgang (9. okt 2026)
 - [x]  Findes der allerede et aktivt forløb, viser dashboardet "Du har allerede et aktivt forløb" i stedet for "Dit forløb er oprettet ✓" (DashboardController, besked.html)
 - [x]  Et forløb kan ikke starte i fremtiden – hverken på dashboardet eller ved opret profil (DashboardService, AuthService, `max` på datofeltet, DashboardServiceTest)

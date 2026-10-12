@@ -18,7 +18,7 @@ hide circle
 
 title Klassediagram 4c-1 — login, profil, diagnoser og dokumenter\n(controller -> service; mappers står i 4b)
 
-' Små private hjælpere (isBlank, isTooLong, deleteFile …) er udeladt.
+' Små private hjælpere (deleteFile …) er udeladt. isBlank/isTooLong ligger i InputCheck (se 4c-oversigt).
 ' Services svarer controlleren med enum ServiceResult (OK, INVALID_INPUT, NOT_FOUND …) – se 4a.
 ' AuthService.login() kaster UserNotFoundException (se 4a).
 ' Bokse uden indhold <<andet diagram>> er services fra et andet område (metoderne står der).

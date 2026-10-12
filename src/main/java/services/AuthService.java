@@ -29,7 +29,7 @@ public class AuthService {
     // Login: giver patientens id tilbage (det er det, sessionen skal huske) – ellers kastes UserNotFoundException
     public Patient login(String username, String password) throws UserNotFoundException {
         // regel: begge felter skal være udfyldt (BCrypt kan ikke tjekke et kodeord, der er null)
-        if (isBlank(username) || isBlank(password)) {
+        if (InputCheck.isBlank(username) || InputCheck.isBlank(password)) {
             throw new UserNotFoundException("Forkert brugernavn eller adgangskode");
         }
 
@@ -49,7 +49,7 @@ public class AuthService {
     public ServiceResult createProfile(String firstName, String lastName, String dateOfBirth, String username, String password, String hasJourney, String journeyStart) {
 
         // 0. regel: ingen tomme felter
-        if (isBlank(firstName) || isBlank(lastName) || isBlank(dateOfBirth) || isBlank(username) || isBlank(password)) {
+        if (InputCheck.isBlank(firstName) || InputCheck.isBlank(lastName) || InputCheck.isBlank(dateOfBirth) || InputCheck.isBlank(username) || InputCheck.isBlank(password)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -57,7 +57,7 @@ public class AuthService {
         username = username.trim();
 
         // 0a. regel: teksten skal kunne være i kolonnerne (VARCHAR(50) – se schema_postgres.sql)
-        if (isTooLong(firstName, 50) || isTooLong(lastName, 50) || isTooLong(username, 50)) {
+        if (InputCheck.isTooLong(firstName, 50) || InputCheck.isTooLong(lastName, 50) || InputCheck.isTooLong(username, 50)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -82,7 +82,7 @@ public class AuthService {
         //     (tjekkes HER, før vi gemmer noget – ellers ville kontoen være oprettet, men forløbet fejle)
         boolean wantsJourney = "yes".equals(hasJourney);
         if (wantsJourney) {
-            if (isBlank(journeyStart)) {
+            if (InputCheck.isBlank(journeyStart)) {
                 return ServiceResult.INVALID_INPUT;
             }
             LocalDate start;
@@ -131,15 +131,5 @@ public class AuthService {
         } catch (IllegalArgumentException | StringIndexOutOfBoundsException e) {
             return false;
         }
-    }
-
-    // hjælper: null eller kun mellemrum tæller som tomt (samme som i de andre services)
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
-    private boolean isTooLong(String s, int max) {
-        return s != null && s.length() > max;
     }
 }

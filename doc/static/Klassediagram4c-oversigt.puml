@@ -51,7 +51,9 @@ package "services" {
   class MedicationService
   class DiaryService
   class NotificationService
+  class InputCheck <<hjælpeklasse>>
 }
+note bottom of InputCheck : isBlank og isTooLong (static)\nbruges af 8 services
 
 package "persistence (4b)" {
   class PatientMapper

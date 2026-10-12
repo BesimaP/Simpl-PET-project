@@ -23,11 +23,11 @@ public class DiaryService {
     // Gemmer én note på patienten
     public ServiceResult saveEntry(int patientId, String date, String title, String note) {
         // 0. regel: dato, titel og note skal være udfyldt (serveren stoler ikke på required i HTML)
-        if (isBlank(date) || isBlank(title) || isBlank(note)) {
+        if (InputCheck.isBlank(date) || InputCheck.isBlank(title) || InputCheck.isBlank(note)) {
             return ServiceResult.INVALID_INPUT;
         }
         // titlen skal kunne være i kolonnen (VARCHAR(100))
-        if (isTooLong(title, 100)) {
+        if (InputCheck.isTooLong(title, 100)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -55,15 +55,5 @@ public class DiaryService {
     // Svar: OK · NOT_FOUND = findes ikke / ikke hendes (så blev 0 rækker slettet)
     public ServiceResult deleteEntry(int patientId, int entryId) {
         return diaryEntryMapper.delete(entryId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
-    }
-
-    // lille hjælper: null eller kun mellemrum tæller som tomt
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
-    private boolean isTooLong(String s, int max) {
-        return s != null && s.length() > max;
     }
 }

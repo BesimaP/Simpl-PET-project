@@ -28,11 +28,11 @@ public class ProfileService {
     // Retter patientens navn og fødselsdato (US6b AC1)
     public ServiceResult updateProfile(int patientId, String firstName, String lastName, String dateOfBirth) {
         // 1. regel: ingen tomme felter
-        if (isBlank(firstName) || isBlank(lastName) || isBlank(dateOfBirth)) {
+        if (InputCheck.isBlank(firstName) || InputCheck.isBlank(lastName) || InputCheck.isBlank(dateOfBirth)) {
             return ServiceResult.INVALID_INPUT;
         }
         // navnene skal kunne være i kolonnerne (VARCHAR(50))
-        if (isTooLong(firstName, 50) || isTooLong(lastName, 50)) {
+        if (InputCheck.isTooLong(firstName, 50) || InputCheck.isTooLong(lastName, 50)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -57,7 +57,7 @@ public class ProfileService {
     // Skifter kodeord. Alle tjek giver INVALID_INPUT, så man ikke afslører hvad der var galt
     public ServiceResult changePassword(int patientId, String currentPassword, String newPassword, String repeat) {
         // 1. regel: ingen tomme felter
-        if (isBlank(currentPassword) || isBlank(newPassword) || isBlank(repeat)) {
+        if (InputCheck.isBlank(currentPassword) || InputCheck.isBlank(newPassword) || InputCheck.isBlank(repeat)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -103,15 +103,5 @@ public class ProfileService {
 
         // 3. gik godt
         return ServiceResult.OK;
-    }
-
-    // hjælper: null eller kun mellemrum tæller som tomt (samme som i de andre services)
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
-    private boolean isTooLong(String s, int max) {
-        return s != null && s.length() > max;
     }
 }

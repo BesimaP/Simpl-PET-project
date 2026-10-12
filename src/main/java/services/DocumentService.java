@@ -34,11 +34,11 @@ public class DocumentService {
                                         String originalFileName, InputStream fileContent, long fileSize) {
 
         // 1. regel: titel, type og fil skal være udfyldt
-        if (isBlank(title) || isBlank(type) || isBlank(originalFileName) || fileContent == null) {
+        if (InputCheck.isBlank(title) || InputCheck.isBlank(type) || InputCheck.isBlank(originalFileName) || fileContent == null) {
             return ServiceResult.INVALID_INPUT;
         }
         // titlen skal kunne være i kolonnen (VARCHAR(100))
-        if (isTooLong(title, 100)) {
+        if (InputCheck.isTooLong(title, 100)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -130,14 +130,5 @@ public class DocumentService {
             // filen kunne ikke slettes (fx låst) – rækken er allerede væk, så patienten ser den ikke mere
             System.err.println("Kunne ikke slette filen " + filePath + ": " + e.getMessage());
         }
-    }
-
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
-    private boolean isTooLong(String s, int max) {
-        return s != null && s.length() > max;
     }
 }

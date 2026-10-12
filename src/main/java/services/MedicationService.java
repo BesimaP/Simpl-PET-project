@@ -37,7 +37,7 @@ public class MedicationService {
     public ServiceResult logDose(int patientId, String medicationName, String dose, String date, String time, boolean taken) {
 
         // 1. regel: alle felter skal være udfyldt
-        if (isBlank(medicationName) || isBlank(dose) || isBlank(date) || isBlank(time)) {
+        if (InputCheck.isBlank(medicationName) || InputCheck.isBlank(dose) || InputCheck.isBlank(date) || InputCheck.isBlank(time)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -161,11 +161,4 @@ public class MedicationService {
             return new ArrayList<>();
         }
     }
-
-    // lille hjælper: null eller kun mellemrum tæller som tomt
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-
 }

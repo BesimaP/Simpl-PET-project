@@ -21,7 +21,7 @@ u -> v : Fills in name, date of birth, username, password and\n"forløb?" (Nej/J
 v -> j : POST /opretprofil (firstName, lastName, dateOfBirth,\nusername, password, hasJourney, journeyStart)
 j -> c : createProfile(ctx)
 c -> s : createProfile(firstName, lastName, dateOfBirth,\nusername, password, hasJourney, journeyStart)
-s -> s : isBlank(...), LocalDate.parse(dateOfBirth / journeyStart),\ndateOfBirth not in the future, password.length() >= 8
+s -> s : InputCheck.isBlank(...), LocalDate.parse(dateOfBirth / journeyStart),\ndateOfBirth not in the future, password.length() >= 8
 alt Empty field, invalid date or password too short
   s --> c : INVALID_INPUT
   c --> j : ctx.redirect("/opretprofil?fejl=felter")
@@ -60,7 +60,7 @@ u -> v : Changes first/last name and/or date of birth, clicks "Gem ændringer"
 v -> j : POST /min-profil (firstName, lastName, dateOfBirth)
 j -> c : updateProfile(ctx)
 c -> s : updateProfile(patientId, firstName, lastName, dateOfBirth)
-s -> s : isBlank(...), LocalDate.parse(dateOfBirth),\nnot in the future
+s -> s : InputCheck.isBlank(...), LocalDate.parse(dateOfBirth),\nnot in the future
 alt Empty field, invalid or future date
   s --> c : INVALID_INPUT
   c --> j : ctx.redirect("/min-profil?fejl=felter")

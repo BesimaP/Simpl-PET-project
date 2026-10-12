@@ -36,11 +36,11 @@ public class AppointmentService {
     // Gemmer én aftale på patientens aktive forløb
     public ServiceResult addAppointment(int patientId, String type, String location, String date, String time) {
         // 1. regel: alle felter skal være udfyldt
-        if (isBlank(type) || isBlank(location) || isBlank(date) || isBlank(time)) {
+        if (InputCheck.isBlank(type) || InputCheck.isBlank(location) || InputCheck.isBlank(date) || InputCheck.isBlank(time)) {
             return ServiceResult.INVALID_INPUT;
         }
         // stedet skal kunne være i kolonnen (VARCHAR(100))
-        if (isTooLong(location, 100)) {
+        if (InputCheck.isTooLong(location, 100)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -143,15 +143,5 @@ public class AppointmentService {
         } catch (NoActiveJourneyException e) {
             return new ArrayList<>();
         }
-    }
-
-    // lille hjælper: null eller kun mellemrum tæller som tomt
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
-    private boolean isTooLong(String s, int max) {
-        return s != null && s.length() > max;
     }
 }

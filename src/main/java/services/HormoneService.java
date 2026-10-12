@@ -34,7 +34,7 @@ public class HormoneService {
     // Gemmer én måling på den runde, der er i gang. En måling SKAL ligge på en runde (round_id i databasen).
     public ServiceResult saveLog(int patientId, String hormone, String value, String unit, String date) {
         // 0. regel: alle felter skal være udfyldt (serveren stoler ikke på required i HTML)
-        if (isBlank(hormone) || isBlank(value) || isBlank(unit) || isBlank(date)) {
+        if (InputCheck.isBlank(hormone) || InputCheck.isBlank(value) || InputCheck.isBlank(unit) || InputCheck.isBlank(date)) {
             return ServiceResult.INVALID_INPUT;
         }
 
@@ -179,10 +179,5 @@ public class HormoneService {
             curve.setAverage(average, Math.round(averageY));
         }
         return curve;
-    }
-
-    // lille hjælper: null eller kun mellemrum tæller som tomt
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
     }
 }

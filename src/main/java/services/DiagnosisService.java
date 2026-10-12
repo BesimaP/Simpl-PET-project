@@ -17,16 +17,16 @@ public class DiagnosisService {
 
     public ServiceResult addDiagnosis(int patientId, String name, String description) {
         // 1. regel: en diagnose skal have et navn (serveren stoler ikke på required i HTML)
-        if (isBlank(name)) {
+        if (InputCheck.isBlank(name)) {
             return ServiceResult.INVALID_INPUT;
         }
         // navnet skal kunne være i kolonnen (VARCHAR(100))
-        if (isTooLong(name, 100)) {
+        if (InputCheck.isTooLong(name, 100)) {
             return ServiceResult.INVALID_INPUT;
         }
 
         // 2. beskrivelsen er valgfri – tom tekst gemmes som null, så databasen ikke fyldes med ""
-        String desc = isBlank(description) ? null : description.trim();
+        String desc = InputCheck.isBlank(description) ? null : description.trim();
 
         // 3. byg kortet og gem – diagnosen hænger direkte på patienten (patient_id). trim = mellemrum før/efter fjernes
         Diagnosis diagnosis = new Diagnosis(0, patientId, name.trim(), desc);
@@ -44,15 +44,5 @@ public class DiagnosisService {
     // Svar: OK · NOT_FOUND = findes ikke / ikke hendes. Samme mønster som DiaryService.deleteEntry
     public ServiceResult deleteDiagnosis(int patientId, int diagnosisId) {
         return diagnosisMapper.delete(diagnosisId, patientId) ? ServiceResult.OK : ServiceResult.NOT_FOUND;
-    }
-
-    // lille hjælper: null eller kun mellemrum tæller som tomt
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
-
-    // lille hjælper: længere end kolonnen i databasen (VARCHAR(max))? Så ville INSERT fejle med en 500-fejl
-    private boolean isTooLong(String s, int max) {
-        return s != null && s.length() > max;
     }
 }

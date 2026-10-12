@@ -18,7 +18,7 @@ hide circle
 
 title Klassediagram 4c-3 — registreringer: hormoner, medicin, dagbog og påmindelser\n(controller -> service; mappers står i 4b)
 
-' Små private hjælpere (isBlank, getAll, alreadyExists …) er udeladt.
+' Små private hjælpere (getAll, alreadyExists …) er udeladt. isBlank/isTooLong ligger i InputCheck (se 4c-oversigt).
 ' Services svarer controlleren med enum ServiceResult (OK, INVALID_INPUT, NOT_FOUND …) – se 4a.
 ' Bokse uden indhold er services fra et andet område (<<4c-2>> = diagrammet med metoderne).
 hide <<4c-2>> members
