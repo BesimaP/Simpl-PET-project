@@ -1,6 +1,6 @@
 # Value Proposition Canvas — Fertilitetsforløb
 
-*Simpl er målrettet patienter i fertilitetsbehandling. VPC'en beskriver, hvilke behov fertilitetspatienten har, og hvordan Simpls funktioner møder dem. Alle produkter og services herunder er dækket af en user story (US1–US12).*
+*Embry er målrettet patienter i fertilitetsbehandling. VPC'en beskriver, hvilke behov fertilitetspatienten har, og hvordan Embrys funktioner møder dem. Alle produkter og services herunder er dækket af en user story (US1–US12).*
 
 ## 👩 Kundesegment — Fertilitetspatienten
 🎯 Customer Jobs:

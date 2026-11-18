@@ -18,7 +18,7 @@ class TestData {
     private static final String USER = "postgres";
     private static final String PASSWORD = "postgres";
     private static final String URL = "jdbc:postgresql://localhost:5432/%s?currentSchema=test";
-    private static final String DB = "Simpl";
+    private static final String DB = "embry";
 
     // stien er relativ til projektets rod, hvor Maven og IntelliJ kører testene fra
     private static final Path SCHEMA = Path.of("doc", "database", "schema_postgres.sql");
@@ -38,7 +38,7 @@ class TestData {
             String sql = Files.readString(SCHEMA);
             statement.execute(sql);   // PostgreSQL kan køre hele filen på én gang
         } catch (IOException | SQLException e) {
-            throw new RuntimeException("Kunne ikke lave testtabellerne i schemaet test i databasen Simpl", e);
+            throw new RuntimeException("Kunne ikke lave testtabellerne i schemaet test i databasen embry", e);
         }
     }
 

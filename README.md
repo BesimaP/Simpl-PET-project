@@ -1,10 +1,10 @@
-# Simpl
+# Embry
 
-Simpl er et system til patienter, der gennemgår et fertilitetsforløb (fx IVF, ICSI, IUI eller FET), hvor de kan holde styr på deres forløb, diagnoser, aftaler, medicin, hormonværdier, dagbogsnoter, dokumenter og notifikationer.
+Embry er et system til patienter, der gennemgår et fertilitetsforløb (fx IVF, ICSI, IUI eller FET), hvor de kan holde styr på deres forløb, diagnoser, aftaler, medicin, hormonværdier, dagbogsnoter, dokumenter og notifikationer.
 
 ## Om projektet
 
-Simpl er vores **Pet Project for 2. semester** (Datamatiker, Systemudvikling I). Projektet er en videreudvikling af vores SP4-projekt fra 1. semester, hvor det oprindeligt blev bygget som en JavaFX-desktopapplikation.
+Embry er vores **Pet Project for 2. semester** (Datamatiker, Systemudvikling I). Projektet er en videreudvikling af vores SP4-projekt fra 1. semester, hvor det oprindeligt blev bygget som en JavaFX-desktopapplikation.
 
 **Gruppe:** Besima & Louise
 
@@ -35,7 +35,7 @@ Patienter der er i gang med et fertilitetsforløb, og som har behov for overblik
 - Backend: alle sider virker mod PostgreSQL via controller → service → mapper, med én fælles `ConnectionPool` (HikariCP), der gives videre gennem konstruktørerne
 - Kodeord gemmes som BCrypt-hash (mindst 8 tegn)
 - Fejl, ingen controller fanger, vises på en fælles fejlside (`fejl.html`)
-- Tests: JUnit-integrationstests af alle mappere (`src/test/java/persistence`) og services (`src/test/java/services`) mod schemaet `test` i databasen `Simpl`, plus unit tests af entiteterne (`src/test/java/entities`)
+- Tests: JUnit-integrationstests af alle mappere (`src/test/java/persistence`) og services (`src/test/java/services`) mod schemaet `test` i databasen `embry`, plus unit tests af entiteterne (`src/test/java/entities`)
 
 ## Tech stack
 
@@ -69,8 +69,8 @@ src/main/resources/
 └── templates/             # View: alle sider som Thymeleaf-skabeloner (login, dashboard, medicin …)
     └── fragments/         # genbrugte stykker: menu.html (menuen), topbar.html (overskrift, klokke, avatar) og besked.html (Gemt ✓ / fejl)
 
-src/test/java/persistence/ # integrationstests af mapperne – kører mod schemaet test i databasen Simpl (se TestDatabase.java)
-src/test/java/services/    # integrationstests af services – kører mod schemaet test i databasen Simpl (se TestData.java)
+src/test/java/persistence/ # integrationstests af mapperne – kører mod schemaet test i databasen embry (se TestDatabase.java)
+src/test/java/services/    # integrationstests af services – kører mod schemaet test i databasen embry (se TestData.java)
 src/test/java/entities/    # unit tests af entiteterne (ingen database)
 ```
 
@@ -80,7 +80,7 @@ Flow for én handling, fx "Gem måling": `hormoner.html` sender formularen (POST
 
 ## Database
 
-Databasen er **PostgreSQL** (databasen hedder `Simpl`). Schema og testdata ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.). ERD: `doc/database/ERD.puml`.
+Databasen er **PostgreSQL** (databasen hedder `embry`). Schema og testdata ligger i `doc/database/` og køres i pgAdmin (Query Tool – kopiér filens indhold ind og kør): først `schema_postgres.sql`, derefter `data_postgres.sql` (testdata: 25 patienter med forløb, runder, målinger m.m.). ERD: `doc/database/ERD.puml`.
 
 **View:** `round_overview` samler `round` med navnene fra `treatment_type` og `result` (JOIN + LEFT JOIN, fordi resultatet er tomt, mens runden er i gang). `RoundMapper` læser runder fra viewet i stedet for at skrive joinet selv.
 
@@ -108,7 +108,7 @@ Navnene i typetabellerne matcher enum-klasserne i `enums` og `value` i HTML-drop
 
 - Java 21 (JDK)
 - Maven 3.x
-- PostgreSQL (fx i Docker) på `localhost:5432` med brugeren `postgres` / `postgres` og en database, der hedder `Simpl`
+- PostgreSQL (fx i Docker) på `localhost:5432` med brugeren `postgres` / `postgres` og en database, der hedder `embry`
 
 ### Kør projektet
 
@@ -116,19 +116,19 @@ Navnene i typetabellerne matcher enum-klasserne i `enums` og `value` i HTML-drop
    ```
    docker run --name db -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e TZ=Europe/Copenhagen -p 5432:5432 -d postgres:16
    ```
-2. Opret databasen `Simpl` i pgAdmin (højreklik på Databases → Create → Database…). Navnet skal staves med stort S.
-3. Kør `doc/database/schema_postgres.sql` og derefter `data_postgres.sql` i pgAdmin på databasen `Simpl`.
+2. Opret databasen `embry` i pgAdmin (højreklik på Databases → Create → Database…). Navnet skal staves med små bogstaver.
+3. Kør `doc/database/schema_postgres.sql` og derefter `data_postgres.sql` i pgAdmin på databasen `embry`.
 4. Åbn projektet i IntelliJ og lad Maven hente afhængighederne (Javalin, Thymeleaf, HikariCP, postgresql, jBCrypt).
 5. Kør `Main` i IntelliJ (pom.xml har intet exec-/shade-plugin, så appen startes ikke med Maven). Konsollen skriver, at Javalin lytter på port 7070.
 6. Åbn `http://localhost:7070` i browseren – du lander på login-siden. Log ind med en testbruger (alle har kodeordet `test1234`, fx `mette1990` / `test1234`), eller opret en ny via "Opret profil".
 
-Forbindelsen til databasen står i `Main` (`postgres`/`postgres` på `localhost:5432/Simpl`). Er miljøvariablen `DEPLOYED` sat, læser `ConnectionPool` i stedet `JDBC_USER`, `JDBC_PASSWORD`, `JDBC_CONNECTION_STRING` og `JDBC_DB` – så skal alle fire være sat.
+Forbindelsen til databasen står i `Main` (`postgres`/`postgres` på `localhost:5432/embry`). Er miljøvariablen `DEPLOYED` sat, læser `ConnectionPool` i stedet `JDBC_USER`, `JDBC_PASSWORD`, `JDBC_CONNECTION_STRING` og `JDBC_DB` – så skal alle fire være sat.
 
 Uploadede dokumenter gemmes i mappen `uploads/` i projektmappen. Den oprettes ved første upload og er ikke med i git. Testdokumenterne i `data_postgres.sql` peger derfor på filer, der ikke findes – de vises i listen, men kan ikke åbnes, før man selv uploader et dokument.
 
 ### Kør testene
 
-1. Databasen `Simpl` skal findes i PostgreSQL (se ovenfor). Testene bruger schemaet `test` i den og opretter det selv, hvis det mangler.
+1. Databasen `embry` skal findes i PostgreSQL (se ovenfor). Testene bruger schemaet `test` i den og opretter det selv, hvis det mangler.
 2. Kør testene i `src/test/java` fra IntelliJ (højreklik → Run 'All Tests') eller med `mvn test`. Testene laver selv tabellerne i `test` ved at køre `schema_postgres.sql` og tømmer dem undervejs – de rører aldrig de rigtige data i schemaet `public`.
 
 ## Dokumentation

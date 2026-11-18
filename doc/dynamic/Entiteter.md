@@ -1,4 +1,4 @@
-# Simpl - Pet Project (2. semester)
+# Embry - Pet Project (2. semester)
 
 *Entiteterne svarer 1:1 til domænemodellen (`doc/static/Domænemodel1.puml`). Placeringsregel: Patient ejer det, der følger patienten på tværs af forløb. FertilityJourney ejer det, der hører til hele forløbet. Round ejer det, der kun giver mening i én runde.*
 

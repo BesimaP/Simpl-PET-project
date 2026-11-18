@@ -5,11 +5,11 @@ skinparam monochrome true
 skinparam defaultFontName Arial
 left to right direction
 
-title Use Case Diagram - Simpl
+title Use Case Diagram - Embry
 
 actor "Patient" as u
 
-rectangle "Simpl" {
+rectangle "Embry" {
   usecase "UC1: LogIn" as UC1
   usecase "UC2: ManageProfile" as UC2
   usecase "UC3: CreateJourney" as UC3

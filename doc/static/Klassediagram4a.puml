@@ -16,7 +16,7 @@ skinparam enumBackgroundColor white
 skinparam enumBorderColor black
 hide circle
 
-title Klassediagram 4a — model, enums og exceptions (Simpl v2)
+title Klassediagram 4a — model, enums og exceptions (Embry v2)
 
 ' Gettere/settere og setId() er udeladt for læsbarhed.
 ' Kun metoder med egen logik vises (getDoseText, getValueText, addPoint, getPolyline …).

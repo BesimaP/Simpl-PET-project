@@ -32,7 +32,7 @@
 
 ## Tekniske krav fra undervisningen (24. sep 2026)
 
-*Krav til Pet Project, stillet af underviseren. Sådan opfyldes de i Simpl:*
+*Krav til Pet Project, stillet af underviseren. Sådan opfyldes de i Embry:*
 
 1. **Thymeleaf på html-siderne** – siderne, der viser data fra databasen (dashboard, diagnoser, dagbog, hormoner, medicin, aftaler, rundehistorik, tidslinje, notifikationer, min profil), flyttes til `resources/templates` og vises via GET-ruter: controlleren lægger data i request scope med `ctx.attribute(...)` og kalder `ctx.render("side")`, og skabelonen viser dem med `th:each`/`th:text`. Opsætning: `configuration/ThymeleafConfig` + `config.fileRenderer(...)` i Main.
 2. **Data i både sessionsscope og requestscope** – *session*: hvem der er logget ind (`ctx.sessionAttribute("patientId", ...)` sættes ved login, læses i alle controllere i stedet for `int patientId = 1`). *Request*: data til én side (listen/objektet, der lægges i `ctx.attribute(...)` før `ctx.render`).

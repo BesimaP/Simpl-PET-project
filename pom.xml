@@ -2,7 +2,7 @@
 <project>
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.example</groupId>
-    <artifactId>Simpl-PET-project</artifactId>
+    <artifactId>embry-pet-project</artifactId>
     <version>1.0</version>
 
     <properties>
@@ -65,7 +65,7 @@
     <build>
         <plugins>
             <!-- Surefire = det plugin, der kører JUnit-testene (mvn test). En nyere version er nødvendig for JUnit 5.
-                 Testene kører mod schemaet test i databasen Simpl – se src/test/java/persistence/TestDatabase.java og services/TestData.java -->
+                 Testene kører mod schemaet test i databasen embry – se src/test/java/persistence/TestDatabase.java og services/TestData.java -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>

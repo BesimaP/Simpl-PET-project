@@ -4,7 +4,7 @@ skinparam shadowing false
 skinparam monochrome true
 skinparam defaultFontName Arial
 
-title Navigationsdiagram - Simpl (skærmflow)
+title Navigationsdiagram - Embry (skærmflow)
 
 actor "Patient" as u
 

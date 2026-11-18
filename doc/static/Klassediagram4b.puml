@@ -16,7 +16,7 @@ skinparam enumBackgroundColor white
 skinparam enumBorderColor black
 hide circle
 
-title Klassediagram 4b — persistence-laget (Simpl, PostgreSQL)\nConnectionPool laves én gang i Main og gives videre: Main → RouteConfig → Controller → Service → Mapper
+title Klassediagram 4b — persistence-laget (Embry, PostgreSQL)\nConnectionPool laves én gang i Main og gives videre: Main → RouteConfig → Controller → Service → Mapper
 
 package "persistence" {
 

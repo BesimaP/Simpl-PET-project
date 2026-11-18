@@ -1,5 +1,5 @@
 -- =========================================================
--- Simpl – testdata til PostgreSQL (genereret 2026-10-05). Køres efter schema_postgres.sql.
+-- Embry – testdata til PostgreSQL (genereret 2026-10-05). Køres efter schema_postgres.sql.
 -- 25 patienter med forløb, runder, aftaler, målinger, medicin, noter, diagnoser, dokumenter og notifikationer.
 -- Vi sætter id'erne selv (OVERRIDING SYSTEM VALUE), så fremmednøglerne passer, og nulstiller tællerne til sidst.
 -- Alle testbrugere har kodeordet test1234, fx mette1990 / test1234. Kun til udvikling.

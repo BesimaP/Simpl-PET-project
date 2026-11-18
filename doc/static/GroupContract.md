@@ -12,7 +12,7 @@
 **Hvad skal vi lave i gruppen?**
 *Løse opgaver. lave afleveringer, diskutere pensum, andet*
 
-Vi skal videreudvikle vores fælles Pet Project (Simpl) fra 1. semester på 2. semester, og lærer at udvide et eksisterende projekt som et team.
+Vi skal videreudvikle vores fælles Pet Project (Embry) fra 1. semester på 2. semester, og lærer at udvide et eksisterende projekt som et team.
 
 **Hvad vil vi have ud af arbejdet i gruppen?**
 *Faglig og/eller social gruppe. Fx fokuseret arbejde og/eller smalltalk?*

@@ -20,7 +20,7 @@ hide circle
 hide empty members
 left to right direction
 
-title ERD — Simpl (PostgreSQL, doc/database/schema_postgres.sql)\n20 tabeller + 1 view. Alle id: INT GENERATED ALWAYS AS IDENTITY. * = NOT NULL
+title ERD — Embry (PostgreSQL, doc/database/schema_postgres.sql)\n20 tabeller + 1 view. Alle id: INT GENERATED ALWAYS AS IDENTITY. * = NOT NULL
 
 ' ---------- Patient og det, der hører til personen ----------
 

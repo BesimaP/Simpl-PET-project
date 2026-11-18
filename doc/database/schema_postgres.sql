@@ -1,6 +1,6 @@
 -- =========================================================
--- Simpl – databaseskema til PostgreSQL (uge 40)
--- Køres som ét script på databasen "Simpl" (med stort S).
+-- Embry – databaseskema til PostgreSQL (uge 40)
+-- Køres som ét script på databasen "embry" (med små bogstaver).
 -- 20 tabeller, én for hver klasse i domænemodellen (doc/static/Domænemodel1.puml).
 -- Vi har brugt de her regler:
 --   - primærnøglen hedder id, fremmednøgler hedder <tabel>_id

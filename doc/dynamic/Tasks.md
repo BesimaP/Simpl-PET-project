@@ -2,7 +2,7 @@
 
 *Opdateret 12. okt 2026: refaktorering – `InputCheck` og `FileStorage` (se afsnittet "Refaktorering (12. okt 2026)"). Nu 262 tests (6 nye i `FileStorageTest`), alle grønne.*
 
-*Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 256 JUnit-tests (mappers, services, entiteter og exceptions) mod schemaet `test` i databasen `Simpl`, alle grønne.*
+*Opdateret 9. okt 2026: integrationstests mod PostgreSQL er lavet og kørt – 256 JUnit-tests (mappers, services, entiteter og exceptions) mod schemaet `test` i databasen `embry`, alle grønne.*
 
 *Opdateret 7. okt 2026 (aften): rettelser efter kodegennemgang – afslut forløb, ret fødselsdato, slet dokument, aftalepåmindelser, kommende medicin, sider der virker uden JavaScript, fælles fejlside og menu som Thymeleaf-fragment. Testene er flyttet til `src/test/java` og sat op mod PostgreSQL (se "Tekniske krav").*
 
@@ -125,7 +125,7 @@
 - [x]  Requestscope: data til siden via `ctx.attribute(...)` før `ctx.render` (som i undervisningen) – fx fejlbesked på login, lister på alle sider
 - [x]  Exception: `UserNotFoundException` kastes i `AuthService.login`, fanges i `LoginController` *(24. sep – desuden NoActiveJourneyException, NoActiveRoundException og DatabaseException med samlet handler i ExceptionConfig)*
 - [x]  Automatiserede tests: 110 JUnit-tests mod in-memory SQLite (`DatabaseConnection.useTestDatabase`) *(25. sep – SQLite er udskiftet, se næste punkt)*
-- [x]  Integrationstests mod en testdatabase i PostgreSQL *(8.–9. okt: testene kører mod schemaet `test` i databasen `Simpl`. `TestDatabase` (mappers) og `TestData` (services) kører `schema_postgres.sql` ind i `test`, så de rigtige data i `public` aldrig røres. 256 tests: 100 mapper-, 141 service-, 13 entitets- og 2 exception-tests – alle grønne)*
+- [x]  Integrationstests mod en testdatabase i PostgreSQL *(8.–9. okt: testene kører mod schemaet `test` i databasen `embry`. `TestDatabase` (mappers) og `TestData` (services) kører `schema_postgres.sql` ind i `test`, så de rigtige data i `public` aldrig røres. 256 tests: 100 mapper-, 141 service-, 13 entitets- og 2 exception-tests – alle grønne)*
 - [x]  Skift fra SQLite til PostgreSQL: `ConnectionPool` (HikariCP), mappers i `persistence`, try-with-resources, typetabeller med `SELECT id … WHERE name = ?` og `JOIN` *(7. okt)*
 
 ## Teknisk gæld (fundet ved kodegennemgang 22. sep 2026)
